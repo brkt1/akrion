@@ -46,5 +46,24 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.6;
+    }
+    33% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 1;
+    }
+    66% {
+      transform: translateY(-10px) translateX(-10px);
+      opacity: 0.8;
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 }
 
