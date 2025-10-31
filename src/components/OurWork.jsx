@@ -1,0 +1,84 @@
+import React, { useEffect, useState } from 'react'
+import ScrollAnimation, { ParallaxSection, StaggerContainer, StaggerItem } from './ScrollAnimation'
+
+const OurWork = () => {
+  const bgImageUrl = 'https://images.unsplash.com/photo-1697311622332-184b7bb19a46?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c29ueSUyMGNhbWVyYXxlbnwwfHwwfHx8MA%3D%3D&fm=jpg&q=60&w=3000'
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+  
+  const projects = [
+    {
+      name: 'Cassopia Tour',
+      image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
+    {
+      name: 'Yenege Games',
+      image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
+    {
+      name: 'Corno D\'Africa',
+      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
+    {
+      name: 'Akrion Run Campaign',
+      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    },
+    {
+      name: 'Teff & Bula Brand Identity',
+      image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    }
+  ]
+
+  return (
+    <section 
+      className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative"
+      style={{
+        backgroundImage: `url(${bgImageUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: isMobile ? 'scroll' : 'fixed'
+      }}
+    >
+      <div className="absolute inset-0 bg-black/60"></div>
+      <ParallaxSection speed={0.25} className="max-w-[1400px] mx-auto relative z-10">
+        <ScrollAnimation animation="fadeDown" delay={0.2}>
+          <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10 mb-8 sm:mb-10 md:mb-12 inline-block glow-effect">
+            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg">
+              OUR WORK
+            </h2>
+          </div>
+        </ScrollAnimation>
+        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8" staggerDelay={0.15}>
+          {projects.map((project, index) => (
+            <StaggerItem key={index}>
+              <div className="group cursor-pointer">
+                <div className="aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden hover:scale-[1.02] transition-all duration-300 border border-white/10 hover:border-accent-orange/50 hover:glow-effect relative">
+                  <img 
+                    src={project.image} 
+                    alt={project.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-lg">{project.name}</h3>
+                  </div>
+                </div>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
+      </ParallaxSection>
+    </section>
+  )
+}
+
+export default OurWork
+
