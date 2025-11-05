@@ -22,8 +22,8 @@ const Header = () => {
     <>
       <header ref={headerRef} className="fixed top-0 left-0 right-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 z-[1000] bg-bg-dark/80 backdrop-blur-[10px]">
         <div className="flex justify-between items-center max-w-[1400px] mx-auto relative w-full">
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 bg-[rgba(26,26,26,0.8)] backdrop-blur-[10px] px-3 sm:px-4 py-1.5 sm:py-2 rounded-[50px] hover:opacity-90 transition-opacity">
-            <img src={logo} alt="Akrion Digitals" className="h-5 sm:h-6 w-auto" />
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 bg-[rgba(26,26,26,0.95)] backdrop-blur-[10px] px-3 sm:px-4 py-1.5 sm:py-2 rounded-[50px] hover:opacity-90 hover:bg-[rgba(26,26,26,1)] transition-all shadow-lg">
+            <img src={logo} alt="Akrion Digitals" className="h-8 sm:h-12 md:h-16 lg:h-20 w-auto max-w-full" />
           </Link>
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
             <Link to="/" className="text-white hover:text-accent-orange transition-colors text-sm lg:text-base">Home</Link>

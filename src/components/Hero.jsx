@@ -29,7 +29,7 @@ const Hero = () => {
 
   return (
     <section 
-      className="min-h-screen pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 relative flex items-center overflow-hidden"
+      className="min-h-screen pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-12 sm:pb-0 relative flex items-center overflow-hidden"
       style={{
         backgroundImage: `url(${bgImageUrl})`,
         backgroundSize: 'cover',
@@ -55,9 +55,9 @@ const Hero = () => {
       <div className="absolute bottom-40 right-1/4 w-2 h-2 bg-cyan-400/50 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
       
       {/* Frosted glass content container */}
-      <ParallaxSection speed={0.3} className="max-w-[1400px] mx-auto w-full relative z-10">
+      <ParallaxSection speed={0.3} className="w-full relative z-10">
         <ScrollAnimation animation="scale" delay={0.2} duration={0.8}>
-          <div className="flex flex-col gap-8 sm:gap-10 md:gap-14 items-center text-center backdrop-blur-xl bg-gradient-to-br from-black/40 via-black/30 to-black/40 rounded-3xl sm:rounded-[2rem] p-8 sm:p-10 md:p-16 border border-white/20 shadow-2xl relative overflow-hidden group hover:border-white/30 transition-all duration-500">
+          <div className="flex flex-col gap-8 sm:gap-10 md:gap-14 items-center text-center justify-center backdrop-blur-xl bg-gradient-to-br from-black/40 via-black/30 to-black/40 rounded-none sm:rounded-3xl p-8 sm:p-10 md:p-16 border-x-0 sm:border-x border-y border-white/20 shadow-2xl relative overflow-hidden group hover:border-white/30 transition-all duration-500 w-full min-h-screen">
             {/* Shimmer effect on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             
@@ -122,12 +122,6 @@ const Hero = () => {
                 </Link>
               </div>
             </ScrollAnimation>
-            
-            {/* Decorative corner accents */}
-            <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-accent-orange/40 rounded-tl-lg opacity-60"></div>
-            <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-purple-400/40 rounded-tr-lg opacity-60"></div>
-            <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-cyan-400/40 rounded-bl-lg opacity-60"></div>
-            <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-accent-orange/40 rounded-br-lg opacity-60"></div>
           </div>
         </ScrollAnimation>
         

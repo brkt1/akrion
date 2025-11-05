@@ -27,7 +27,7 @@ const WhoWeAre = () => {
       <div className="absolute inset-0 bg-bg-dark"></div>
       <ParallaxSection speed={0.2} className="max-w-[1200px] mx-auto relative z-10">
         <ScrollAnimation animation="fadeLeft" delay={0.2} duration={0.8}>
-          <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 border border-white/10 glow-effect">
+          <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 border border-white/10">
             <ScrollAnimation animation="fadeRight" delay={0.3}>
               <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg mb-4 sm:mb-6">
                 WHO WE ARE

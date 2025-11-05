@@ -10,10 +10,27 @@ const Contact = () => {
   })
   const [isMobile, setIsMobile] = useState(false)
 
+  // WhatsApp number (remove + and spaces for wa.me link)
+  const whatsappNumber = '251976601172'
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Form submitted:', formData)
+    // Create WhatsApp message with form data
+    const message = encodeURIComponent(
+      `Hello Akrion Digitals!\n\n` +
+      `I'm interested in starting a project.\n\n` +
+      `Name: ${formData.name}\n` +
+      `Email: ${formData.email}\n` +
+      `Message: ${formData.message}`
+    )
+    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank')
+    
+    // Reset form after opening WhatsApp
+    setFormData({
+      name: '',
+      email: '',
+      message: ''
+    })
   }
 
   const handleChange = (e) => {
@@ -69,8 +86,38 @@ const Contact = () => {
                   </a>
                 </div>
                 <div>
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-2 drop-shadow-md">Phone</h3>
+                  <a href="tel:+251976601172" className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm">
+                    +251 976 601 172
+                  </a>
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-2 drop-shadow-md">WhatsApp</h3>
+                  <a 
+                    href={`https://wa.me/${whatsappNumber}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm"
+                  >
+                    Chat with us on WhatsApp
+                  </a>
+                </div>
+                <div>
                   <h3 className="text-base sm:text-lg font-semibold text-white mb-2 drop-shadow-md">Location</h3>
-                  <p className="text-sm sm:text-base text-white/80 drop-shadow-sm">Addis Ababa, Ethiopia</p>
+                  <p className="text-sm sm:text-base text-white/80 drop-shadow-sm mb-4">Addis Ababa, Ethiopia</p>
+                  <div className="w-full h-64 sm:h-80 rounded-lg sm:rounded-xl overflow-hidden border border-white/20">
+                    <iframe
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126748.6091243727!2d38.6966474!3d9.0083434!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85cef5ab402d%3A0x8467b6b037a24d49!2sAddis%20Ababa%2C%20Ethiopia!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Akrion Digitals Office Location"
+                      className="w-full h-full"
+                    ></iframe>
+                  </div>
                 </div>
               </div>
               <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6 backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">

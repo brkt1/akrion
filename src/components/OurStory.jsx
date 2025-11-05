@@ -28,7 +28,7 @@ const OurStory = () => {
       <ParallaxSection speed={0.3} className="max-w-[1200px] mx-auto relative z-10">
         <div className="flex flex-col gap-6 sm:gap-8 items-center text-center">
           <ScrollAnimation animation="scale" delay={0.2} duration={0.8}>
-            <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10 glow-effect">
+            <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">
               <ScrollAnimation animation="fadeUp" delay={0.3}>
                 <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg mb-3 sm:mb-4">
                   OUR STORY VIDEO
@@ -42,7 +42,7 @@ const OurStory = () => {
             </div>
           </ScrollAnimation>
           <ScrollAnimation animation="blur" delay={0.7} duration={1}>
-            <div className="aspect-video w-full max-w-4xl backdrop-blur-md bg-black/30 rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/10 relative overflow-hidden hover:glow-effect transition-all duration-300 mx-4 sm:mx-0">
+            <div className="aspect-video w-full max-w-4xl backdrop-blur-md bg-black/30 rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/10 relative overflow-hidden transition-all duration-300 mx-4 sm:mx-0">
               <div 
                 className="absolute inset-0 opacity-30"
                 style={{
@@ -51,7 +51,7 @@ const OurStory = () => {
                   backgroundPosition: 'center'
                 }}
               ></div>
-              <button className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 bg-accent-orange rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-lg glow-effect">
+              <button className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 bg-accent-orange rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-lg">
                 <svg width="24" height="24" className="sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="white">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
