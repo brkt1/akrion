@@ -84,13 +84,13 @@ const WhatWeDo = () => {
         <div className="flex flex-wrap gap-4 sm:gap-6 md:gap-8 items-center justify-center">
           {services.map((service, index) => (
             <ScrollAnimation key={index} animation="fadeUp" delay={0.2 + index * 0.1}>
-              <div className="group relative overflow-hidden bg-white border-2 border-gray-300 hover:border-accent-orange transition-all duration-300 hover:shadow-lg cursor-pointer w-[280px] sm:w-[320px] md:w-[360px]"
+              <div className="group relative overflow-hidden bg-white border-2 border-gray-300 hover:border-accent-orange transition-all duration-300 hover:shadow-lg cursor-pointer w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px]"
                    style={{
                      transform: 'skewX(-15deg)',
                      padding: '0'
                    }}>
                 {/* Inner content - unskewed for readability */}
-                <div className="flex items-center gap-4 sm:gap-5 px-6 sm:px-8 py-4 sm:py-5 min-h-[80px]"
+                <div className="flex items-center gap-3 sm:gap-4 md:gap-5 px-4 sm:px-6 md:px-8 py-4 sm:py-5 min-h-[80px]"
                      style={{
                        transform: 'skewX(15deg)'
                      }}>
@@ -100,7 +100,7 @@ const WhatWeDo = () => {
                   </div>
                   
                   {/* Title */}
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-black whitespace-nowrap group-hover:text-accent-orange transition-colors duration-300">
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-black group-hover:text-accent-orange transition-colors duration-300 flex-1 min-w-0">
                     {service.name}
                   </h3>
                   

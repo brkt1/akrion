@@ -57,7 +57,7 @@ const Hero = () => {
       {/* Frosted glass content container */}
       <ParallaxSection speed={0.3} className="w-full relative z-10">
         <ScrollAnimation animation="scale" delay={0.2} duration={0.8}>
-          <div className="flex flex-col gap-8 sm:gap-10 md:gap-14 items-center text-center justify-center backdrop-blur-xl bg-gradient-to-br from-black/40 via-black/30 to-black/40 rounded-none sm:rounded-3xl p-8 sm:p-10 md:p-16 border-x-0 sm:border-x border-y border-white/20 shadow-2xl relative overflow-hidden group hover:border-white/30 transition-all duration-500 w-full min-h-screen">
+          <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 lg:gap-14 items-center text-center justify-center backdrop-blur-xl bg-gradient-to-br from-black/40 via-black/30 to-black/40 rounded-none sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-16 border-x-0 sm:border-x border-y border-white/20 shadow-2xl relative overflow-hidden group hover:border-white/30 transition-all duration-500 w-full min-h-screen max-w-full">
             {/* Shimmer effect on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             
@@ -100,22 +100,22 @@ const Hero = () => {
             </ScrollAnimation>
             
             <ScrollAnimation animation="fadeUp" delay={0.7} duration={0.8}>
-              <div className="flex flex-wrap gap-4 sm:gap-5 justify-center w-full sm:w-auto pt-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 md:gap-5 justify-center w-full max-w-full px-2 sm:px-0 pt-2">
                 <Link 
                   to="/about" 
-                  className="group/btn relative inline-flex items-center gap-3 bg-gradient-to-r from-accent-orange to-[#FF6B2E] text-white border-none px-8 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(255,127,62,0.4)] overflow-hidden backdrop-blur-sm w-full sm:w-auto justify-center"
+                  className="group/btn relative inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-accent-orange to-[#FF6B2E] text-white border-none px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(255,127,62,0.4)] overflow-hidden backdrop-blur-sm w-full sm:w-auto justify-center min-w-[200px] sm:min-w-0"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
                   <span className="relative z-10 flex items-center gap-2">
                     <span>Watch Our Story</span>
-                    <svg width="20" height="20" className="transition-transform duration-300 group-hover/btn:translate-x-1" viewBox="0 0 20 20" fill="none">
+                    <svg width="18" height="18" className="sm:w-5 sm:h-5 transition-transform duration-300 group-hover/btn:translate-x-1" viewBox="0 0 20 20" fill="none">
                       <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </span>
                 </Link>
                 <Link 
                   to="/contact" 
-                  className="group/btn2 relative inline-flex items-center gap-3 bg-white/10 backdrop-blur-md text-white border-2 border-white/40 px-8 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-white/20 hover:border-white/60 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] overflow-hidden w-full sm:w-auto justify-center"
+                  className="group/btn2 relative inline-flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-md text-white border-2 border-white/40 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-lg sm:rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-white/20 hover:border-white/60 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] overflow-hidden w-full sm:w-auto justify-center min-w-[200px] sm:min-w-0"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn2:translate-x-[100%] transition-transform duration-700"></span>
                   <span className="relative z-10">Start a Project</span>
