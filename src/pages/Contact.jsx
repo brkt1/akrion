@@ -55,7 +55,7 @@ const Contact = () => {
     <>
       <Header />
       <div 
-        className="pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 min-h-screen relative"
+        className="pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 px-4 xs:px-6 sm:px-6 lg:px-8 min-h-screen relative"
         style={{
           backgroundImage: `url(${bgImageUrl})`,
           backgroundSize: 'cover',
@@ -68,12 +68,12 @@ const Contact = () => {
         
         {/* Frosted glass content */}
         <section className="max-w-[1200px] mx-auto relative z-10">
-          <div className="flex flex-col gap-8 sm:gap-10 md:gap-12">
+          <div className="flex flex-col gap-6 sm:gap-10 md:gap-12">
             <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">
-              <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-bold leading-[1.1] tracking-[-0.02em] mb-4 sm:mb-6 text-white drop-shadow-lg">
+              <h1 className="text-[clamp(2rem,7vw,4rem)] font-bold leading-[1.1] tracking-[-0.02em] mb-4 sm:mb-6 text-white drop-shadow-lg">
                 CONTACT
               </h1>
-              <p className="text-base sm:text-lg md:text-xl leading-relaxed text-white/90 max-w-3xl drop-shadow-md">
+              <p className="text-[clamp(0.95rem,4vw,1.25rem)] sm:text-lg md:text-xl leading-relaxed text-white/90 max-w-3xl drop-shadow-md">
                 Ready to create something extraordinary? We're here to collaborate, brainstorm, and bring your vision to life.
               </p>
             </div>
@@ -81,13 +81,13 @@ const Contact = () => {
               <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10 flex flex-col gap-4 sm:gap-6">
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold text-white mb-2 drop-shadow-md">Email</h3>
-                  <a href="mailto:info@akriondigitals.com" className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm break-all">
+                  <a href="mailto:info@akriondigitals.com" className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm break-all touch-target min-h-[44px] flex items-center">
                     info@akriondigitals.com
                   </a>
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold text-white mb-2 drop-shadow-md">Phone</h3>
-                  <a href="tel:+251976601172" className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm">
+                  <a href="tel:+251976601172" className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm touch-target min-h-[44px] flex items-center">
                     +251 976 601 172
                   </a>
                 </div>
@@ -97,7 +97,7 @@ const Contact = () => {
                     href={`https://wa.me/${whatsappNumber}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm"
+                    className="text-sm sm:text-base text-accent-orange hover:underline drop-shadow-sm touch-target min-h-[44px] flex items-center"
                   >
                     Chat with us on WhatsApp
                   </a>
@@ -156,7 +156,7 @@ const Contact = () => {
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-accent-orange text-white border-none px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium cursor-pointer transition-all duration-300 hover:bg-[#FF6B2E] hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(255,127,62,0.3)] group backdrop-blur-sm w-full sm:w-auto"
+                  className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-accent-orange text-white border-none px-6 sm:px-8 py-4 sm:py-4 rounded-lg sm:rounded-xl text-base sm:text-base font-medium cursor-pointer transition-all duration-300 active:scale-95 sm:hover:bg-[#FF6B2E] sm:hover:-translate-y-0.5 sm:hover:shadow-[0_10px_30px_rgba(255,127,62,0.3)] group backdrop-blur-sm w-full sm:w-auto touch-target min-h-[48px]"
                 >
                   <span>Send Message</span>
                   <svg width="18" height="18" className="sm:w-5 sm:h-5 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 20 20" fill="none">

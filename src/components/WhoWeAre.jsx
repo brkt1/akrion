@@ -16,7 +16,7 @@ const WhoWeAre = () => {
 
   return (
     <section 
-      className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative"
+      className="py-12 sm:py-16 md:py-24 px-4 xs:px-6 sm:px-6 lg:px-8 relative"
       style={{
         backgroundImage: `url(${bgImageUrl})`,
         backgroundSize: 'cover',
@@ -29,12 +29,12 @@ const WhoWeAre = () => {
         <ScrollAnimation animation="fadeLeft" delay={0.2} duration={0.8}>
           <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 border border-white/10">
             <ScrollAnimation animation="fadeRight" delay={0.3}>
-              <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg mb-4 sm:mb-6">
+              <h2 className="text-[clamp(1.75rem,6vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg mb-4 sm:mb-6">
                 WHO WE ARE
               </h2>
             </ScrollAnimation>
             <ScrollAnimation animation="fadeLeft" delay={0.5}>
-              <p className="text-base sm:text-lg md:text-xl leading-relaxed text-white/90 max-w-3xl drop-shadow-md">
+              <p className="text-[clamp(0.95rem,4vw,1.25rem)] sm:text-lg md:text-xl leading-relaxed text-white/90 max-w-3xl drop-shadow-md">
                 Creativity with purpose. Design with vision. We're not just a design studio — we're a creative movement that helps brands express who they are through art, culture, and innovation.
               </p>
             </ScrollAnimation>

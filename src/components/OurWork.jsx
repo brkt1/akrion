@@ -107,7 +107,7 @@ const OurWork = () => {
 
   return (
     <section 
-      className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative"
+      className="py-12 sm:py-16 md:py-24 px-4 xs:px-6 sm:px-6 lg:px-8 relative"
       style={{
         backgroundImage: `url(${bgImageUrl})`,
         backgroundSize: 'cover',
@@ -118,8 +118,8 @@ const OurWork = () => {
       <div className="absolute inset-0 bg-black/60"></div>
       <ParallaxSection speed={0.25} className="max-w-[1400px] mx-auto relative z-10">
         <ScrollAnimation animation="fadeDown" delay={0.2}>
-          <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10 mb-8 sm:mb-10 md:mb-12 inline-block">
-            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg">
+          <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10 mb-6 sm:mb-10 md:mb-12 inline-block">
+            <h2 className="text-[clamp(1.75rem,6vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg">
               OUR WORK
             </h2>
           </div>
@@ -127,22 +127,23 @@ const OurWork = () => {
         <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8" staggerDelay={0.15}>
           {projects.map((project, index) => (
             <StaggerItem key={index}>
-              <div className="group cursor-pointer">
-                <div className="aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden hover:scale-[1.02] transition-all duration-300 border border-white/10 hover:border-accent-orange/50 relative">
+              <div className="group cursor-pointer touch-target">
+                <div className="aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden active:scale-[0.98] sm:hover:scale-[1.02] transition-all duration-300 border border-white/10 hover:border-accent-orange/50 relative">
                   <img 
                     src={project.image} 
                     alt={project.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-                    <span className="text-accent-orange">
+                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/20">
+                    <span className="text-accent-orange w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
                       {getCategoryIcon(project.category)}
                     </span>
                     <span className="text-xs sm:text-sm font-medium text-white">{project.category}</span>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-lg">{project.name}</h3>
+                    <h3 className="text-base sm:text-xl md:text-2xl font-bold text-white drop-shadow-lg">{project.name}</h3>
                   </div>
                 </div>
               </div>

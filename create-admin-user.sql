@@ -1,0 +1,76 @@
+-- ============================================
+-- CREATE ADMIN USER
+-- ============================================
+-- This SQL creates an admin user in Supabase Auth
+-- Note: User creation is typically done via Supabase Dashboard or Auth API
+-- 
+-- Admin Credentials:
+-- Email: Hailakemelaku1223@gmail.com
+-- Password: Open@1223
+-- ============================================
+
+-- IMPORTANT: User creation cannot be done via SQL in Supabase
+-- You must use one of these methods:
+
+-- ============================================
+-- METHOD 1: Via Supabase Dashboard (Recommended)
+-- ============================================
+-- 1. Go to Supabase Dashboard → Authentication → Users
+-- 2. Click "Add user" → "Create new user"
+-- 3. Enter:
+--    - Email: Hailakemelaku1223@gmail.com
+--    - Password: Open@1223
+--    - Auto Confirm User: Yes (to skip email verification)
+-- 4. Click "Create user"
+
+-- ============================================
+-- METHOD 2: Via Supabase Management API
+-- ============================================
+-- POST https://api.supabase.com/v1/projects/{project_ref}/auth/users
+-- Headers:
+--   Authorization: Bearer {service_role_key}
+--   Content-Type: application/json
+-- Body:
+-- {
+--   "email": "Hailakemelaku1223@gmail.com",
+--   "password": "Open@1223",
+--   "email_confirm": true,
+--   "user_metadata": {
+--     "role": "admin"
+--   }
+-- }
+
+-- ============================================
+-- METHOD 3: Via JavaScript/Node.js
+-- ============================================
+-- Use the Supabase Admin API (requires service_role key):
+-- 
+-- import { createClient } from '@supabase/supabase-js'
+-- 
+-- const supabaseAdmin = createClient(
+--   'https://umgztbsclpznwgdocgbh.supabase.co',
+--   'YOUR_SERVICE_ROLE_KEY' // Get from Supabase Dashboard → Settings → API
+-- )
+-- 
+-- const { data, error } = await supabaseAdmin.auth.admin.createUser({
+--   email: 'Hailakemelaku1223@gmail.com',
+--   password: 'Open@1223',
+--   email_confirm: true,
+--   user_metadata: {
+--     role: 'admin'
+--   }
+-- })
+
+-- ============================================
+-- METHOD 4: Via Sign Up (User Self-Registration)
+-- ============================================
+-- The user can sign up through the app, but they'll need to verify email
+-- unless email confirmation is disabled in Auth settings.
+
+-- ============================================
+-- AFTER CREATING THE USER
+-- ============================================
+-- 1. The user can now log in through the Login button in the footer
+-- 2. Once logged in, admin mode will be automatically enabled
+-- 3. They'll have full CRUD access to Blog, Portfolio, and Services
+
