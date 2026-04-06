@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import ScrollAnimation, { StaggerContainer, StaggerItem } from '../components/ScrollAnimation'
+import { authAPI } from '../lib/api/auth'
 import { portfolioAPI } from '../lib/api/portfolio'
 import { uploadAPI } from '../lib/api/upload'
 
@@ -30,9 +31,19 @@ const Portfolio = () => {
 
   useEffect(() => {
     loadProjects()
-    const adminStatus = localStorage.getItem('portfolioAdminMode')
-    setIsAdmin(adminStatus === 'true')
+    checkAdmin()
   }, [])
+
+  const checkAdmin = async () => {
+    const adminMode = localStorage.getItem('portfolioAdminMode') === 'true'
+    if (adminMode) {
+      const isActuallyAdmin = await authAPI.isAdmin()
+      setIsAdmin(isActuallyAdmin)
+      if (!isActuallyAdmin) localStorage.removeItem('portfolioAdminMode')
+    } else {
+      setIsAdmin(false)
+    }
+  }
 
   const loadProjects = async () => {
     try { setLoading(true); setError(null); const data = await portfolioAPI.getAll(); setProjects(data) }
@@ -67,10 +78,6 @@ const Portfolio = () => {
     }
   }
 
-  const toggleAdmin = () => {
-    const next = !isAdmin; setIsAdmin(next)
-    localStorage.setItem('portfolioAdminMode', next.toString())
-  }
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
@@ -109,7 +116,6 @@ const Portfolio = () => {
                   Explore our creative work and the stories behind each project.
                 </p>
               </ScrollAnimation>
-              <div className="flex items-center gap-4 mt-6 flex-wrap">
                 {isAdmin && (
                   <button
                     onClick={() => { setShowForm(!showForm); if (showForm) { setIsEditing(false); setEditingProject(null); setFormData({ title:'',description:'',image:'',category:'',link:'',tags:'' }) }}}
@@ -118,13 +124,6 @@ const Portfolio = () => {
                     {showForm ? 'Cancel' : '+ New Project'}
                   </button>
                 )}
-                <button onClick={toggleAdmin} className="text-xs font-mono" style={{ color: 'rgba(201,161,112,0.3)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = GOLD}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(201,161,112,0.3)'}
-                >
-                  {isAdmin ? '[ exit admin ]' : '[ admin ]'}
-                </button>
-              </div>
             </div>
 
             {/* Admin form */}

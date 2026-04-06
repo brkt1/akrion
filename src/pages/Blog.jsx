@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import ScrollAnimation, { StaggerContainer, StaggerItem } from '../components/ScrollAnimation'
+import { authAPI } from '../lib/api/auth'
 import { blogAPI } from '../lib/api/blog'
 import { uploadAPI } from '../lib/api/upload'
 
@@ -34,9 +35,19 @@ const Blog = () => {
 
   useEffect(() => {
     loadPosts()
-    const adminStatus = localStorage.getItem('blogAdminMode')
-    setIsAdmin(adminStatus === 'true')
+    checkAdmin()
   }, [])
+
+  const checkAdmin = async () => {
+    const adminMode = localStorage.getItem('blogAdminMode') === 'true'
+    if (adminMode) {
+      const isActuallyAdmin = await authAPI.isAdmin()
+      setIsAdmin(isActuallyAdmin)
+      if (!isActuallyAdmin) localStorage.removeItem('blogAdminMode')
+    } else {
+      setIsAdmin(false)
+    }
+  }
 
   const loadPosts = async () => {
     try { setLoading(true); setError(null); const data = await blogAPI.getAll(); setPosts(data) }
@@ -71,10 +82,6 @@ const Blog = () => {
     }
   }
 
-  const toggleAdmin = () => {
-    const next = !isAdmin; setIsAdmin(next)
-    localStorage.setItem('blogAdminMode', next.toString())
-  }
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
@@ -113,18 +120,12 @@ const Blog = () => {
                   Creative insights, digital storytelling, and design trends from the Akrion team.
                 </p>
               </ScrollAnimation>
-              <div className="flex items-center gap-4 mt-6 flex-wrap">
                 {isAdmin && (
                   <button
                     onClick={() => { setShowForm(!showForm); if (showForm) { setIsEditing(false); setEditingPost(null); setFormData({ title:'',content:'',author:'',date:new Date().toISOString().split('T')[0],image:'',category:'' }) }}}
                     className="btn-primary text-sm px-5 py-2.5"
                   >{showForm ? 'Cancel' : '+ New Post'}</button>
                 )}
-                <button onClick={toggleAdmin} className="text-xs font-mono" style={{ color: 'rgba(201,161,112,0.3)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = GOLD}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(201,161,112,0.3)'}
-                >{isAdmin ? '[ exit admin ]' : '[ admin ]'}</button>
-              </div>
             </div>
 
             {/* Admin form */}

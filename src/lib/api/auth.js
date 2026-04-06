@@ -67,6 +67,16 @@ export const authAPI = {
     return supabase.auth.onAuthStateChange((event, session) => {
       callback(event, session)
     })
+  },
+
+  // Check if current user is an admin
+  async isAdmin() {
+    try {
+      const user = await this.getUser()
+      return user?.user_metadata?.role === 'admin'
+    } catch (err) {
+      return false
+    }
   }
 }
 

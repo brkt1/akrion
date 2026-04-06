@@ -128,9 +128,18 @@ const Footer = () => {
         setUser(data.user)
         setShowLoginModal(false)
         setLoginData({ email: '', password: '' })
-        localStorage.setItem('blogAdminMode', 'true')
-        localStorage.setItem('portfolioAdminMode', 'true')
-        localStorage.setItem('servicesAdminMode', 'true')
+        
+        // Only set admin mode if they are actually an admin
+        const isAdmin = data.user.user_metadata?.role === 'admin'
+        if (isAdmin) {
+          localStorage.setItem('blogAdminMode', 'true')
+          localStorage.setItem('portfolioAdminMode', 'true')
+          localStorage.setItem('servicesAdminMode', 'true')
+        } else {
+          localStorage.setItem('blogAdminMode', 'false')
+          localStorage.setItem('portfolioAdminMode', 'false')
+          localStorage.setItem('servicesAdminMode', 'false')
+        }
       }
     } catch (err) {
       console.error('Login error:', err)
@@ -145,9 +154,9 @@ const Footer = () => {
       await authAPI.signOut()
       setIsAuthenticated(false)
       setUser(null)
-      localStorage.setItem('blogAdminMode', 'false')
-      localStorage.setItem('portfolioAdminMode', 'false')
-      localStorage.setItem('servicesAdminMode', 'false')
+      localStorage.removeItem('blogAdminMode')
+      localStorage.removeItem('portfolioAdminMode')
+      localStorage.removeItem('servicesAdminMode')
     } catch (err) {
       console.error('Logout error:', err)
     }

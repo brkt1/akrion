@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import ScrollAnimation from '../components/ScrollAnimation'
+import { authAPI } from '../lib/api/auth'
 import { servicesAPI } from '../lib/api/services'
 
 // Brand constants
@@ -69,9 +70,19 @@ const Services = () => {
 
   useEffect(() => {
     loadServices()
-    const adminStatus = localStorage.getItem('servicesAdminMode')
-    setIsAdmin(adminStatus === 'true')
+    checkAdmin()
   }, [])
+
+  const checkAdmin = async () => {
+    const adminMode = localStorage.getItem('servicesAdminMode') === 'true'
+    if (adminMode) {
+      const isActuallyAdmin = await authAPI.isAdmin()
+      setIsAdmin(isActuallyAdmin)
+      if (!isActuallyAdmin) localStorage.removeItem('servicesAdminMode')
+    } else {
+      setIsAdmin(false)
+    }
+  }
 
   const loadServices = async () => {
     try {
@@ -131,11 +142,6 @@ const Services = () => {
     }
   }
 
-  const toggleAdmin = () => {
-    const next = !isAdmin
-    setIsAdmin(next)
-    localStorage.setItem('servicesAdminMode', next.toString())
-  }
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
@@ -163,7 +169,6 @@ const Services = () => {
                 </p>
               </ScrollAnimation>
 
-              <div className="flex items-center gap-4 mt-6 flex-wrap">
                 {isAdmin && (
                   <button
                     onClick={() => {
@@ -175,13 +180,6 @@ const Services = () => {
                     {showForm ? 'Cancel' : '+ New Service'}
                   </button>
                 )}
-                <button onClick={toggleAdmin} className="text-xs font-mono transition-colors" style={{ color: 'rgba(201,161,112,0.3)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = GOLD}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(201,161,112,0.3)'}
-                >
-                  {isAdmin ? '[ exit admin ]' : '[ admin ]'}
-                </button>
-              </div>
             </div>
 
             {/* Admin form */}
