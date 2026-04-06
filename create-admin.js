@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const supabaseUrl = 'https://umgztbsclpznwgdocgbh.supabase.co'
+const supabaseUrl = 'https://gavhkkrnsuisqsjnnaow.supabase.co'
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!serviceRoleKey) {
