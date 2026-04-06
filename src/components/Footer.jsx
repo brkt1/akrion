@@ -307,7 +307,7 @@ const Footer = () => {
                     onClick={() => setShowLoginModal(true)}
                     className="text-xs text-white/30 hover:text-white/60 transition-colors"
                   >
-                    Admin Login
+                    AD
                   </button>
                 )}
               </div>
@@ -342,7 +342,7 @@ const Footer = () => {
             {/* Modal header */}
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-xl font-bold text-white mb-0.5">Admin Login</h2>
+                <h2 className="text-xl font-bold text-white mb-0.5">AD</h2>
                 <p className="text-xs text-white/40">Content management access</p>
               </div>
               <button
