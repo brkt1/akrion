@@ -1,148 +1,213 @@
-import React, { useEffect, useState } from 'react'
 import Footer from './Footer'
 import Header from './Header'
+import ScrollAnimation from './ScrollAnimation'
+
+const values = [
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    ),
+    title: 'Creativity First',
+    description: 'We believe in pushing boundaries and exploring new creative territories every single day.',
+    accent: '#8B5CF6',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
+    title: 'Client-Centric',
+    description: 'Your vision is our mission. We work closely alongside you to bring your ideas to life.',
+    accent: '#06B6D4',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+    ),
+    title: 'Quality Excellence',
+    description: 'Every project is crafted with meticulous attention to detail and an uncompromising commitment to excellence.',
+    accent: '#FF7F3E',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4l3 3"/>
+      </svg>
+    ),
+    title: 'Innovation',
+    description: 'We stay ahead of trends and leverage cutting-edge tools and technologies to keep you competitive.',
+    accent: '#F59E0B',
+  },
+]
+
+const team = [
+  {
+    name: 'Creative Team',
+    role: 'Design & Strategy',
+    description: 'Talented designers and strategists who bring fresh perspectives and cultural depth to every project.',
+    accent: '#8B5CF6',
+  },
+  {
+    name: 'Development Team',
+    role: 'Technology & Innovation',
+    description: 'Expert engineers who turn creative visions into fast, accessible, delightful digital products.',
+    accent: '#06B6D4',
+  },
+  {
+    name: 'Content Team',
+    role: 'Storytelling & Branding',
+    description: 'Master storytellers who craft compelling narratives that cut through the noise and resonate deeply.',
+    accent: '#FF7F3E',
+  },
+]
 
 const About = () => {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  const bgImageUrl = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=2000'
-
-  const values = [
-    {
-      title: 'Creativity First',
-      description: 'We believe in pushing boundaries and exploring new creative territories.'
-    },
-    {
-      title: 'Client-Centric',
-      description: 'Your vision is our mission. We work closely with you to bring your ideas to life.'
-    },
-    {
-      title: 'Quality Excellence',
-      description: 'Every project is crafted with attention to detail and a commitment to excellence.'
-    },
-    {
-      title: 'Innovation',
-      description: 'We stay ahead of trends and leverage cutting-edge tools and technologies.'
-    }
-  ]
-
-  const team = [
-    {
-      name: 'Creative Team',
-      role: 'Design & Strategy',
-      description: 'Our talented designers and strategists bring fresh perspectives to every project.'
-    },
-    {
-      name: 'Development Team',
-      role: 'Technology & Innovation',
-      description: 'Expert developers who turn creative visions into functional digital experiences.'
-    },
-    {
-      name: 'Content Team',
-      role: 'Storytelling & Branding',
-      description: 'Master storytellers who craft compelling narratives that resonate with audiences.'
-    }
-  ]
-
   return (
     <>
       <Header />
-      <div 
-        className="pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 min-h-screen relative"
-        style={{
-          backgroundImage: `url(${bgImageUrl})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: isMobile ? 'scroll' : 'fixed'
-        }}
-      >
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/60"></div>
-        
-        {/* Content */}
-        <section className="max-w-[1200px] mx-auto relative z-10">
-          <div className="flex flex-col gap-8 sm:gap-10 md:gap-12">
-            {/* Hero Section */}
-            <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">
-              <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-bold leading-[1.1] tracking-[-0.02em] mb-4 sm:mb-6 text-white drop-shadow-lg">
-                ABOUT
-              </h1>
-              <p className="text-base sm:text-lg md:text-xl leading-relaxed text-white/90 max-w-3xl drop-shadow-md mb-6">
-                Akrion Digitals was built on the belief that creativity is more than design — it's transformation. Our mission is to design meaningful experiences that connect people, purpose, and performance.
-              </p>
-              <p className="text-base sm:text-lg leading-relaxed text-white/80 max-w-3xl drop-shadow-sm">
-                Based in Addis Ababa, Ethiopia, we're a creative digital agency that specializes in branding, web development, video production, and social media strategy. We work with forward-thinking brands and businesses to create digital experiences that make an impact.
-              </p>
-            </div>
+      <main className="min-h-screen bg-bg-dark relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="fixed top-0 right-0 w-[800px] h-[800px] bg-accent-purple/[0.04] rounded-full blur-[200px] pointer-events-none z-0" />
+        <div className="absolute inset-0 dot-grid opacity-30 z-0" />
 
-            {/* Values Section */}
-            <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-6 sm:mb-8 drop-shadow-md">
-                Our Values
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div className="relative z-10 pt-28 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-10">
+          <div className="max-w-[1200px] mx-auto flex flex-col gap-20 sm:gap-24">
+
+            {/* Hero */}
+            <section>
+              <ScrollAnimation animation="fadeUp" delay={0.1}>
+                <div className="section-label mb-4">
+                  <span className="section-dot" />
+                  Who We Are
+                </div>
+              </ScrollAnimation>
+              <ScrollAnimation animation="fadeUp" delay={0.2} duration={0.8}>
+                <h1 className="section-heading text-[clamp(3rem,8vw,5.5rem)] text-white mb-6">
+                  ABOUT
+                </h1>
+              </ScrollAnimation>
+              <ScrollAnimation animation="fadeUp" delay={0.35}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                  <p className="text-lg sm:text-xl leading-[1.8] text-white/55 font-light">
+                    Akrion Digitals was built on the belief that creativity is more than design —
+                    it&apos;s <span className="text-white/85 font-normal">transformation</span>. Our mission
+                    is to design meaningful experiences that connect people, purpose, and performance.
+                  </p>
+                  <p className="text-base sm:text-lg leading-[1.8] text-white/40 font-light">
+                    Based in Addis Ababa, Ethiopia, we specialize in branding, web development, video production,
+                    and social media strategy — creating digital experiences that make a real impact for
+                    forward-thinking brands and businesses.
+                  </p>
+                </div>
+              </ScrollAnimation>
+            </section>
+
+            {/* Values */}
+            <section>
+              <ScrollAnimation animation="fadeLeft" delay={0.1}>
+                <div className="section-label mb-4">
+                  <span className="section-dot" />
+                  What We Stand For
+                </div>
+              </ScrollAnimation>
+              <ScrollAnimation animation="fadeLeft" delay={0.2} duration={0.8}>
+                <h2 className="section-heading text-[clamp(1.8rem,4vw,3rem)] text-white mb-10">
+                  Our Values
+                </h2>
+              </ScrollAnimation>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {values.map((value, index) => (
-                  <div
-                    key={index}
-                    className="p-4 sm:p-6 rounded-xl backdrop-blur-sm bg-white/5 border border-white/10 hover:border-accent-orange/50 transition-all duration-300"
-                  >
-                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3 drop-shadow-md">
-                      {value.title}
-                    </h3>
-                    <p className="text-sm sm:text-base text-white/80 leading-relaxed drop-shadow-sm">
-                      {value.description}
-                    </p>
-                  </div>
+                  <ScrollAnimation key={index} animation="fadeUp" delay={0.1 + index * 0.08}>
+                    <div className="group flex items-start gap-4 p-6 rounded-2xl border border-white/[0.07] hover:border-white/[0.14] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
+                      <div
+                        className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                        style={{ background: `${value.accent}12`, color: value.accent, border: `1px solid ${value.accent}20` }}
+                      >
+                        {value.icon}
+                      </div>
+                      <div>
+                        <h3 className="text-base font-semibold text-white mb-1.5">{value.title}</h3>
+                        <p className="text-sm text-white/40 leading-relaxed font-light">{value.description}</p>
+                      </div>
+                    </div>
+                  </ScrollAnimation>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Team Section */}
-            <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-6 sm:mb-8 drop-shadow-md">
-                Our Team
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {/* Team */}
+            <section>
+              <ScrollAnimation animation="fadeLeft" delay={0.1}>
+                <div className="section-label mb-4">
+                  <span className="section-dot" />
+                  The People
+                </div>
+              </ScrollAnimation>
+              <ScrollAnimation animation="fadeLeft" delay={0.2} duration={0.8}>
+                <h2 className="section-heading text-[clamp(1.8rem,4vw,3rem)] text-white mb-10">
+                  Our Team
+                </h2>
+              </ScrollAnimation>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {team.map((member, index) => (
-                  <div
-                    key={index}
-                    className="p-4 sm:p-6 rounded-xl backdrop-blur-sm bg-white/5 border border-white/10 hover:border-accent-orange/50 transition-all duration-300"
-                  >
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2 drop-shadow-md">
-                      {member.name}
-                    </h3>
-                    <p className="text-sm text-accent-orange mb-3 drop-shadow-sm">
-                      {member.role}
-                    </p>
-                    <p className="text-sm sm:text-base text-white/80 leading-relaxed drop-shadow-sm">
-                      {member.description}
-                    </p>
-                  </div>
+                  <ScrollAnimation key={index} animation="fadeUp" delay={0.1 + index * 0.1}>
+                    <div className="group flex flex-col gap-4 p-6 rounded-2xl border border-white/[0.07] hover:border-white/[0.14] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 h-full">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold"
+                        style={{ background: `${member.accent}12`, color: member.accent, border: `1px solid ${member.accent}20` }}
+                      >
+                        {member.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="text-base font-semibold text-white mb-1">{member.name}</h3>
+                        <p className="text-xs font-semibold tracking-wide uppercase mb-3" style={{ color: member.accent }}>
+                          {member.role}
+                        </p>
+                        <p className="text-sm text-white/40 leading-relaxed font-light">{member.description}</p>
+                      </div>
+                    </div>
+                  </ScrollAnimation>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Mission Statement */}
-            <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6 drop-shadow-md">
-                Our Mission
-              </h2>
-              <p className="text-base sm:text-lg md:text-xl leading-relaxed text-white/90 drop-shadow-md">
-                To empower businesses and brands with creative digital solutions that drive growth, engage audiences, and create lasting impact. We're committed to excellence, innovation, and building meaningful relationships with our clients.
-              </p>
-            </div>
+            {/* Mission CTA */}
+            <ScrollAnimation animation="fadeUp" delay={0.2}>
+              <section className="relative rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+                <div className="absolute inset-0 dot-grid opacity-30" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-orange/40 to-transparent" />
+                <div className="relative z-10 p-8 sm:p-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+                  <div>
+                    <p className="section-label mb-3">
+                      <span className="section-dot" />
+                      Our Mission
+                    </p>
+                    <p className="text-base sm:text-lg leading-[1.8] text-white/50 max-w-xl font-light">
+                      To empower businesses with creative digital solutions that drive real growth,
+                      engage audiences meaningfully, and create lasting impact across Africa and beyond.
+                    </p>
+                  </div>
+                  <a href="/contact" className="btn-primary flex-shrink-0 px-8 py-4">
+                    Work With Us
+                  </a>
+                </div>
+              </section>
+            </ScrollAnimation>
+
           </div>
-        </section>
-      </div>
+        </div>
+      </main>
       <Footer />
     </>
   )

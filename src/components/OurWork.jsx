@@ -1,159 +1,163 @@
-import React, { useEffect, useState } from 'react'
-import ScrollAnimation, { ParallaxSection, StaggerContainer, StaggerItem } from './ScrollAnimation'
+import ScrollAnimation, { StaggerContainer, StaggerItem } from './ScrollAnimation'
+import TiletDivider from './TiletDivider'
+
+const GOLD = '#C9A170'
+const GOLD_LIGHT = '#E2C49A'
+
+const projects = [
+  {
+    name: 'Cassopia Tour',
+    category: 'Web Development',
+    description: 'Full-stack travel booking platform with live availability and payment integration.',
+    image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    accent: GOLD,
+  },
+  {
+    name: 'Yenege Games',
+    category: 'Game Development',
+    description: 'Immersive Ethiopian-themed mobile game with over 10K downloads on launch week.',
+    image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    accent: '#2D6B3F',
+    featured: true,
+  },
+  {
+    name: "Corno D'Africa",
+    category: 'Video Editing',
+    description: 'Documentary-style brand film showcasing Horn of Africa culture and hospitality.',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    accent: '#9E7A4A',
+  },
+  {
+    name: 'Akrion Run Campaign',
+    category: 'Campaign',
+    description: 'City-wide marathon campaign that drove 3K+ registrations and 1M+ social impressions.',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    accent: '#E2C49A',
+  },
+  {
+    name: 'Teff & Bula',
+    category: 'Brand Identity',
+    description: 'Premium brand identity for an Ethiopian F&B startup entering international markets.',
+    image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    accent: GOLD,
+  },
+]
 
 const OurWork = () => {
-  const bgImageUrl = 'https://images.unsplash.com/photo-1697311622332-184b7bb19a46?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c29ueSUyMGNhbWVyYXxlbnwwfHwwfHx8MA%3D%3D&fm=jpg&q=60&w=3000'
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-  
-  // Icon components
-  const CodeIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="16 18 22 12 16 6"></polyline>
-      <polyline points="8 6 2 12 8 18"></polyline>
-    </svg>
-  )
-
-  const VideoIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="23 7 16 12 23 17 23 7"></polygon>
-      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-    </svg>
-  )
-
-  const BrandIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"></circle>
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-      <path d="M2 12h20"></path>
-    </svg>
-  )
-
-  const GameIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="6" y1="12" x2="10" y2="12"></line>
-      <line x1="8" y1="10" x2="8" y2="14"></line>
-      <line x1="15" y1="13" x2="15.01" y2="13"></line>
-      <line x1="18" y1="11" x2="18.01" y2="11"></line>
-      <rect x="2" y="6" width="20" height="12" rx="2"></rect>
-    </svg>
-  )
-
-  const CampaignIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-      <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-      <line x1="12" y1="22.08" x2="12" y2="12"></line>
-    </svg>
-  )
-
-  const getCategoryIcon = (category) => {
-    switch(category) {
-      case 'Web Development':
-      case 'App Development':
-        return <CodeIcon />
-      case 'Video Editing':
-      case 'Motion Design':
-        return <VideoIcon />
-      case 'Brand Identity':
-      case 'Design':
-        return <BrandIcon />
-      case 'Games':
-      case 'Game Development':
-        return <GameIcon />
-      case 'Campaign':
-      case 'Marketing':
-        return <CampaignIcon />
-      default:
-        return <CodeIcon />
-    }
-  }
-
-  const projects = [
-    {
-      name: 'Cassopia Tour',
-      category: 'Web Development',
-      image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      name: 'Yenege Games',
-      category: 'Games',
-      image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      name: 'Corno D\'Africa',
-      category: 'Video Editing',
-      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      name: 'Akrion Run Campaign',
-      category: 'Campaign',
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      name: 'Teff & Bula Brand Identity',
-      category: 'Brand Identity',
-      image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    }
-  ]
-
   return (
-    <section 
-      className="py-12 sm:py-16 md:py-24 px-4 xs:px-6 sm:px-6 lg:px-8 relative"
-      style={{
-        backgroundImage: `url(${bgImageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: isMobile ? 'scroll' : 'fixed'
-      }}
-    >
-      <div className="absolute inset-0 bg-black/60"></div>
-      <ParallaxSection speed={0.25} className="max-w-[1400px] mx-auto relative z-10">
-        <ScrollAnimation animation="fadeDown" delay={0.2}>
-          <div className="backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10 mb-6 sm:mb-10 md:mb-12 inline-block">
-            <h2 className="text-[clamp(1.75rem,6vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.02em] text-white drop-shadow-lg">
-              OUR WORK
-            </h2>
+    <section className="py-20 sm:py-28 md:py-36 px-4 sm:px-6 lg:px-10 relative overflow-hidden"
+      style={{ background: '#0A1A0F' }}>
+
+      {/* Ethiopian pattern background — very subtle */}
+      <div className="absolute inset-0 eth-pattern-subtle opacity-60 pointer-events-none z-0" />
+
+      {/* Glow */}
+      <div className="absolute bottom-0 right-0 w-[700px] h-[700px] rounded-full blur-[200px] pointer-events-none z-0"
+        style={{ background: 'rgba(201,161,112,0.04)' }} />
+
+      <div className="max-w-[1400px] mx-auto relative z-10">
+
+        {/* Section header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12 sm:mb-16">
+          <div className="flex flex-col gap-4">
+            <ScrollAnimation animation="fadeLeft" delay={0.1}>
+              <div className="section-label"><span className="section-dot" />Portfolio</div>
+            </ScrollAnimation>
+            <ScrollAnimation animation="fadeLeft" delay={0.2} duration={0.8}>
+              <h2 className="section-heading text-[clamp(2.2rem,5vw,4rem)]">OUR WORK</h2>
+            </ScrollAnimation>
           </div>
-        </ScrollAnimation>
-        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8" staggerDelay={0.15}>
+          <ScrollAnimation animation="fadeRight" delay={0.3}>
+            <a href="/portfolio" className="btn-ghost text-sm px-5 py-2.5 group">
+              View All Projects
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
+                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </a>
+          </ScrollAnimation>
+        </div>
+
+        {/* Tilet Divider */}
+        <TiletDivider className="mb-12 sm:mb-16 -mt-4 opacity-70" />
+
+        {/* Project grid */}
+        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" staggerDelay={0.1}>
           {projects.map((project, index) => (
-            <StaggerItem key={index}>
-              <div className="group cursor-pointer touch-target">
-                <div className="aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden active:scale-[0.98] sm:hover:scale-[1.02] transition-all duration-300 border border-white/10 hover:border-accent-orange/50 relative">
-                  <img 
-                    src={project.image} 
+            <StaggerItem key={index} className={project.featured ? 'sm:col-span-2 lg:col-span-1' : ''}>
+              <div
+                className="group cursor-pointer relative rounded-2xl overflow-hidden transition-all duration-400"
+                style={{
+                  border: '1px solid rgba(201,161,112,0.08)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-5px)'
+                  e.currentTarget.style.borderColor = 'rgba(201,161,112,0.22)'
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(201,161,112,0.08)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.borderColor = 'rgba(201,161,112,0.08)'
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)'
+                }}
+              >
+                {/* Image */}
+                <div className={`relative overflow-hidden ${project.featured ? 'aspect-[16/9] sm:aspect-[2/1] lg:aspect-[4/5]' : 'aspect-[4/5]'}`}>
+                  <img
+                    src={project.image}
                     alt={project.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/20">
-                    <span className="text-accent-orange w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
-                      {getCategoryIcon(project.category)}
+
+                  {/* Dark gradient */}
+                  <div className="absolute inset-0"
+                    style={{ background: 'linear-gradient(to top, rgba(10,26,15,0.96) 0%, rgba(10,26,15,0.4) 55%, rgba(10,26,15,0.1) 100%)' }} />
+
+                  {/* Hover accent glow */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background: `linear-gradient(to top, ${project.accent}28, transparent 60%)` }} />
+
+                  {/* Category badge */}
+                  <div className="absolute top-4 left-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm"
+                      style={{
+                        background: `${project.accent}15`,
+                        color: project.accent,
+                        border: `1px solid ${project.accent}28`,
+                      }}>
+                      {project.category}
                     </span>
-                    <span className="text-xs sm:text-sm font-medium text-white">{project.category}</span>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                    <h3 className="text-base sm:text-xl md:text-2xl font-bold text-white drop-shadow-lg">{project.name}</h3>
+
+                  {/* Arrow on hover */}
+                  <div className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all duration-300 backdrop-blur-sm"
+                    style={{ background: 'rgba(201,161,112,0.14)', border: '1px solid rgba(201,161,112,0.22)' }}>
+                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                      <path d="M5 15L15 5M15 5H7M15 5V13" stroke={GOLD_LIGHT} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+
+                  {/* Bottom info */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                    {/* ETH pattern strip at project title */}
+                    <div className="absolute top-0 left-5 right-5 h-px eth-divider" />
+                    <h3 className="text-base sm:text-xl font-bold leading-tight mb-1 pt-3" style={{ color: '#F0EAD6' }}>
+                      {project.name}
+                    </h3>
+                    <p className="text-xs sm:text-sm leading-relaxed translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 font-light"
+                      style={{ color: 'rgba(201,161,112,0.55)' }}>
+                      {project.description}
+                    </p>
                   </div>
                 </div>
               </div>
             </StaggerItem>
           ))}
         </StaggerContainer>
-      </ParallaxSection>
+      </div>
     </section>
   )
 }
 
 export default OurWork
-

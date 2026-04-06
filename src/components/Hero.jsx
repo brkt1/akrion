@@ -1,139 +1,217 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ScrollAnimation, { ParallaxSection } from './ScrollAnimation'
+import TiletDivider from './TiletDivider'
+
+const words = ['WE BUILD.', 'WE DEVELOP.', 'WE CREATE.']
+
+const stats = [
+  { value: '50+', label: 'Projects Delivered' },
+  { value: '3+', label: 'Years of Experience' },
+  { value: '100%', label: 'Client Satisfaction' },
+  { value: '5+', label: 'Industries Served' },
+]
+
+// Brand colors
+const GOLD = '#C9A170'
+const GOLD_DARK = '#9E7A4A'
 
 const Hero = () => {
-  const bgImageUrl = 'https://images.unsplash.com/photo-1697311622332-184b7bb19a46?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c29ueSUyMGNhbWVyYXxlbnwwfHwwfHx8MA%3D%3D&fm=jpg&q=60&w=3000'
+  const [wordIndex, setWordIndex] = useState(0)
+  const [displayText, setDisplayText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
   const [isMobile, setIsMobile] = useState(false)
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  /* Typewriter effect */
   useEffect(() => {
+    const current = words[wordIndex]
+    let timeout
+
+    if (!isDeleting) {
+      if (displayText.length < current.length) {
+        timeout = setTimeout(() => setDisplayText(current.slice(0, displayText.length + 1)), 80)
+      } else {
+        timeout = setTimeout(() => setIsDeleting(true), 2000)
+      }
+    } else {
+      if (displayText.length > 0) {
+        timeout = setTimeout(() => setDisplayText(current.slice(0, displayText.length - 1)), 45)
+      } else {
+        setIsDeleting(false)
+        setWordIndex((prev) => (prev + 1) % words.length)
+      }
+    }
+    return () => clearTimeout(timeout)
+  }, [displayText, isDeleting, wordIndex])
+
+  /* Mouse parallax (desktop only) */
+  useEffect(() => {
+    if (isMobile) return
     const handleMouseMove = (e) => {
       setMousePosition({
         x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100
+        y: (e.clientY / window.innerHeight) * 100,
       })
     }
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
+  }, [isMobile])
 
   return (
-    <section 
-      className="min-h-screen pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-8 sm:pb-12 md:pb-0 relative flex items-center overflow-hidden"
-      style={{
-        backgroundImage: `url(${bgImageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: isMobile ? 'scroll' : 'fixed'
-      }}
-    >
-      {/* Gradient overlay with dynamic positioning */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-black/70 transition-opacity duration-700"
+    <section className="min-h-screen relative flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24">
+      {/* Background layer */}
+      <div
+        className="absolute inset-0 z-0"
         style={{
-          background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(255,127,62,0.15) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.8) 100%)`
+          background: `radial-gradient(ellipse at ${mousePosition.x}% ${mousePosition.y}%, rgba(201,161,112,0.10) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(45,107,63,0.12) 0%, transparent 50%), #0D1F13`,
         }}
-      ></div>
-      
+      />
+
+      {/* Dot grid overlay */}
+      <div className="absolute inset-0 z-0 dot-grid opacity-60" />
+
+      {/* Ornamental Tilet Corners */}
+      <div className="absolute top-0 left-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0" />
+      <div className="absolute top-0 right-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0 transform rotate-90" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0 transform -rotate-90" />
+      <div className="absolute bottom-0 right-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0 transform rotate-180" />
+
+
       {/* Animated gradient orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent-orange/20 rounded-full blur-[100px] animate-pulse opacity-50"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px] animate-pulse opacity-50" style={{ animationDelay: '1s' }}></div>
-      
-      {/* Floating geometric shapes */}
-      <div className="absolute top-20 right-10 w-2 h-2 bg-accent-orange/60 rounded-full animate-float"></div>
-      <div className="absolute top-40 left-20 w-3 h-3 bg-purple-400/40 rounded-full animate-float" style={{ animationDelay: '0.5s' }}></div>
-      <div className="absolute bottom-40 right-1/4 w-2 h-2 bg-cyan-400/50 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
-      
-      {/* Frosted glass content container */}
-      <ParallaxSection speed={0.3} className="w-full relative z-10 px-4 xs:px-6 sm:px-8">
-        <ScrollAnimation animation="scale" delay={0.2} duration={0.8}>
-          <div className="flex flex-col gap-5 sm:gap-8 md:gap-10 lg:gap-14 items-center text-center justify-center backdrop-blur-xl bg-gradient-to-br from-black/40 via-black/30 to-black/40 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 lg:p-16 border border-white/20 shadow-2xl relative overflow-hidden group hover:border-white/30 transition-all duration-500 w-full min-h-[calc(100vh-5rem)] sm:min-h-screen max-w-full">
-            {/* Shimmer effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            
-            {/* Subtle inner glow */}
-            <div className="absolute inset-0 bg-gradient-to-t from-accent-orange/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            
-            <ScrollAnimation animation="fadeUp" delay={0.3} duration={0.8}>
-              <div className="relative w-full">
-                <h1 className="text-[clamp(2rem,8vw,5.5rem)] sm:text-[clamp(3rem,8vw,6.5rem)] font-black leading-[1.1] sm:leading-[1.05] tracking-[-0.02em] sm:tracking-[-0.03em] text-white drop-shadow-2xl mb-4 sm:mb-6 px-2">
-                  <span className="relative inline-block">
-                    <span className="absolute inset-0 bg-gradient-to-r from-accent-orange via-purple-500 to-cyan-400 opacity-20 blur-2xl"></span>
-                    <span className="relative bg-gradient-to-r from-white via-white to-white/90 bg-clip-text text-transparent">
-                      WE BUILD.
-                    </span>
-                  </span>
-                  <br />
-                  <span className="relative inline-block">
-                    <span className="absolute inset-0 bg-gradient-to-r from-purple-500 via-accent-orange to-cyan-400 opacity-20 blur-2xl"></span>
-                    <span className="relative bg-gradient-to-r from-white via-white to-white/90 bg-clip-text text-transparent">
-                      WE DEVELOP.
-                    </span>
-                  </span>
-                  <br />
-                  <span className="relative inline-block">
-                    <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-accent-orange to-purple-500 opacity-20 blur-2xl"></span>
-                    <span className="relative bg-gradient-to-r from-white via-white to-white/90 bg-clip-text text-transparent">
-                      WE CREATE.
-                    </span>
-                  </span>
-                </h1>
-                {/* Accent line */}
-                <div className="mx-auto mt-6 w-24 h-1 bg-gradient-to-r from-transparent via-accent-orange to-transparent rounded-full"></div>
-              </div>
-            </ScrollAnimation>
-            
-            <ScrollAnimation animation="fadeUp" delay={0.5} duration={0.8}>
-              <p className="text-[clamp(0.95rem,4vw,1.4rem)] sm:text-[clamp(1.1rem,2vw,1.6rem)] leading-relaxed sm:leading-relaxed text-white/95 max-w-4xl drop-shadow-lg font-light tracking-wide px-4 sm:px-6">
-                Akrion Digitals is a creative agency transforming imagination into experience. We blend design, storytelling, and technology to craft visuals that inspire and digital products that deliver results.
-              </p>
-            </ScrollAnimation>
-            
-            <ScrollAnimation animation="fadeUp" delay={0.7} duration={0.8}>
-              <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-4 md:gap-5 justify-center w-full max-w-full px-2 sm:px-0 pt-2">
-                <Link 
-                  to="/about" 
-                  className="group/btn relative inline-flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-accent-orange to-[#FF6B2E] text-white border-none px-8 sm:px-8 md:px-10 py-4 sm:py-4 md:py-5 rounded-xl sm:rounded-xl md:rounded-2xl text-base sm:text-base md:text-lg font-semibold cursor-pointer transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 sm:hover:shadow-[0_20px_40px_rgba(255,127,62,0.4)] overflow-hidden backdrop-blur-sm w-full sm:w-auto touch-target min-h-[48px] sm:min-h-0"
+      <div className="absolute top-1/4 left-1/5 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse" style={{ background: 'rgba(201,161,112,0.07)' }} />
+      <div
+        className="absolute bottom-1/4 right-1/5 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse"
+        style={{ background: 'rgba(45,107,63,0.10)', animationDelay: '2s' }}
+      />
+
+      {/* Floating particles — gold dots and Tilet motifs */}
+      {[...Array(8)].map((_, i) => {
+        const isTilet = i >= 6;
+        return (
+          <div
+            key={i}
+            className="absolute rounded-full animate-float pointer-events-none"
+            style={{
+              width: isTilet ? '40px' : `${[2, 3, 2, 4, 2, 3][i]}px`,
+              height: isTilet ? '40px' : `${[2, 3, 2, 4, 2, 3][i]}px`,
+              background: isTilet ? 'none' : [GOLD, '#2D6B3F', GOLD, GOLD_DARK, '#2D6B3F', GOLD][i],
+              backgroundImage: isTilet ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L38 20 L20 38 L2 20 Z' stroke='%23C9A170' stroke-width='0.5' fill='none' opacity='0.3'/%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23C9A170' opacity='0.4'/%3E%3C/svg%3E")` : 'none',
+              top: [`15%`, `30%`, `65%`, `20%`, `75%`, `45%`, `25%`, `80%`][i],
+              left: [`10%`, `85%`, `75%`, `45%`, `15%`, `60%`, `80%`, `20%`][i],
+              opacity: isTilet ? 0.4 : 0.55,
+              animationDelay: `${i * 0.8}s`,
+              animationDuration: isTilet ? '12s' : '6s',
+              zIndex: 1
+            }}
+          />
+        );
+      })}
+
+      {/* Main content */}
+      <ParallaxSection speed={0.15} className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="flex flex-col items-center text-center gap-6 sm:gap-8 lg:gap-10">
+
+          {/* Label chip */}
+          <ScrollAnimation animation="fadeDown" delay={0.1} duration={0.6}>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.12em] uppercase" style={{ border: '1px solid rgba(201,161,112,0.2)', background: 'rgba(201,161,112,0.06)', color: 'rgba(201,161,112,0.8)' }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#C9A170' }} />
+              Creative Agency · Addis Ababa, Ethiopia
+            </div>
+          </ScrollAnimation>
+
+          {/* Headline with typewriter */}
+          <ScrollAnimation animation="fadeUp" delay={0.2} duration={0.8}>
+            <h1 className="section-heading text-[clamp(2.8rem,9vw,7rem)] text-white leading-[1.0] tracking-[-0.04em]">
+              <span
+                className="relative inline-block gradient-text-gold"
+                style={{ minWidth: '2ch' }}
+              >
+                {displayText}
+                <span className="animate-blink" style={{ color: '#C9A170' }}>|</span>
+              </span>
+            </h1>
+          </ScrollAnimation>
+
+          {/* Sub-headline */}
+          <ScrollAnimation animation="fadeUp" delay={0.35} duration={0.8}>
+            <p className="text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed text-white/55 max-w-2xl font-light tracking-[-0.01em]">
+              We&apos;re a creative agency transforming imagination into experience — blending{' '}
+              <span className="text-white/80 font-normal">design</span>,{' '}
+              <span className="text-white/80 font-normal">storytelling</span>, and{' '}
+              <span className="text-white/80 font-normal">technology</span> to build digital products that deliver results.
+            </p>
+          </ScrollAnimation>
+
+          {/* CTA Buttons */}
+          <ScrollAnimation animation="fadeUp" delay={0.5} duration={0.7}>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <Link
+                to="/portfolio"
+                className="btn-primary text-base px-8 py-4 rounded-2xl group min-h-[52px]"
+              >
+                View Our Work
+                <svg
+                  width="18" height="18"
+                  viewBox="0 0 20 20" fill="none"
+                  className="transition-transform duration-300 group-hover:translate-x-1"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></span>
-                  <span className="relative z-10 flex items-center gap-2">
-                    <span>Watch Our Story</span>
-                    <svg width="18" height="18" className="sm:w-5 sm:h-5 transition-transform duration-300 group-hover/btn:translate-x-1" viewBox="0 0 20 20" fill="none">
-                      <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
-                </Link>
-                <Link 
-                  to="/contact" 
-                  className="group/btn2 relative inline-flex items-center justify-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-md text-white border-2 border-white/40 px-8 sm:px-8 md:px-10 py-4 sm:py-4 md:py-5 rounded-xl sm:rounded-xl md:rounded-2xl text-base sm:text-base md:text-lg font-semibold cursor-pointer transition-all duration-300 active:scale-95 sm:hover:bg-white/20 sm:hover:border-white/60 sm:hover:-translate-y-1 sm:hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] overflow-hidden w-full sm:w-auto touch-target min-h-[48px] sm:min-h-0"
+                  <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+              <a
+                href="https://wa.me/251976601172"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-ghost text-base px-8 py-4 rounded-2xl min-h-[52px]"
+              >
+                Contact Us
+              </a>
+            </div>
+          </ScrollAnimation>
+
+          {/* Premium Ethiopian Tilet Divider */}
+          <TiletDivider className="py-2 opacity-80" />
+
+          {/* Stats row */}
+          <ScrollAnimation animation="fadeUp" delay={0.75} duration={0.7}>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden" style={{ background: 'rgba(201,161,112,0.08)', border: '1px solid rgba(201,161,112,0.12)' }}>
+              {stats.map((stat, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center gap-0.5 px-6 sm:px-8 py-5 transition-all duration-300 hover:bg-white/[0.02]"
+                  style={{ 
+                    background: 'rgba(201,161,112,0.03)',
+                    backdropFilter: 'blur(10px)',
+                    borderRight: i < stats.length - 1 ? '1px solid rgba(201,161,112,0.08)' : 'none'
+                  }}
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn2:translate-x-[100%] transition-transform duration-700"></span>
-                  <span className="relative z-10">Start a Project</span>
-                </Link>
-              </div>
-            </ScrollAnimation>
-          </div>
-        </ScrollAnimation>
-        
-        <ParallaxSection speed={0.5}>
-          <div className="absolute -bottom-[5%] sm:-bottom-[10%] left-0 right-0 text-[clamp(4rem,12vw,14rem)] font-black text-white/[0.03] tracking-[-0.05em] z-[1] pointer-events-none leading-[0.8] text-center select-none">
-            AKRION
-          </div>
-        </ParallaxSection>
+                  <span className="counter-text text-2xl sm:text-3xl font-bold" style={{ color: '#C9A170', textShadow: '0 0 20px rgba(201,161,112,0.2)' }}>{stat.value}</span>
+                  <span className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-center leading-tight" style={{ color: 'rgba(201,161,112,0.4)' }}>
+                    {stat.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </ScrollAnimation>
+
+        </div>
       </ParallaxSection>
+
+      {/* Scroll hint */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-40">
+        <span className="text-[10px] tracking-[0.2em] uppercase font-medium" style={{ color: '#C9A170' }}>Scroll</span>
+        <div className="w-px h-12" style={{ background: 'linear-gradient(to bottom, rgba(201,161,112,0.5), transparent)' }} />
+      </div>
     </section>
   )
 }
 
 export default Hero
-

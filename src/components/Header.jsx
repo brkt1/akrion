@@ -1,11 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import logo from '../Artboard 2.png'
+
+const navItems = [
+  { label: 'Home', path: '/' },
+  { label: 'About', path: '/about' },
+  { label: 'Services', path: '/services' },
+  { label: 'Portfolio', path: '/portfolio' },
+  { label: 'Blog', path: '/blog' },
+  { label: 'Contact', path: '/contact' },
+]
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [headerHeight, setHeaderHeight] = useState(88)
+  const [scrolled, setScrolled] = useState(false)
+  const [headerHeight, setHeaderHeight] = useState(72)
   const headerRef = useRef(null)
+  const location = useLocation()
 
   useEffect(() => {
     const updateHeaderHeight = () => {
@@ -18,57 +29,159 @@ const Header = () => {
     return () => window.removeEventListener('resize', updateHeaderHeight)
   }, [])
 
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 24)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Close menu on navigation
+  useEffect(() => {
+    setIsMenuOpen(false)
+  }, [location.pathname])
+
+  const isActive = (path) => {
+    if (path === '/') return location.pathname === '/'
+    return location.pathname.startsWith(path)
+  }
+
   return (
     <>
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 px-4 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8 z-[1000] bg-bg-dark/90 backdrop-blur-[10px] w-full max-w-full overflow-hidden border-b border-white/5">
-        <div className="flex justify-between items-center max-w-[1400px] mx-auto relative w-full">
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 bg-[rgba(26,26,26,0.95)] backdrop-blur-[10px] px-3 sm:px-3 md:px-4 py-2 sm:py-1.5 md:py-2 rounded-[50px] hover:opacity-90 hover:bg-[rgba(26,26,26,1)] transition-all shadow-lg touch-target min-h-[44px]">
-            <img src={logo} alt="Akrion Digitals" className="h-7 sm:h-10 md:h-14 lg:h-16 w-auto max-w-[100px] xs:max-w-[120px] sm:max-w-[160px] md:max-w-[200px] lg:max-w-none" />
+      <header
+        ref={headerRef}
+        className={`fixed top-0 left-0 right-0 z-[1000] w-full transition-all duration-500 ${
+          scrolled
+            ? 'py-3 border-b border-white/[0.07]'
+            : 'py-4 border-b border-transparent'
+        }`}
+        style={{
+          background: scrolled
+            ? 'rgba(17,17,17,0.92)'
+            : 'rgba(17,17,17,0.5)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        }}
+      >
+        <div className="flex justify-between items-center max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex items-center gap-2 touch-target group"
+            aria-label="Akrion Digitals Home"
+          >
+            <img
+              src={logo}
+              alt="Akrion Digitals"
+              className="h-8 sm:h-10 md:h-12 w-auto transition-all duration-300 group-hover:opacity-80"
+            />
           </Link>
-          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            <Link to="/" className="text-white hover:text-accent-orange transition-colors text-sm lg:text-base py-2 px-1 touch-target min-h-[44px] flex items-center">Home</Link>
-            <Link to="/about" className="text-white hover:text-accent-orange transition-colors text-sm lg:text-base py-2 px-1 touch-target min-h-[44px] flex items-center">About</Link>
-            <Link to="/services" className="text-white hover:text-accent-orange transition-colors text-sm lg:text-base py-2 px-1 touch-target min-h-[44px] flex items-center">Services</Link>
-            <Link to="/portfolio" className="text-white hover:text-accent-orange transition-colors text-sm lg:text-base py-2 px-1 touch-target min-h-[44px] flex items-center">Portfolio</Link>
-            <Link to="/blog" className="text-white hover:text-accent-orange transition-colors text-sm lg:text-base py-2 px-1 touch-target min-h-[44px] flex items-center">Blog</Link>
-            <Link to="/contact" className="text-white hover:text-accent-orange transition-colors text-sm lg:text-base py-2 px-1 touch-target min-h-[44px] flex items-center">Contact</Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1" role="navigation" aria-label="Main navigation">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive(item.path)
+                    ? 'text-accent-orange bg-accent-orange/8'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              to="/contact"
+              className="ml-3 btn-primary text-sm px-5 py-2.5"
+            >
+              Let&apos;s Talk
+            </Link>
           </nav>
-          <button 
-            className="bg-transparent border-none cursor-pointer flex flex-col gap-1.5 p-3 md:hidden z-50 relative touch-target min-h-[44px] min-w-[44px] justify-center items-center rounded-lg active:bg-white/10 transition-colors" 
-            aria-label="Toggle menu"
+
+          {/* Mobile Hamburger */}
+          <button
+            className="flex flex-col gap-[5px] p-2.5 md:hidden z-50 relative touch-target rounded-lg hover:bg-white/5 transition-colors"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            <span className={`w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
-            <span className={`w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
-            <span className={`w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+            <span
+              className={`block w-5 h-[1.5px] bg-white rounded-full transition-all duration-300 origin-center ${
+                isMenuOpen ? 'rotate-45 translate-y-[6.5px]' : ''
+              }`}
+            />
+            <span
+              className={`block w-5 h-[1.5px] bg-white rounded-full transition-all duration-300 ${
+                isMenuOpen ? 'opacity-0 scale-x-0' : ''
+              }`}
+            />
+            <span
+              className={`block w-5 h-[1.5px] bg-white rounded-full transition-all duration-300 origin-center ${
+                isMenuOpen ? '-rotate-45 -translate-y-[6.5px]' : ''
+              }`}
+            />
           </button>
         </div>
       </header>
+
+      {/* Mobile Menu Backdrop */}
       {isMenuOpen && (
-        <>
-          <div 
-            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000]"
-            style={{ top: `${headerHeight}px` }}
-            onClick={() => setIsMenuOpen(false)}
-            aria-hidden="true"
-          />
-          <nav 
-            className="md:hidden fixed left-0 right-0 bg-bg-dark/98 backdrop-blur-[15px] px-6 py-8 flex flex-col gap-2 shadow-2xl z-[1001] w-full max-w-full overflow-y-auto border-t border-white/10"
-            style={{ top: `${headerHeight}px`, maxHeight: `calc(100vh - ${headerHeight}px)` }}
-          >
-            <Link to="/" className="text-white hover:text-accent-orange transition-colors text-lg py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 touch-target min-h-[48px] flex items-center" onClick={() => setIsMenuOpen(false)}>Home</Link>
-            <Link to="/about" className="text-white hover:text-accent-orange transition-colors text-lg py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 touch-target min-h-[48px] flex items-center" onClick={() => setIsMenuOpen(false)}>About</Link>
-            <Link to="/services" className="text-white hover:text-accent-orange transition-colors text-lg py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 touch-target min-h-[48px] flex items-center" onClick={() => setIsMenuOpen(false)}>Services</Link>
-            <Link to="/portfolio" className="text-white hover:text-accent-orange transition-colors text-lg py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 touch-target min-h-[48px] flex items-center" onClick={() => setIsMenuOpen(false)}>Portfolio</Link>
-            <Link to="/blog" className="text-white hover:text-accent-orange transition-colors text-lg py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 touch-target min-h-[48px] flex items-center" onClick={() => setIsMenuOpen(false)}>Blog</Link>
-            <Link to="/contact" className="text-white hover:text-accent-orange transition-colors text-lg py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 touch-target min-h-[48px] flex items-center" onClick={() => setIsMenuOpen(false)}>Contact</Link>
-          </nav>
-        </>
+        <div
+          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[998]"
+          style={{ top: `${headerHeight}px` }}
+          onClick={() => setIsMenuOpen(false)}
+          aria-hidden="true"
+        />
       )}
+
+      {/* Mobile Menu Panel */}
+      <nav
+        className={`md:hidden fixed left-0 right-0 z-[999] transition-all duration-400 ease-out ${
+          isMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'
+        }`}
+        style={{
+          top: `${headerHeight}px`,
+          background: 'rgba(15,15,15,0.98)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          maxHeight: `calc(100vh - ${headerHeight}px)`,
+          overflowY: 'auto',
+        }}
+        role="navigation"
+        aria-label="Mobile navigation"
+      >
+        <div className="px-4 py-6 flex flex-col gap-1">
+          {navItems.map((item, i) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setIsMenuOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium transition-all duration-200 ${
+                isActive(item.path)
+                  ? 'text-accent-orange bg-accent-orange/10 border border-accent-orange/15'
+                  : 'text-white/80 hover:text-white hover:bg-white/[0.06]'
+              }`}
+              style={{ transitionDelay: isMenuOpen ? `${i * 30}ms` : '0ms' }}
+            >
+              {isActive(item.path) && (
+                <span className="w-1.5 h-1.5 rounded-full bg-accent-orange flex-shrink-0" />
+              )}
+              {item.label}
+            </Link>
+          ))}
+          <Link
+            to="/contact"
+            onClick={() => setIsMenuOpen(false)}
+            className="mt-3 btn-primary justify-center"
+          >
+            Let&apos;s Talk
+          </Link>
+        </div>
+      </nav>
     </>
   )
 }
 
 export default Header
-

@@ -1,8 +1,21 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import ScrollAnimation, { StaggerContainer, StaggerItem } from '../components/ScrollAnimation'
 import { portfolioAPI } from '../lib/api/portfolio'
 import { uploadAPI } from '../lib/api/upload'
+
+const GOLD = '#C9A170'
+const GOLD_LIGHT = '#E2C49A'
+const CARD_BG = 'rgba(19,32,25,0.9)'
+const CARD_BORDER = 'rgba(201,161,112,0.1)'
+const INPUT_STYLE = {
+  width: '100%', padding: '12px 16px',
+  background: 'rgba(201,161,112,0.05)',
+  border: '1px solid rgba(201,161,112,0.15)',
+  borderRadius: '12px', color: '#F0EAD6', fontSize: '14px',
+  outline: 'none', transition: 'border-color 0.2s, background 0.2s',
+}
 
 const Portfolio = () => {
   const [projects, setProjects] = useState([])
@@ -13,407 +26,247 @@ const Portfolio = () => {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    image: '',
-    category: '',
-    link: '',
-    tags: ''
-  })
+  const [formData, setFormData] = useState({ title: '', description: '', image: '', category: '', link: '', tags: '' })
 
-  // Load projects from Supabase on mount
   useEffect(() => {
     loadProjects()
-    // Check if admin mode is enabled
     const adminStatus = localStorage.getItem('portfolioAdminMode')
     setIsAdmin(adminStatus === 'true')
   }, [])
 
   const loadProjects = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await portfolioAPI.getAll()
-      setProjects(data)
-    } catch (err) {
-      console.error('Error loading projects:', err)
-      setError('Failed to load portfolio projects. Please try again later.')
-    } finally {
-      setLoading(false)
-    }
+    try { setLoading(true); setError(null); const data = await portfolioAPI.getAll(); setProjects(data) }
+    catch (err) { console.error(err); setError('Failed to load portfolio projects.') }
+    finally { setLoading(false) }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      setLoading(true)
-      setError(null)
-      if (editingProject) {
-        // Update existing project
-        await portfolioAPI.update(editingProject.id, formData)
-      } else {
-        // Create new project
-        await portfolioAPI.create(formData)
-      }
+      setLoading(true); setError(null)
+      if (editingProject) { await portfolioAPI.update(editingProject.id, formData) }
+      else { await portfolioAPI.create(formData) }
       await loadProjects()
-      setFormData({
-        title: '',
-        description: '',
-        image: '',
-        category: '',
-        link: '',
-        tags: ''
-      })
-      setShowForm(false)
-      setIsEditing(false)
-      setEditingProject(null)
-    } catch (err) {
-      console.error('Error saving project:', err)
-      setError('Failed to save project. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+      setFormData({ title: '', description: '', image: '', category: '', link: '', tags: '' })
+      setShowForm(false); setIsEditing(false); setEditingProject(null)
+    } catch (err) { console.error(err); setError('Failed to save project.') }
+    finally { setLoading(false) }
   }
 
   const handleEdit = (project) => {
     setEditingProject(project)
-    setFormData({
-      title: project.title,
-      description: project.description,
-      image: project.image || '',
-      category: project.category || '',
-      link: project.link || '',
-      tags: project.tags || ''
-    })
-    setShowForm(true)
-    setIsEditing(true)
+    setFormData({ title: project.title, description: project.description, image: project.image||'', category: project.category||'', link: project.link||'', tags: project.tags||'' })
+    setShowForm(true); setIsEditing(true)
   }
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
-      try {
-        setLoading(true)
-        setError(null)
-        await portfolioAPI.delete(id)
-        await loadProjects()
-      } catch (err) {
-        console.error('Error deleting project:', err)
-        setError('Failed to delete project. Please try again.')
-      } finally {
-        setLoading(false)
-      }
+    if (window.confirm('Delete this project?')) {
+      try { setLoading(true); await portfolioAPI.delete(id); await loadProjects() }
+      catch (err) { setError('Failed to delete project.') }
+      finally { setLoading(false) }
     }
   }
 
   const toggleAdmin = () => {
-    const newAdminStatus = !isAdmin
-    setIsAdmin(newAdminStatus)
-    localStorage.setItem('portfolioAdminMode', newAdminStatus.toString())
+    const next = !isAdmin; setIsAdmin(next)
+    localStorage.setItem('portfolioAdminMode', next.toString())
   }
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file')
-      return
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB')
-      return
-    }
-
+    const file = e.target.files?.[0]; if (!file) return
+    if (!file.type.startsWith('image/')) { setError('Please upload an image file'); return }
+    if (file.size > 5 * 1024 * 1024) { setError('Image size must be less than 5MB'); return }
     try {
-      setUploading(true)
-      setError(null)
+      setUploading(true); setError(null)
       const imageUrl = await uploadAPI.uploadImage(file, 'portfolio')
-      setFormData({
-        ...formData,
-        image: imageUrl
-      })
-    } catch (err) {
-      console.error('Error uploading image:', err)
-      setError('Failed to upload image. Please try again.')
-    } finally {
-      setUploading(false)
-    }
+      setFormData({ ...formData, image: imageUrl })
+    } catch (err) { setError('Failed to upload image.') }
+    finally { setUploading(false) }
   }
 
   return (
     <>
       <Header />
-      <div className="pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <section className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-10 md:mb-12">
-            <div className="flex justify-between items-start flex-wrap gap-4">
-              <div>
-                <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-bold leading-[1.1] tracking-[-0.02em] mb-4">
-                  PORTFOLIO
-                </h1>
-                <p className="text-base sm:text-lg md:text-xl leading-relaxed text-text-gray max-w-3xl">
+      <main className="min-h-screen relative overflow-hidden" style={{ background: '#0D1F13' }}>
+        <div className="fixed inset-0 dot-grid opacity-30 z-0 pointer-events-none" />
+        <div className="fixed bottom-0 right-0 w-[600px] h-[600px] rounded-full blur-[160px] z-0 pointer-events-none" style={{ background: 'rgba(201,161,112,0.04)' }} />
+
+        <div className="relative z-10 pt-28 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-10">
+          <div className="max-w-[1400px] mx-auto flex flex-col gap-10 sm:gap-14">
+
+            {/* Header */}
+            <div>
+              <ScrollAnimation animation="fadeUp" delay={0.1}>
+                <div className="section-label mb-4"><span className="section-dot" />Our Projects</div>
+              </ScrollAnimation>
+              <ScrollAnimation animation="fadeUp" delay={0.2} duration={0.8}>
+                <h1 className="section-heading text-[clamp(3rem,8vw,5.5rem)]">PORTFOLIO</h1>
+              </ScrollAnimation>
+              <ScrollAnimation animation="fadeUp" delay={0.35}>
+                <p className="text-lg leading-relaxed mt-4 max-w-2xl font-light" style={{ color: 'rgba(201,161,112,0.5)' }}>
                   Explore our creative work and the stories behind each project.
                 </p>
+              </ScrollAnimation>
+              <div className="flex items-center gap-4 mt-6 flex-wrap">
+                {isAdmin && (
+                  <button
+                    onClick={() => { setShowForm(!showForm); if (showForm) { setIsEditing(false); setEditingProject(null); setFormData({ title:'',description:'',image:'',category:'',link:'',tags:'' }) }}}
+                    className="btn-primary text-sm px-5 py-2.5"
+                  >
+                    {showForm ? 'Cancel' : '+ New Project'}
+                  </button>
+                )}
+                <button onClick={toggleAdmin} className="text-xs font-mono" style={{ color: 'rgba(201,161,112,0.3)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = GOLD}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(201,161,112,0.3)'}
+                >
+                  {isAdmin ? '[ exit admin ]' : '[ admin ]'}
+                </button>
               </div>
-              {isAdmin && (
-                <button
-                  onClick={() => {
-                    setShowForm(!showForm)
-                    if (showForm) {
-                      setIsEditing(false)
-                      setEditingProject(null)
-                      setFormData({
-                        title: '',
-                        description: '',
-                        image: '',
-                        category: '',
-                        link: '',
-                        tags: ''
-                      })
-                    }
-                  }}
-                  className="bg-accent-orange text-white px-6 py-3 rounded-lg font-medium hover:bg-[#FF6B2E] transition-colors"
-                >
-                  {showForm ? 'Cancel' : '+ New Project'}
-                </button>
-              )}
             </div>
-            <button
-              onClick={toggleAdmin}
-              className="self-start text-sm text-text-gray hover:text-accent-orange transition-colors"
-            >
-              {isAdmin ? 'Exit Admin Mode' : 'Enter Admin Mode'}
-            </button>
-          </div>
 
-          {/* Create/Edit Form */}
-          {showForm && (
-            <div className="mb-8 sm:mb-10 md:mb-12 backdrop-blur-md bg-black/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/10">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-white">
-                {isEditing ? 'Edit Project' : 'Create New Project'}
-              </h2>
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <div>
-                    <label className="block text-sm text-text-gray mb-2">Title</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-accent-orange transition-colors"
-                      placeholder="Project title"
-                      required
-                    />
+            {/* Admin form */}
+            {showForm && (
+              <div className="p-6 sm:p-8 rounded-2xl border" style={{ background: CARD_BG, borderColor: 'rgba(201,161,112,0.2)', backdropFilter: 'blur(20px)' }}>
+                <h2 className="text-xl font-bold mb-6" style={{ color: '#F0EAD6' }}>{isEditing ? 'Edit Project' : 'Create New Project'}</h2>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { name: 'title', placeholder: 'Project title', label: 'Title', required: true },
+                      { name: 'category', placeholder: 'e.g. Web Development', label: 'Category' },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <label className="block text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: 'rgba(201,161,112,0.45)' }}>{f.label}</label>
+                        <input type="text" name={f.name} value={formData[f.name]} onChange={handleChange} style={INPUT_STYLE} placeholder={f.placeholder} required={f.required}
+                          onFocus={e => e.currentTarget.style.borderColor = GOLD} onBlur={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.15)'} />
+                      </div>
+                    ))}
                   </div>
                   <div>
-                    <label className="block text-sm text-text-gray mb-2">Category</label>
-                    <input
-                      type="text"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-accent-orange transition-colors"
-                      placeholder="Category"
-                    />
+                    <label className="block text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: 'rgba(201,161,112,0.45)' }}>Description</label>
+                    <textarea name="description" value={formData.description} onChange={handleChange} rows="3" style={INPUT_STYLE} placeholder="Project description" required
+                      onFocus={e => e.currentTarget.style.borderColor = GOLD} onBlur={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.15)'} />
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-text-gray mb-2">Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows="3"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-accent-orange transition-colors resize-none"
-                    placeholder="Project description"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-text-gray mb-2">Image</label>
-                  <div className="flex flex-col gap-3">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploading}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-orange file:text-white hover:file:bg-[#FF6B2E] file:cursor-pointer cursor-pointer disabled:opacity-50"
-                    />
-                    {uploading && (
-                      <p className="text-sm text-accent-orange">Uploading image...</p>
-                    )}
-                    {formData.image && (
-                      <div className="mt-2">
-                        <p className="text-xs text-text-gray mb-2">Current image:</p>
-                        <img 
-                          src={formData.image} 
-                          alt="Preview" 
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <input
-                          type="url"
-                          name="image"
-                          value={formData.image}
-                          onChange={handleChange}
-                          className="mt-2 w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm placeholder-white/50 focus:outline-none focus:border-accent-orange transition-colors"
-                          placeholder="Or enter image URL"
-                        />
-                      </div>
-                    )}
-                    {!formData.image && (
-                      <input
-                        type="url"
-                        name="image"
-                        value={formData.image}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-accent-orange transition-colors"
-                        placeholder="Or enter image URL"
-                      />
+                  <div>
+                    <label className="block text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: 'rgba(201,161,112,0.45)' }}>Image</label>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="w-full text-sm cursor-pointer"
+                      style={{ ...INPUT_STYLE, padding: '10px 16px' }} />
+                    {uploading && <p className="text-xs mt-2" style={{ color: GOLD }}>Uploading…</p>}
+                    {!uploading && (
+                      <input type="url" name="image" value={formData.image} onChange={handleChange} style={{ ...INPUT_STYLE, marginTop: '8px' }} placeholder="Or paste image URL"
+                        onFocus={e => e.currentTarget.style.borderColor = GOLD} onBlur={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.15)'} />
                     )}
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm text-text-gray mb-2">Project Link (optional)</label>
-                  <input
-                    type="url"
-                    name="link"
-                    value={formData.link}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-accent-orange transition-colors"
-                    placeholder="https://example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-text-gray mb-2">Tags (comma separated)</label>
-                  <input
-                    type="text"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-accent-orange transition-colors"
-                    placeholder="Tag1, Tag2, Tag3"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="bg-accent-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-[#FF6B2E] transition-colors self-start"
-                >
-                  {isEditing ? 'Update Project' : 'Create Project'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-              {error}
-            </div>
-          )}
-
-          {/* Portfolio Grid */}
-          {loading && projects.length === 0 ? (
-            <div className="text-center py-12 text-text-gray">
-              <p className="text-lg">Loading portfolio projects...</p>
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-12 text-text-gray">
-              <p className="text-lg">No projects yet. Create your first project!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="group cursor-pointer"
-                >
-                  <div className="aspect-[4/5] bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] rounded-xl sm:rounded-2xl overflow-hidden hover:scale-[1.02] transition-transform duration-300 border border-[rgba(255,255,255,0.05)] hover:border-accent-orange/50 relative">
-                    {project.image && (
-                      <div className="absolute inset-0">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-300"
-                        />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { name: 'link', placeholder: 'https://example.com', label: 'Project Link' },
+                      { name: 'tags', placeholder: 'Tag1, Tag2, Tag3', label: 'Tags (comma separated)' },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <label className="block text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: 'rgba(201,161,112,0.45)' }}>{f.label}</label>
+                        <input type="text" name={f.name} value={formData[f.name]} onChange={handleChange} style={INPUT_STYLE} placeholder={f.placeholder}
+                          onFocus={e => e.currentTarget.style.borderColor = GOLD} onBlur={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.15)'} />
                       </div>
-                    )}
-                    <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-end z-10">
-                      {project.category && (
-                        <span className="inline-block text-xs sm:text-sm text-accent-orange mb-2 font-medium">
-                          {project.category}
-                        </span>
-                      )}
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3 group-hover:text-accent-orange transition-colors">
-                        {project.title}
-                      </h3>
-                      <p className="text-sm sm:text-base text-text-gray mb-4">
-                        {project.description}
-                      </p>
-                      {project.tags && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tags.split(',').map((tag, idx) => (
-                            <span
-                              key={idx}
-                              className="text-xs text-text-gray bg-white/5 px-2 py-1 rounded"
-                            >
-                              {tag.trim()}
+                    ))}
+                  </div>
+                  <button type="submit" className="btn-primary self-start px-7 py-3">{isEditing ? 'Update Project' : 'Create Project'}</button>
+                </form>
+              </div>
+            )}
+
+            {error && <div className="p-4 rounded-xl text-red-400 text-sm" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>{error}</div>}
+
+            {/* Grid */}
+            {loading && projects.length === 0 ? (
+              <div className="text-center py-16 text-sm" style={{ color: 'rgba(201,161,112,0.4)' }}>Loading portfolio…</div>
+            ) : projects.length === 0 ? (
+              <div className="text-center py-16 text-sm" style={{ color: 'rgba(201,161,112,0.4)' }}>No projects yet. {isAdmin && 'Create your first project!'}</div>
+            ) : (
+              <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" staggerDelay={0.08}>
+                {projects.map((project) => (
+                  <StaggerItem key={project.id}>
+                    <div className="group cursor-pointer relative rounded-2xl overflow-hidden border transition-all duration-400 hover:-translate-y-1 hover:shadow-2xl"
+                      style={{ borderColor: CARD_BORDER, background: CARD_BG }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.25)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = CARD_BORDER}
+                    >
+                      {/* Image */}
+                      <div className="aspect-[4/5] relative overflow-hidden">
+                        {project.image ? (
+                          <>
+                            <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,26,15,0.95) 0%, rgba(10,26,15,0.4) 50%, transparent 100%)' }} />
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(201,161,112,0.05)' }}>
+                            <span className="text-4xl font-display font-black" style={{ color: 'rgba(201,161,112,0.15)' }}>{project.title?.charAt(0)}</span>
+                          </div>
+                        )}
+
+                        {/* Category badge */}
+                        {project.category && (
+                          <div className="absolute top-4 left-4">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm"
+                              style={{ background: 'rgba(201,161,112,0.15)', color: GOLD_LIGHT, border: `1px solid rgba(201,161,112,0.25)` }}>
+                              {project.category}
                             </span>
-                          ))}
+                          </div>
+                        )}
+
+                        {/* Arrow */}
+                        <div className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
+                          style={{ background: 'rgba(201,161,112,0.15)', border: `1px solid ${CARD_BORDER}`, backdropFilter: 'blur(8px)' }}>
+                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 15L15 5M15 5H7M15 5V13" stroke={GOLD_LIGHT} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
                         </div>
-                      )}
-                      {project.link && (
-                        <a
-                          href={project.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-sm text-accent-orange hover:underline inline-block"
-                        >
-                          View Project →
-                        </a>
-                      )}
-                      {isAdmin && (
-                        <div className="flex gap-2 mt-4 pt-4 border-t border-white/10">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEdit(project)
-                            }}
-                            className="text-sm text-accent-orange hover:underline"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(project.id)
-                            }}
-                            className="text-sm text-red-400 hover:underline"
-                          >
-                            Delete
-                          </button>
+
+                        {/* Bottom text */}
+                        <div className="absolute bottom-0 left-0 right-0 p-5">
+                          <h3 className="text-base sm:text-lg font-bold mb-1 leading-tight" style={{ color: '#F0EAD6' }}>{project.title}</h3>
+                          <p className="text-xs leading-relaxed opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" style={{ color: 'rgba(201,161,112,0.6)' }}>
+                            {project.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Tags + admin */}
+                      {(project.tags || isAdmin) && (
+                        <div className="px-5 py-4" style={{ borderTop: `1px solid ${CARD_BORDER}` }}>
+                          {project.tags && (
+                            <div className="flex flex-wrap gap-1.5 mb-3">
+                              {project.tags.split(',').map((tag, idx) => (
+                                <span key={idx} className="tag-pill">{tag.trim()}</span>
+                              ))}
+                            </div>
+                          )}
+                          {project.link && (
+                            <a href={project.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                              className="text-xs font-semibold tracking-wide uppercase transition-colors" style={{ color: GOLD }}
+                              onMouseEnter={e => e.currentTarget.style.color = GOLD_LIGHT}
+                              onMouseLeave={e => e.currentTarget.style.color = GOLD}
+                            >
+                              View Project →
+                            </a>
+                          )}
+                          {isAdmin && (
+                            <div className="flex gap-3 mt-3 pt-3" style={{ borderTop: `1px solid ${CARD_BORDER}` }}>
+                              <button onClick={(e) => { e.stopPropagation(); handleEdit(project) }} className="text-xs" style={{ color: GOLD }}>Edit</button>
+                              <button onClick={(e) => { e.stopPropagation(); handleDelete(project.id) }} className="text-xs text-red-400">Delete</button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            )}
+          </div>
+        </div>
+      </main>
       <Footer />
     </>
   )

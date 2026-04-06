@@ -1,4 +1,3 @@
-import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import About from './components/About'
 import Footer from './components/Footer'
@@ -7,6 +6,7 @@ import Hero from './components/Hero'
 import OurStory from './components/OurStory'
 import OurWork from './components/OurWork'
 import { ScrollProgress } from './components/ScrollAnimation'
+import TiletDivider from './components/TiletDivider'
 import WhatWeDo from './components/WhatWeDo'
 import WhoWeAre from './components/WhoWeAre'
 import WhyChooseUs from './components/WhyChooseUs'
@@ -21,10 +21,15 @@ function Home() {
       <Header />
       <Hero />
       <WhoWeAre />
+      <TiletDivider />
       <WhatWeDo />
+      <TiletDivider />
       <OurWork />
+      <TiletDivider variant="strip" className="opacity-40" />
       <WhyChooseUs />
+      <TiletDivider />
       <OurStory />
+      <TiletDivider variant="strip" className="opacity-30" />
       <Footer />
     </>
   )
