@@ -12,16 +12,30 @@
 :root {
   --color-green-primary:  #0D1F13;
   --color-green-card:     #132019;
+
+  /* ── Muted Gold — luxury, confidence, value */
   --color-gold:           #C9A170;
   --color-gold-light:     #E2C49A;
-  --color-cream:          #F0EAD6;
+  --color-gold-dark:      #9E7A4A;
+
+  /* ── Warm Cream — trust, comfort, human warmth */
+  --color-cream:          #F5EDD8;
+  --color-cream-dim:      rgba(245, 237, 216, 0.55);
+  --color-cream-subtle:   rgba(245, 237, 216, 0.04);
+
+  /* ── Legacy alias */
   --color-text-muted:     #7A9B84;
 
   --glow-gold:  rgba(201, 161, 112, 0.25);
+  --glow-cream: rgba(245, 237, 216, 0.12);
   --glow-green: rgba(45, 107, 63, 0.25);
 
   /* Ethiopian tile repeat size */
   --eth-tile-size: 48px;
+
+  /* Smooth transition default */
+  --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @layer base {
@@ -194,6 +208,19 @@
     animation: float 6s ease-in-out infinite;
   }
 
+  /* ── Fade-in reveal (used by case study expand) ── */
+  .animate-fadeIn {
+    animation: fade-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  /* ── Warm cream text ── */
+  .text-cream {
+    color: var(--color-cream);
+  }
+  .text-cream-dim {
+    color: var(--color-cream-dim);
+  }
+
   /* ── Section label dot ── */
   .section-dot {
     @apply w-1.5 h-1.5 rounded-full;
@@ -304,7 +331,7 @@
   .section-heading {
     font-family: 'Outfit', sans-serif;
     @apply font-black leading-[1.0] tracking-[-0.04em];
-    color: #F0EAD6;
+    color: var(--color-cream);
   }
 
   /* NAV LINK */

@@ -3,9 +3,11 @@ import About from './components/About'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import Hero from './components/Hero'
+import OurFounders from './components/OurFounders'
 import OurStory from './components/OurStory'
 import OurWork from './components/OurWork'
 import { ScrollProgress } from './components/ScrollAnimation'
+import Testimonials from './components/Testimonials'
 import TiletDivider from './components/TiletDivider'
 import WhatWeDo from './components/WhatWeDo'
 import WhoWeAre from './components/WhoWeAre'
@@ -26,8 +28,12 @@ function Home() {
       <TiletDivider />
       <OurWork />
       <TiletDivider variant="strip" className="opacity-40" />
+      <Testimonials />
+      <TiletDivider />
       <WhyChooseUs />
       <TiletDivider />
+      <OurFounders />
+      <TiletDivider variant="strip" className="opacity-30" />
       <OurStory />
       <TiletDivider variant="strip" className="opacity-30" />
       <Footer />
@@ -52,4 +58,3 @@ function App() {
 }
 
 export default App
-
