@@ -1,262 +1,437 @@
-import ScrollAnimation from './ScrollAnimation'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from 'framer-motion'
+import socialMedia1200 from '../assets/services/service-social-media-1200.webp'
+import socialMedia720 from '../assets/services/service-social-media-720.webp'
+import webDevelopment1200 from '../assets/services/service-web-development-1200.webp'
+import webDevelopment720 from '../assets/services/service-web-development-720.webp'
+import benediktaFoundation1200 from '../assets/portfolio/benedikta-foundation-1200.webp'
+import benediktaFoundation720 from '../assets/portfolio/benedikta-foundation-720.webp'
+import documentaryFilm1400 from '../assets/portfolio/documentary-film-1400.webp'
+import documentaryFilm720 from '../assets/portfolio/documentary-film-720.webp'
 
-const GOLD = '#C9A170'
-const GOLD_LIGHT = '#E2C49A'
-const CREAM = '#F5EDD8'
-
-const reasons = [
+const REASONS = [
   {
+    id: 'strategy',
     number: '01',
-    title: 'End-to-End Expertise',
-    description: 'From brand strategy and identity to web development and video production — one partner for your entire creative journey. No agency-hopping, no broken vision.',
-    accent: '#C9A170',
-    proof: '5 creative disciplines under one roof',
+    title: 'STRATEGY BEFORE DECORATION',
+    description: 'Every creative decision begins with your business, your audience, and the outcome you want to achieve.',
+    visual: {
+      src: benediktaFoundation720,
+      srcSet: `${benediktaFoundation720} 720w, ${benediktaFoundation1200} 1200w`,
+      width: 720,
+      height: 540,
+      alt: 'Benedikta Foundation identity presentation with purple-and-gold logo applications on a mug, tote bag, pattern, stationery, and lanyard.',
+      caption: 'Brand Identity',
+      context: 'Akrion project',
+      objectPosition: 'center top',
+    },
   },
   {
+    id: 'connected-team',
     number: '02',
-    title: 'Results With Evidence',
-    description: "We don't just deliver beautifully — we show you the numbers. Every project comes with measurable outcomes you can see, verify, and build on.",
-    accent: '#7AB48C',
-    proof: '100% of clients track real business growth',
+    title: 'ONE CONNECTED TEAM',
+    description: 'Branding, websites, applications, social media, video, and motion—planned and executed as one connected experience.',
+    visual: {
+      src: webDevelopment720,
+      srcSet: `${webDevelopment720} 720w, ${webDevelopment1200} 1200w`,
+      width: 720,
+      height: 480,
+      alt: 'Branded concept visual showing a responsive emerald and cream digital experience on desktop and mobile.',
+      caption: 'Digital Experiences',
+      context: 'Concept visual · replaceable media',
+      objectPosition: 'center',
+    },
   },
   {
+    id: 'cultural-insight',
     number: '03',
-    title: 'Affordable to Premium',
-    description: "We have tiers for every business stage. Normal for clean and effective. Package for value. Premium for brands that demand excellence and lasting impact.",
-    accent: '#E2C49A',
-    proof: 'Starts at 3,500 ETB — scales to your ambition',
+    title: 'CULTURAL INSIGHT, GLOBAL STANDARD',
+    description: 'We bring an Ethiopian and African perspective to work designed to communicate confidently across markets and cultures.',
+    visual: {
+      src: documentaryFilm720,
+      srcSet: `${documentaryFilm720} 720w, ${documentaryFilm1400} 1400w`,
+      width: 720,
+      height: 405,
+      alt: 'An Ethiopian fashion professional speaking on camera among garments and mannequins during an Akrion documentary interview.',
+      caption: 'Documentary Production',
+      context: 'Akrion production still',
+      objectPosition: 'center',
+    },
   },
   {
+    id: 'performance',
     number: '04',
-    title: 'Culture-Embedded',
-    description: "We understand the Ethiopian and African creative landscape deeply — your audience, your context, your story. We don't adapt a foreign template; we speak your language.",
-    accent: '#C9A170',
-    proof: 'Born in Addis Ababa, thinking globally',
+    title: 'CREATIVITY BUILT TO PERFORM',
+    description: 'We create work that does more than attract attention. It builds clarity, trust, action, and sustainable growth.',
+    visual: {
+      src: socialMedia720,
+      srcSet: `${socialMedia720} 720w, ${socialMedia1200} 1200w`,
+      width: 720,
+      height: 480,
+      alt: 'Branded concept visual showing a coordinated emerald, cream, and gold social media system.',
+      caption: 'Social Media Systems',
+      context: 'Concept visual · replaceable media',
+      objectPosition: 'center',
+    },
   },
 ]
 
-// Before / after comparison — what changes when you invest in your brand
-const transformations = [
-  {
-    before: 'Invisible online — no one can find you',
-    after: 'Discoverable brand with a digital presence that works while you sleep',
-  },
-  {
-    before: 'Generic logo customers forget instantly',
-    after: 'Distinctive identity customers recognize, trust, and choose again',
-  },
-  {
-    before: 'Competing on price because nothing else stands out',
-    after: 'Charging what you\'re worth because your brand commands respect',
-  },
-  {
-    before: 'Inconsistent content that confuses your audience',
-    after: 'A clear, consistent voice across every platform and touchpoint',
-  },
-]
+// Replace these null media fields with an approved, like-for-like client transformation pair.
+const TRANSFORMATION_MEDIA = {
+  before: null,
+  after: null,
+  isPlaceholder: true,
+}
+
+const ArrowIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+const ProjectReel = ({ activeIndex, reducedMotion }) => {
+  const scene = REASONS[activeIndex].visual
+
+  return (
+    <div id="why-project-reel" className="why-us-reel" role="region" aria-label="Akrion creative project reel">
+      <div className="why-us-reel-pattern eth-pattern" aria-hidden="true" />
+      <AnimatePresence initial={false} mode="sync">
+        <motion.figure
+          key={REASONS[activeIndex].id}
+          className="why-us-reel-scene"
+          initial={reducedMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={reducedMotion ? undefined : { opacity: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 0.82, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <motion.img
+            src={scene.src}
+            srcSet={scene.srcSet}
+            sizes="(min-width: 1280px) 46vw, (min-width: 1024px) 48vw, 100vw"
+            width={scene.width}
+            height={scene.height}
+            alt={scene.alt}
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+            style={{ objectPosition: scene.objectPosition }}
+            initial={false}
+            animate={reducedMotion ? { scale: 1 } : { scale: 1.045, x: -3 }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 8, ease: 'easeOut' }}
+          />
+          <div className="why-us-reel-overlay" aria-hidden="true" />
+          <figcaption className="why-us-reel-caption">
+            <div>
+              <span>{scene.context}</span>
+              <p>{scene.caption}</p>
+            </div>
+            <span className="why-us-reel-count" aria-hidden="true">
+              {String(activeIndex + 1).padStart(2, '0')} / {String(REASONS.length).padStart(2, '0')}
+            </span>
+          </figcaption>
+        </motion.figure>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+const ReasonItem = ({ reason, index, active, reducedMotion, onActivate }) => {
+  const itemVariants = {
+    hidden: {},
+    visible: {
+      transition: reducedMotion ? undefined : { staggerChildren: 0.12 },
+    },
+  }
+  const leadVariants = reducedMotion
+    ? {}
+    : {
+        hidden: { opacity: 0, x: -14 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.62, ease: [0.22, 1, 0.36, 1] } },
+      }
+  const copyVariants = reducedMotion
+    ? {}
+    : {
+        hidden: { opacity: 0, y: 12 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.66, ease: [0.22, 1, 0.36, 1] } },
+      }
+
+  return (
+    <motion.li
+      className="why-us-reason-item"
+      variants={itemVariants}
+      initial={reducedMotion ? false : 'hidden'}
+      whileInView={reducedMotion ? undefined : 'visible'}
+      viewport={{ once: true, amount: 0.35 }}
+    >
+      <motion.button
+        type="button"
+        className="why-us-reason"
+        data-active={active}
+        aria-pressed={active}
+        aria-controls="why-project-reel"
+        aria-label={`${reason.number} — ${reason.title}. Show matching project visual.`}
+        onClick={() => onActivate(index)}
+        onFocus={() => onActivate(index)}
+        onPointerEnter={(event) => {
+          if (event.pointerType === 'mouse') onActivate(index)
+        }}
+      >
+        <motion.span className="why-us-reason-lead" variants={leadVariants} aria-hidden="true">
+          <span className="why-us-reason-number">{reason.number}</span>
+          <span className="why-us-reason-line" />
+        </motion.span>
+        <motion.span className="why-us-reason-copy" variants={copyVariants}>
+          <span className="why-us-reason-title">{reason.title}</span>
+          <span className="why-us-reason-description">{reason.description}</span>
+        </motion.span>
+      </motion.button>
+    </motion.li>
+  )
+}
+
+const TransformationImage = ({ media }) => (
+  <picture className="why-transform-media-picture">
+    {media.srcSet && <source srcSet={media.srcSet} sizes="(min-width: 1280px) 1200px, 100vw" type="image/webp" />}
+    <img
+      className="why-transform-media-image"
+      src={media.src}
+      alt={media.alt}
+      width={media.width}
+      height={media.height}
+      loading="lazy"
+      decoding="async"
+      draggable="false"
+    />
+  </picture>
+)
+
+const BeforeAfterSlider = ({ media }) => {
+  const [position, setPosition] = useState(50)
+  const instructionsId = 'why-transform-instructions'
+  const positionStyle = { '--why-transform-position': `${position}%` }
+
+  const handleKeyDown = (event) => {
+    let nextPosition = null
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') nextPosition = position - 1
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') nextPosition = position + 1
+    if (event.key === 'PageDown') nextPosition = position - 10
+    if (event.key === 'PageUp') nextPosition = position + 10
+    if (event.key === 'Home') nextPosition = 0
+    if (event.key === 'End') nextPosition = 100
+    if (nextPosition == null) return
+
+    event.preventDefault()
+    setPosition(Math.max(0, Math.min(100, nextPosition)))
+  }
+
+  return (
+    <div className="why-transform-comparison">
+      <div className="why-transform-frame" style={positionStyle} data-placeholder={media.isPlaceholder}>
+        <div className="why-transform-layer why-transform-layer--after" aria-hidden={!media.after}>
+          {media.after ? (
+            <TransformationImage media={media.after} />
+          ) : (
+            <>
+              <div className="why-transform-after-pattern eth-pattern" />
+              <div className="why-transform-after-system">
+                <div className="why-transform-after-mark">AD</div>
+                <div className="why-transform-after-copy">
+                  <span>DEFINE · CREATE · LAUNCH</span>
+                  <strong>One connected brand system</strong>
+                  <div><i /><i /><i /></div>
+                </div>
+              </div>
+              <div className="why-transform-after-grid">
+                <span /><span /><span /><span />
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="why-transform-layer why-transform-layer--before" aria-hidden={!media.before}>
+          {media.before ? (
+            <TransformationImage media={media.before} />
+          ) : (
+            <>
+              <div className="why-transform-before-notes">
+                <span>IDEA 01</span>
+                <span>IDEA 04</span>
+                <span>?</span>
+              </div>
+              <div className="why-transform-before-wireframe">
+                <span /><span /><span /><span />
+              </div>
+              <p>Scattered direction</p>
+            </>
+          )}
+        </div>
+
+        <span className="why-transform-side-label why-transform-side-label--before" aria-hidden="true">Before</span>
+        <span className="why-transform-side-label why-transform-side-label--after" aria-hidden="true">After Akrion.</span>
+
+        <label className="sr-only" htmlFor="why-transformation-range">Before and after comparison divider</label>
+        <input
+          id="why-transformation-range"
+          className="why-transform-range"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value={position}
+          aria-describedby={instructionsId}
+          aria-valuetext={`${position}% Before visible; ${100 - position}% After Akrion visible`}
+          onChange={(event) => setPosition(Number(event.target.value))}
+          onKeyDown={handleKeyDown}
+        />
+
+        <div className="why-transform-divider" aria-hidden="true">
+          <span className="why-transform-handle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M9 7L4 12L9 17M15 7L20 12L15 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div className="why-transform-meta">
+        <p id={instructionsId}>Drag the gold divider, or focus it and use the arrow keys.</p>
+        {media.isPlaceholder && (
+          <p className="why-transform-placeholder-note">
+            Illustrative Akrion placeholder · awaiting an approved client transformation pair.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const WhyChooseUs = () => {
+  const reasonsRef = useRef(null)
+  const reducedMotion = useReducedMotion()
+  const [activeReason, setActiveReason] = useState(0)
+
+  useEffect(() => {
+    if (reducedMotion || !reasonsRef.current) return undefined
+
+    let animationFrame = 0
+
+    const syncReasonToScroll = () => {
+      animationFrame = 0
+      const list = reasonsRef.current
+      if (!list) return
+
+      const bounds = list.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const startLine = viewportHeight * 0.35
+      const endLine = viewportHeight * 0.55
+      const travel = Math.max(1, bounds.height + startLine - endLine)
+      const progress = Math.max(0, Math.min(1, (startLine - bounds.top) / travel))
+      const nextIndex = Math.round(progress * (REASONS.length - 1))
+
+      setActiveReason((current) => (current === nextIndex ? current : nextIndex))
+    }
+
+    const requestSync = () => {
+      if (animationFrame) return
+      animationFrame = window.requestAnimationFrame(syncReasonToScroll)
+    }
+
+    syncReasonToScroll()
+    window.addEventListener('scroll', requestSync, { passive: true })
+    window.addEventListener('resize', requestSync)
+
+    return () => {
+      window.removeEventListener('scroll', requestSync)
+      window.removeEventListener('resize', requestSync)
+      if (animationFrame) window.cancelAnimationFrame(animationFrame)
+    }
+  }, [reducedMotion])
+
+  const reveal = reducedMotion
+    ? { initial: false }
+    : {
+        initial: { opacity: 0, y: 18 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, amount: 0.25 },
+        transition: { duration: 0.68, ease: [0.22, 1, 0.36, 1] },
+      }
+
   return (
-    <section className="py-20 sm:py-28 md:py-36 px-4 sm:px-6 lg:px-10 relative overflow-hidden"
-      style={{ background: '#0D1F13' }}>
-      {/* Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[160px] pointer-events-none"
-        style={{ background: 'rgba(245,237,216,0.025)' }} />
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full blur-[140px] pointer-events-none"
-        style={{ background: 'rgba(201,161,112,0.04)' }} />
-      <div className="absolute inset-0 dot-grid opacity-30" />
+    <section id="why-us" className="why-us-section scroll-mt-24 sm:scroll-mt-28" aria-labelledby="why-us-heading">
+      <div className="why-us-dark">
+        <div className="why-us-pattern eth-pattern-subtle" aria-hidden="true" />
+        <div className="why-us-vignette" aria-hidden="true" />
 
-      <div className="max-w-[1400px] mx-auto relative z-10">
+        <div className="why-us-container">
+          <motion.header className="why-us-header" {...reveal}>
+            <div className="section-label"><span className="section-dot" />WHY US</div>
+            <h2 id="why-us-heading" className="section-heading text-[clamp(2.2rem,5vw,4rem)]">WHY CHOOSE US</h2>
+            <p>Strategy, creativity, and technology—connected by one team and built around your business goals.</p>
+          </motion.header>
 
-        {/* Header */}
-        <div className="text-center flex flex-col items-center gap-4 mb-14 sm:mb-20">
-          <ScrollAnimation animation="fadeUp" delay={0.1}>
-            <div className="section-label">
-              <span className="section-dot" />
-              Why Us
-            </div>
-          </ScrollAnimation>
-          <ScrollAnimation animation="fadeUp" delay={0.2} duration={0.8}>
-            <h2 className="section-heading text-[clamp(2.2rem,5vw,4rem)]">
-              WHY CHOOSE US
-            </h2>
-          </ScrollAnimation>
-          <ScrollAnimation animation="fadeUp" delay={0.3}>
-            <p className="text-base max-w-md leading-relaxed font-light" style={{ color: 'rgba(245,237,216,0.4)' }}>
-              Affordable for the everyday business. Premium for brands that demand more. Always evidence-backed, always culture-first.
-            </p>
-          </ScrollAnimation>
-        </div>
+          <div className="why-us-editorial">
+            <motion.div className="why-us-reel-column" {...reveal}>
+              <ProjectReel activeIndex={activeReason} reducedMotion={reducedMotion} />
+            </motion.div>
 
-        {/* Reasons grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-14 sm:mb-20">
-          {reasons.map((reason, index) => (
-            <ScrollAnimation key={index} animation="fadeUp" delay={0.15 + index * 0.1}>
-              <div
-                className="group flex flex-col gap-4 p-6 sm:p-7 rounded-2xl border h-full transition-all duration-300 cursor-default"
-                style={{
-                  background: 'rgba(19,32,25,0.7)',
-                  borderColor: 'rgba(201,161,112,0.08)',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(19,32,25,0.95)'
-                  e.currentTarget.style.borderColor = `${reason.accent}30`
-                  e.currentTarget.style.transform = 'translateY(-3px)'
-                  e.currentTarget.style.boxShadow = `0 16px 40px rgba(0,0,0,0.3), 0 0 30px ${reason.accent}08`
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(19,32,25,0.7)'
-                  e.currentTarget.style.borderColor = 'rgba(201,161,112,0.08)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              >
-                {/* Top row */}
-                <div className="flex items-start gap-4">
-                  <div
-                    className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-sm font-black font-display transition-all duration-300 group-hover:scale-110"
-                    style={{
-                      background: `${reason.accent}10`,
-                      border: `1px solid ${reason.accent}20`,
-                      color: reason.accent,
-                    }}
-                  >
-                    {reason.number}
-                  </div>
-                  <div className="flex flex-col gap-1 flex-1">
-                    <h3 className="text-base font-bold leading-tight" style={{ color: CREAM }}>{reason.title}</h3>
-                    <p className="text-sm font-light leading-relaxed" style={{ color: 'rgba(245,237,216,0.4)' }}>
-                      {reason.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Proof tag */}
-                <div className="flex items-center gap-2 pt-1 mt-auto"
-                  style={{ borderTop: '1px solid rgba(201,161,112,0.06)' }}>
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                    <path d="M3 10L8 15L17 5" stroke={reason.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className="text-[11px] font-semibold" style={{ color: `${reason.accent}90` }}>
-                    {reason.proof}
-                  </span>
-                </div>
-              </div>
-            </ScrollAnimation>
-          ))}
-        </div>
-
-        {/* Before / After — brand transformation */}
-        <ScrollAnimation animation="fadeUp" delay={0.4}>
-          <div
-            className="relative rounded-3xl border overflow-hidden p-6 sm:p-10 mb-10"
-            style={{
-              background: 'rgba(19,32,25,0.85)',
-              borderColor: 'rgba(201,161,112,0.12)',
-              backdropFilter: 'blur(24px)',
-            }}
-          >
-            {/* Top accent */}
-            <div className="absolute top-0 left-0 right-0 h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(201,161,112,0.5), transparent)' }} />
-
-            {/* Section title */}
-            <div className="flex flex-col items-center text-center gap-3 mb-8">
-              <p className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: GOLD }}>
-                What Changes When You Work With Us
-              </p>
-              <h3 className="font-display font-bold text-xl sm:text-2xl leading-tight" style={{ color: CREAM }}>
-                The Before & After of a Strong Brand
-              </h3>
-              <p className="text-sm font-light max-w-sm leading-relaxed" style={{ color: 'rgba(245,237,216,0.4)' }}>
-                Your brand is speaking right now — the question is what it's saying. We make sure it's saying the right things.
-              </p>
-            </div>
-
-            {/* Comparison table */}
-            <div className="flex flex-col gap-3">
-              {/* Column headers */}
-              <div className="grid grid-cols-2 gap-4 mb-1 px-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-red-400 opacity-70" />
-                  <span className="text-[11px] font-black tracking-[0.15em] uppercase text-red-400 opacity-70">Before</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: GOLD }} />
-                  <span className="text-[11px] font-black tracking-[0.15em] uppercase" style={{ color: GOLD }}>After Akrion</span>
-                </div>
-              </div>
-
-              {transformations.map((t, i) => (
-                <div key={i} className="grid grid-cols-2 gap-3 sm:gap-4 group">
-                  {/* Before */}
-                  <div
-                    className="flex items-start gap-3 p-4 rounded-xl"
-                    style={{ background: 'rgba(255,60,60,0.04)', border: '1px solid rgba(255,60,60,0.10)' }}
-                  >
-                    <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 20 20" fill="none">
-                      <path d="M5 5L15 15M15 5L5 15" stroke="rgba(255,100,100,0.6)" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                    <span className="text-xs sm:text-sm font-light leading-relaxed" style={{ color: 'rgba(245,237,216,0.4)' }}>
-                      {t.before}
-                    </span>
-                  </div>
-                  {/* After */}
-                  <div
-                    className="flex items-start gap-3 p-4 rounded-xl"
-                    style={{ background: 'rgba(201,161,112,0.06)', border: '1px solid rgba(201,161,112,0.14)' }}
-                  >
-                    <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 20 20" fill="none">
-                      <path d="M3 10L8 15L17 5" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className="text-xs sm:text-sm font-light leading-relaxed" style={{ color: 'rgba(245,237,216,0.65)' }}>
-                      {t.after}
-                    </span>
-                  </div>
-                </div>
+            <ol ref={reasonsRef} className="why-us-reasons" aria-label="Reasons to choose Akrion Digitals">
+              {REASONS.map((reason, index) => (
+                <ReasonItem
+                  key={reason.id}
+                  reason={reason}
+                  index={index}
+                  active={index === activeReason}
+                  reducedMotion={reducedMotion}
+                  onActivate={setActiveReason}
+                />
               ))}
-            </div>
+            </ol>
           </div>
-        </ScrollAnimation>
+        </div>
+      </div>
 
-        {/* Bottom CTA band */}
-        <ScrollAnimation animation="fadeUp" delay={0.5}>
-          <div
-            className="rounded-2xl border p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left"
-            style={{
-              background: 'linear-gradient(135deg, rgba(201,161,112,0.06), rgba(45,107,63,0.04))',
-              borderColor: 'rgba(201,161,112,0.14)',
-            }}
-          >
-            <div>
-              <p className="text-xs font-semibold tracking-[0.12em] uppercase mb-2" style={{ color: GOLD }}>Ready to Start?</p>
-              <h3 className="font-display font-bold text-xl sm:text-2xl leading-tight" style={{ color: CREAM }}>
-                Let&apos;s build your brand together.
-              </h3>
-              <p className="text-sm font-light mt-1" style={{ color: 'rgba(245,237,216,0.4)' }}>
-                One call. Real strategy. No pressure.
-              </p>
+      <section className="why-transform-section" aria-labelledby="why-transform-heading">
+        <div className="why-transform-corner eth-pattern-subtle" aria-hidden="true" />
+        <div className="why-us-container why-transform-container">
+          <motion.header className="why-transform-header" {...reveal}>
+            <p>WHAT CHANGES WHEN YOU WORK WITH US</p>
+            <h3 id="why-transform-heading">Your brand shouldn’t only look better. It should work better.</h3>
+            <span>We help turn scattered ideas into a clear identity, a consistent experience, and a brand people understand, trust, and choose.</span>
+          </motion.header>
+
+          <motion.div {...reveal}>
+            <BeforeAfterSlider media={TRANSFORMATION_MEDIA} />
+          </motion.div>
+
+          <motion.div className="why-us-cta" {...reveal}>
+            <div className="why-us-cta-copy">
+              <p>READY TO START?</p>
+              <h3>Let’s build your brand together.</h3>
+              <span>One conversation. Clear direction. No pressure.</span>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+            <div className="why-us-cta-actions">
               <a
-                href="https://wa.me/251976601172?text=Hi!%20I'd%20like%20a%20free%20strategy%20call%20to%20discuss%20building%20my%20brand."
+                href="https://wa.me/251976601172?text=Hi!%20I'd%20like%20a%20free%20strategy%20call%20to%20discuss%20my%20brand."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-primary flex-shrink-0 px-8 py-4 group inline-flex"
+                className="btn-primary why-us-primary group"
               >
                 Free Strategy Call
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
-                  <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <span className="why-us-primary-arrow"><ArrowIcon /></span>
               </a>
-              <a href="/contact" className="btn-ghost flex-shrink-0 px-8 py-4 inline-flex">
-                Other Ways to Reach Us
-              </a>
+              <Link to="/contact" className="why-us-contact-link">
+                Contact Us <ArrowIcon />
+              </Link>
             </div>
-          </div>
-        </ScrollAnimation>
-
-      </div>
+          </motion.div>
+        </div>
+      </section>
     </section>
   )
 }

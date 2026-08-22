@@ -1,312 +1,370 @@
-import { useState, useEffect } from 'react'
-import ScrollAnimation from './ScrollAnimation'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion'
 
-const GOLD = '#C9A170'
-const GOLD_LIGHT = '#E2C49A'
-const CREAM = '#F5EDD8'
-
-const testimonials = [
+const VERIFIED_TESTIMONIALS = [
   {
-    name: 'Kalkidan Tesfaye',
-    role: 'Founder, Teff & Bula',
-    text: "Akrion didn't just design our brand — they built our identity from scratch and made it feel alive. Customers recognize us now. The investment paid off in the first month.",
-    stars: 5,
-    avatar: 'KT',
-    accentColor: '#C9A170',
-    result: '40% price increase after rebrand',
-  },
-  {
-    name: 'Samuel Girma',
-    role: 'CEO, Cassopia Tours',
-    text: "I was skeptical at first — we'd tried other agencies before. But Akrion delivered a website that actually converts. Booking inquiries went up 3× after launch.",
-    stars: 5,
-    avatar: 'SG',
-    accentColor: '#E2C49A',
-    result: '3× more booking inquiries',
-  },
-  {
-    name: 'Meron Alemu',
-    role: 'Marketing Director, CornodAfrica',
-    text: "The video they produced for us got 50K+ views organically. The storytelling quality is unmatched — they understood exactly the emotion we wanted to convey.",
-    stars: 5,
-    avatar: 'MA',
-    accentColor: '#C9A170',
-    result: '50K+ organic views, zero ad spend',
-  },
-  {
+    id: 'yenege-games',
     name: 'Biruk Haile',
-    role: 'CEO, Yenege Games',
-    text: "From brand design to launch strategy — Akrion handled everything with professionalism and passion. We went from zero to 10,000 downloads in our first week.",
-    stars: 5,
-    avatar: 'BH',
-    accentColor: '#9E7A4A',
-    result: '10,000+ downloads, week one',
-  },
-  {
-    name: 'Tigist Wolde',
-    role: 'Event Director, Akrion Run',
-    text: "They turned a local marathon into a city-wide movement. The campaign had energy and emotion — people weren't just registering, they were sharing it everywhere.",
-    stars: 5,
-    avatar: 'TW',
-    accentColor: '#E2C49A',
-    result: '3,000+ registrations, 1M+ impressions',
+    title: 'CEO',
+    company: 'Yenege Games',
+    quote: 'From brand design to launch strategy — Akrion handled everything with professionalism and passion. We went from zero to 10,000 downloads in our first week.',
+    result: '10,000+ downloads in the first week',
+    initials: 'BH',
+    companyInitials: 'YG',
+    services: ['Brand Design', 'Launch Strategy'],
+    rating: null,
+    projectVisual: null,
+    projectHref: null,
   },
 ]
 
-const StarRow = ({ count, color }) => (
-  <div className="flex gap-0.5">
-    {[...Array(count)].map((_, i) => (
-      <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={color}>
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-      </svg>
-    ))}
-  </div>
+const APPROVED_CLIENT_LOGOS = []
+const AUTOPLAY_DELAY = 8000
+const INTERACTION_PAUSE = 10000
+
+const ArrowIcon = ({ direction = 'next' }) => (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path
+      d={direction === 'previous' ? 'M12.5 5L7.5 10L12.5 15' : 'M7.5 15L12.5 10L7.5 5'}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
 )
 
-const Testimonials = () => {
-  const [active, setActive] = useState(0)
-  const [isAnimating, setIsAnimating] = useState(false)
+const ProjectVisual = ({ testimonial, reduceMotion }) => {
+  const visual = testimonial.projectVisual
 
-  // Auto-rotate every 5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIsAnimating(true)
-      setTimeout(() => {
-        setActive(prev => (prev + 1) % testimonials.length)
-        setIsAnimating(false)
-      }, 300)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const goTo = (index) => {
-    if (index === active) return
-    setIsAnimating(true)
-    setTimeout(() => {
-      setActive(index)
-      setIsAnimating(false)
-    }, 250)
+  if (visual) {
+    return (
+      <div className="social-proof-visual social-proof-visual--image">
+        <picture>
+          {visual.srcSet && <source srcSet={visual.srcSet} sizes={visual.sizes} type="image/webp" />}
+          <motion.img
+            src={visual.src}
+            alt={visual.alt}
+            width={visual.width}
+            height={visual.height}
+            loading="lazy"
+            decoding="async"
+            animate={reduceMotion ? undefined : { scale: [1.01, 1.045, 1.01] }}
+            transition={reduceMotion ? undefined : { duration: 18, ease: 'easeInOut', repeat: Infinity }}
+          />
+        </picture>
+        <div className="social-proof-visual-vignette" aria-hidden="true" />
+      </div>
+    )
   }
 
-  const prev = () => goTo((active - 1 + testimonials.length) % testimonials.length)
-  const next = () => goTo((active + 1) % testimonials.length)
+  return (
+    <div
+      className="social-proof-visual social-proof-visual--snapshot"
+      role="img"
+      aria-label={`${testimonial.company} verified launch snapshot highlighting ${testimonial.result}.`}
+    >
+      <div className="social-proof-snapshot-pattern eth-pattern" aria-hidden="true" />
+      <div className="social-proof-snapshot-glow" aria-hidden="true" />
+
+      <div className="social-proof-snapshot-topline" aria-hidden="true">
+        <span>Verified launch outcome</span>
+        <span>01</span>
+      </div>
+
+      <div className="social-proof-snapshot-center" aria-hidden="true">
+        <div className="social-proof-company-initial">{testimonial.companyInitials}</div>
+        <div>
+          <p>{testimonial.company}</p>
+          <span>{testimonial.services.join(' · ')}</span>
+        </div>
+      </div>
+
+      <div className="social-proof-snapshot-divider" aria-hidden="true"><span /></div>
+
+      <div className="social-proof-snapshot-result" aria-hidden="true">
+        <span>10,000+</span>
+        <small>downloads · first week</small>
+      </div>
+    </div>
+  )
+}
+
+const Testimonials = () => {
+  const sectionRef = useRef(null)
+  const selectorRefs = useRef([])
+  const interactionTimerRef = useRef(null)
+  const pointerStartRef = useRef(null)
+  const reduceMotion = useReducedMotion()
+  const isInView = useInView(sectionRef, { amount: 0.25 })
+  const [active, setActive] = useState(0)
+  const [direction, setDirection] = useState(1)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isFocusWithin, setIsFocusWithin] = useState(false)
+  const [isInteracting, setIsInteracting] = useState(false)
+  const [pageIsHidden, setPageIsHidden] = useState(
+    () => typeof document !== 'undefined' && document.visibilityState === 'hidden',
+  )
+
+  const testimonialCount = VERIFIED_TESTIMONIALS.length
+  const hasMultipleTestimonials = testimonialCount > 1
+  const current = VERIFIED_TESTIMONIALS[active]
+
+  const pauseAfterInteraction = useCallback(() => {
+    setIsInteracting(true)
+    window.clearTimeout(interactionTimerRef.current)
+    interactionTimerRef.current = window.setTimeout(() => setIsInteracting(false), INTERACTION_PAUSE)
+  }, [])
+
+  const goTo = useCallback((index, nextDirection = 1) => {
+    if (!hasMultipleTestimonials || index === active) return
+    setDirection(nextDirection)
+    setActive((index + testimonialCount) % testimonialCount)
+    pauseAfterInteraction()
+  }, [active, hasMultipleTestimonials, pauseAfterInteraction, testimonialCount])
+
+  const previous = useCallback(() => {
+    goTo(active - 1, -1)
+  }, [active, goTo])
+
+  const next = useCallback(() => {
+    goTo(active + 1, 1)
+  }, [active, goTo])
+
+  useEffect(() => {
+    const handleVisibility = () => setPageIsHidden(document.visibilityState === 'hidden')
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
+
+  useEffect(() => () => window.clearTimeout(interactionTimerRef.current), [])
+
+  useEffect(() => {
+    const shouldRotate = hasMultipleTestimonials
+      && isInView
+      && !reduceMotion
+      && !isHovered
+      && !isFocusWithin
+      && !isInteracting
+      && !pageIsHidden
+
+    if (!shouldRotate) return undefined
+
+    const timer = window.setInterval(() => {
+      setDirection(1)
+      setActive((value) => (value + 1) % testimonialCount)
+    }, AUTOPLAY_DELAY)
+
+    return () => window.clearInterval(timer)
+  }, [hasMultipleTestimonials, isFocusWithin, isHovered, isInView, isInteracting, pageIsHidden, reduceMotion, testimonialCount])
+
+  const handleSelectorKeyDown = (event) => {
+    if (!hasMultipleTestimonials) return
+    let targetIndex = null
+
+    if (event.key === 'ArrowLeft') targetIndex = (active - 1 + testimonialCount) % testimonialCount
+    if (event.key === 'ArrowRight') targetIndex = (active + 1) % testimonialCount
+    if (event.key === 'Home') targetIndex = 0
+    if (event.key === 'End') targetIndex = testimonialCount - 1
+    if (targetIndex == null) return
+
+    event.preventDefault()
+    goTo(targetIndex, targetIndex < active ? -1 : 1)
+    window.requestAnimationFrame(() => selectorRefs.current[targetIndex]?.focus())
+  }
+
+  const handlePointerDown = (event) => {
+    if (!hasMultipleTestimonials || event.pointerType !== 'touch') return
+    pointerStartRef.current = { x: event.clientX, y: event.clientY }
+    pauseAfterInteraction()
+  }
+
+  const handlePointerUp = (event) => {
+    if (!pointerStartRef.current || event.pointerType !== 'touch') return
+    const deltaX = event.clientX - pointerStartRef.current.x
+    const deltaY = event.clientY - pointerStartRef.current.y
+    pointerStartRef.current = null
+
+    if (Math.abs(deltaX) > 44 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25) {
+      if (deltaX > 0) previous()
+      else next()
+    }
+  }
+
+  const reveal = reduceMotion
+    ? { initial: false }
+    : {
+        initial: { opacity: 0, y: 18 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, amount: 0.25 },
+        transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
+      }
 
   return (
-    <section className="py-20 sm:py-28 md:py-36 px-4 sm:px-6 lg:px-10 relative overflow-hidden"
-      style={{ background: '#0A1A0F' }}>
-      <div className="absolute inset-0 eth-pattern-subtle opacity-40 pointer-events-none z-0" />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[160px] pointer-events-none z-0"
-        style={{ background: 'rgba(245,237,216,0.04)' }} />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[140px] pointer-events-none z-0"
-        style={{ background: 'rgba(201,161,112,0.04)' }} />
+    <section
+      id="testimonials"
+      ref={sectionRef}
+      aria-labelledby="social-proof-heading"
+      className="social-proof-section scroll-mt-24 sm:scroll-mt-28 px-4 py-20 sm:px-6 sm:py-24 lg:px-10 lg:py-28"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocusCapture={() => setIsFocusWithin(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setIsFocusWithin(false)
+      }}
+    >
+      <div className="social-proof-pattern eth-pattern-subtle" aria-hidden="true" />
+      <div className="social-proof-vignette" aria-hidden="true" />
 
-      <div className="max-w-[1200px] mx-auto relative z-10">
+      <div className="relative z-10 mx-auto max-w-[1200px]">
+        <motion.header className="social-proof-header" {...reveal}>
+          <div className="section-label"><span className="section-dot" />SOCIAL PROOF.</div>
+          <h2 id="social-proof-heading" className="section-heading text-[clamp(2rem,5vw,3.5rem)]">
+            Real Results, <span className="gradient-text-gold">Real People.</span>
+          </h2>
+          <p>
+            Creative work should do more than look good—it should solve problems, earn attention, and create measurable value. Here’s what our clients experienced.
+          </p>
+        </motion.header>
 
-        {/* Header */}
-        <div className="flex flex-col items-center text-center gap-4 mb-14 sm:mb-20">
-          <ScrollAnimation animation="fadeUp" delay={0.1}>
-            <div className="section-label"><span className="section-dot" />Social Proof</div>
-          </ScrollAnimation>
-          <ScrollAnimation animation="fadeUp" delay={0.2} duration={0.8}>
-            <h2 className="section-heading text-[clamp(2rem,5vw,3.5rem)]">
-              Real Results,{' '}
-              <span className="gradient-text-gold">Real People</span>
-            </h2>
-          </ScrollAnimation>
-          <ScrollAnimation animation="fadeUp" delay={0.3}>
-            <p className="text-base font-light max-w-md leading-relaxed" style={{ color: 'rgba(245,237,216,0.45)' }}>
-              We don't just make pretty things — we make things that work. Here's what our clients say.
-            </p>
-          </ScrollAnimation>
-        </div>
-
-        {/* Small avatar previews of all testimonials */}
-        <ScrollAnimation animation="fadeUp" delay={0.3}>
-          <div className="flex justify-center gap-3 mb-10">
-            {testimonials.map((t, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className="relative transition-all duration-300 rounded-full"
-                style={{
-                  transform: i === active ? 'scale(1.18)' : 'scale(1)',
-                  zIndex: i === active ? 10 : 1,
-                }}
-                title={t.name}
-              >
-                <div
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-300"
-                  style={{
-                    background: i === active
-                      ? `linear-gradient(135deg, ${t.accentColor}, #9E7A4A)`
-                      : 'rgba(255,255,255,0.05)',
-                    color: i === active ? '#0D1F13' : 'rgba(245,237,216,0.4)',
-                    border: i === active ? `2px solid ${t.accentColor}80` : '2px solid rgba(255,255,255,0.07)',
-                    boxShadow: i === active ? `0 0 20px ${t.accentColor}40` : 'none',
-                  }}
-                >
-                  {t.avatar}
-                </div>
-              </button>
-            ))}
-          </div>
-        </ScrollAnimation>
-
-        {/* Main testimonial card */}
-        <ScrollAnimation animation="fadeUp" delay={0.4}>
-          <div
-            className="relative p-8 sm:p-12 rounded-3xl border"
-            style={{
-              background: 'rgba(19,32,25,0.90)',
-              borderColor: `${testimonials[active].accentColor}20`,
-              backdropFilter: 'blur(24px)',
-              boxShadow: `0 24px 80px rgba(0,0,0,0.4), 0 0 60px ${testimonials[active].accentColor}08`,
-              transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
-            }}
-          >
-            {/* Gold top accent */}
-            <div className="absolute top-0 left-12 right-12 h-px transition-all duration-500"
-              style={{ background: `linear-gradient(90deg, transparent, ${testimonials[active].accentColor}70, transparent)` }} />
-
-            {/* Giant quote mark */}
-            <div className="absolute top-6 right-10 text-[120px] leading-none font-black pointer-events-none select-none"
-              style={{ color: `${testimonials[active].accentColor}08`, fontFamily: 'Georgia, serif' }}>"</div>
-
+        {hasMultipleTestimonials && (
+          <motion.div className="social-proof-selector-wrap" {...reveal}>
             <div
-              className="transition-all duration-300"
-              style={{ opacity: isAnimating ? 0 : 1, transform: isAnimating ? 'translateY(8px)' : 'translateY(0)' }}
+              className="social-proof-selectors scrollbar-hide"
+              role="tablist"
+              aria-label="Verified client testimonials"
+              onKeyDown={handleSelectorKeyDown}
             >
-              {/* Stars */}
-              <div className="mb-6">
-                <StarRow count={testimonials[active].stars} color={testimonials[active].accentColor} />
-              </div>
-
-              {/* Quote */}
-              <blockquote
-                className="text-[clamp(1.1rem,2.5vw,1.45rem)] leading-[1.8] font-light mb-8 relative z-10"
-                style={{ color: CREAM, letterSpacing: '-0.01em' }}
-              >
-                &ldquo;{testimonials[active].text}&rdquo;
-              </blockquote>
-
-              {/* Result pill */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-                style={{
-                  background: `${testimonials[active].accentColor}12`,
-                  border: `1px solid ${testimonials[active].accentColor}28`,
-                }}>
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                  <path d="M3 10L8 15L17 5" stroke={testimonials[active].accentColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-xs font-bold" style={{ color: testimonials[active].accentColor }}>
-                  {testimonials[active].result}
-                </span>
-              </div>
-
-              {/* Author row */}
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{
-                      background: `linear-gradient(135deg, ${testimonials[active].accentColor}, #9E7A4A)`,
-                      color: '#0D1F13',
-                    }}
-                  >
-                    {testimonials[active].avatar}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm" style={{ color: CREAM }}>{testimonials[active].name}</p>
-                    <p className="text-xs font-light" style={{ color: 'rgba(201,161,112,0.5)' }}>{testimonials[active].role}</p>
-                  </div>
-                </div>
-
-                {/* Arrow controls */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={prev}
-                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,161,112,0.12)'; e.currentTarget.style.borderColor = 'rgba(201,161,112,0.25)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                      <path d="M12.5 5L7.5 10L12.5 15" stroke="rgba(245,237,216,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  <button
-                    onClick={next}
-                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,161,112,0.12)'; e.currentTarget.style.borderColor = 'rgba(201,161,112,0.25)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                      <path d="M7.5 15L12.5 10L7.5 5" stroke="rgba(245,237,216,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress dots */}
-              <div className="flex gap-1.5 mt-6">
-                {testimonials.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => goTo(i)}
-                    className="transition-all duration-400 rounded-full"
-                    style={{
-                      width: i === active ? '28px' : '6px',
-                      height: '6px',
-                      background: i === active ? testimonials[active].accentColor : 'rgba(201,161,112,0.18)',
-                    }}
-                  />
-                ))}
-              </div>
+              {VERIFIED_TESTIMONIALS.map((testimonial, index) => (
+                <button
+                  key={testimonial.id}
+                  id={`social-proof-selector-${testimonial.id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={index === active}
+                  aria-controls={`social-proof-panel-${testimonial.id}`}
+                  aria-label={`Show testimonial from ${testimonial.name}, ${testimonial.company}`}
+                  title={`${testimonial.name} · ${testimonial.company}`}
+                  tabIndex={index === active ? 0 : -1}
+                  className="social-proof-selector"
+                  data-active={index === active}
+                  ref={(node) => { selectorRefs.current[index] = node }}
+                  onClick={() => goTo(index, index > active ? 1 : -1)}
+                >
+                  <span className="social-proof-selector-avatar" aria-hidden="true">{testimonial.initials}</span>
+                  <span className="social-proof-selector-caption">{testimonial.company}</span>
+                </button>
+              ))}
             </div>
-          </div>
-        </ScrollAnimation>
+          </motion.div>
+        )}
 
-        {/* Trust strip */}
-        <ScrollAnimation animation="fadeUp" delay={0.55}>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10 py-6"
-            style={{ borderTop: '1px solid rgba(201,161,112,0.08)', borderBottom: '1px solid rgba(201,161,112,0.08)' }}>
-            {[
-              { value: '50+', label: 'Happy Clients' },
-              { value: '100%', label: 'Satisfaction Rate' },
-              { value: '3+', label: 'Years Delivering' },
-              { value: '5★', label: 'Average Rating' },
-            ].map((stat, i) => (
-              <div key={i} className="flex flex-col items-center text-center">
-                <span className="text-xl font-black" style={{ color: GOLD }}>{stat.value}</span>
-                <span className="text-[10px] font-semibold tracking-widest uppercase mt-0.5" style={{ color: 'rgba(245,237,216,0.3)' }}>
-                  {stat.label}
-                </span>
+        <motion.div
+          className="social-proof-card-viewport"
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={() => { pointerStartRef.current = null }}
+          {...reveal}
+        >
+          <AnimatePresence initial={false} mode="wait" custom={direction}>
+            <motion.article
+              key={current.id}
+              id={`social-proof-panel-${current.id}`}
+              role={hasMultipleTestimonials ? 'tabpanel' : undefined}
+              aria-labelledby={hasMultipleTestimonials ? `social-proof-selector-${current.id}` : undefined}
+              aria-label={!hasMultipleTestimonials ? `Testimonial from ${current.name}, ${current.company}` : undefined}
+              className="social-proof-card"
+              custom={direction}
+              initial={reduceMotion ? false : { opacity: 0, x: direction * 18 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, x: direction * -12 }}
+              transition={{ duration: reduceMotion ? 0 : 0.42, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="social-proof-media">
+                <ProjectVisual testimonial={current} reduceMotion={reduceMotion} />
               </div>
+
+              <div className="social-proof-copy">
+                <span className="social-proof-verified-label">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M3 10L8 15L17 5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Verified client outcome
+                </span>
+
+                {current.rating != null && (
+                  <p className="social-proof-rating" aria-label={`${current.rating} out of 5 stars`}>
+                    {current.rating} / 5
+                  </p>
+                )}
+
+                <div className="social-proof-quote-mark" aria-hidden="true">“</div>
+                <blockquote>“{current.quote}”</blockquote>
+
+                <motion.div
+                  className="social-proof-result-badge"
+                  initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M3 10L8 15L17 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>{current.result}</span>
+                </motion.div>
+
+                <div className="social-proof-client-row">
+                  <div className="social-proof-client">
+                    <span className="social-proof-client-avatar" aria-hidden="true">{current.initials}</span>
+                    <div>
+                      <p>{current.name}</p>
+                      <span>{current.title}, {current.company}</span>
+                    </div>
+                  </div>
+
+                  {hasMultipleTestimonials && (
+                    <div className="social-proof-controls" aria-label="Testimonial controls">
+                      <button type="button" onClick={previous} aria-label="Show previous testimonial">
+                        <ArrowIcon direction="previous" />
+                      </button>
+                      <button type="button" onClick={next} aria-label="Show next testimonial">
+                        <ArrowIcon />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {current.projectHref && (
+                  <a className="social-proof-project-link" href={current.projectHref}>
+                    View Case Study <ArrowIcon />
+                  </a>
+                )}
+              </div>
+            </motion.article>
+          </AnimatePresence>
+        </motion.div>
+
+        {APPROVED_CLIENT_LOGOS.length > 0 && (
+          <div className="social-proof-trusted" aria-label="Trusted by">
+            <span>Trusted By</span>
+            {APPROVED_CLIENT_LOGOS.map((logo) => (
+              <img key={logo.name} src={logo.src} alt={logo.name} width={logo.width} height={logo.height} loading="lazy" />
             ))}
           </div>
-        </ScrollAnimation>
+        )}
 
-        {/* CTA */}
-        <ScrollAnimation animation="fadeUp" delay={0.6}>
-          <div className="text-center mt-10">
-            <p className="text-sm font-light mb-4" style={{ color: 'rgba(245,237,216,0.4)' }}>
-              Ready to become our next success story?
-            </p>
-            <a
-              href="https://wa.me/251976601172?text=Hi!%20I'd%20like%20to%20discuss%20building%20my%20brand."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary inline-flex px-8 py-4 group"
-            >
-              Let's Build Your Brand
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
-                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </a>
-          </div>
-        </ScrollAnimation>
-
+        <motion.div className="social-proof-cta" {...reveal}>
+          <p>Ready to become our next success story?</p>
+          <a
+            href="https://wa.me/251976601172?text=Hi!%20I'd%20like%20to%20discuss%20building%20my%20brand."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary group"
+          >
+            Let’s Build Your Brand
+            <span className="social-proof-cta-arrow"><ArrowIcon /></span>
+          </a>
+        </motion.div>
       </div>
     </section>
   )

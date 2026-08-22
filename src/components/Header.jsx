@@ -17,6 +17,7 @@ const Header = () => {
   const [headerHeight, setHeaderHeight] = useState(72)
   const headerRef = useRef(null)
   const location = useLocation()
+  const isHome = location.pathname === '/'
 
   useEffect(() => {
     const updateHeaderHeight = () => {
@@ -24,9 +25,16 @@ const Header = () => {
         setHeaderHeight(headerRef.current.offsetHeight)
       }
     }
+
     updateHeaderHeight()
+    const resizeObserver = new ResizeObserver(updateHeaderHeight)
+    if (headerRef.current) resizeObserver.observe(headerRef.current)
     window.addEventListener('resize', updateHeaderHeight)
-    return () => window.removeEventListener('resize', updateHeaderHeight)
+
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', updateHeaderHeight)
+    }
   }, [])
 
   useEffect(() => {
@@ -49,30 +57,49 @@ const Header = () => {
     <>
       <header
         ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-[1000] w-full transition-all duration-500 ${
-          scrolled
-            ? 'py-3 border-b border-white/[0.07]'
-            : 'py-4 border-b border-transparent'
+        className={`top-0 z-[1000] w-full transition-all duration-500 ${
+          isHome
+            ? `sticky border-b ${
+                scrolled
+                  ? 'py-2.5 border-[rgba(201,161,112,0.16)] shadow-[0_12px_36px_rgba(0,0,0,0.28)]'
+                  : 'py-3 border-[rgba(201,161,112,0.10)] shadow-[0_8px_28px_rgba(0,0,0,0.18)]'
+              }`
+            : `fixed left-0 right-0 ${
+                scrolled
+                  ? 'py-3 border-b border-white/[0.07]'
+                  : 'py-4 border-b border-transparent'
+              }`
         }`}
         style={{
-          background: scrolled
-            ? 'rgba(17,17,17,0.92)'
-            : 'rgba(17,17,17,0.5)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          background: isHome
+            ? scrolled
+              ? 'rgba(8, 28, 17, 0.88)'
+              : 'rgba(9, 31, 19, 0.72)'
+            : scrolled
+              ? 'rgba(17,17,17,0.92)'
+              : 'rgba(17,17,17,0.5)',
+          backdropFilter: isHome
+            ? 'blur(16px) saturate(145%)'
+            : 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: isHome
+            ? 'blur(16px) saturate(145%)'
+            : 'blur(20px) saturate(180%)',
         }}
       >
         <div className="flex justify-between items-center max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 touch-target group"
+            className={`${isHome ? 'akrion-logo-link' : ''} flex items-center gap-2 touch-target group`}
             aria-label="Akrion Digitals Home"
           >
             <img
               src={logo}
               alt="Akrion Digitals"
-              className="h-8 sm:h-10 md:h-12 w-auto transition-all duration-300 group-hover:opacity-80"
+              className={isHome
+                ? 'akrion-logo h-10 w-auto sm:h-11 lg:h-14'
+                : 'h-8 w-auto transition-all duration-300 group-hover:opacity-80 sm:h-10 md:h-12'
+              }
             />
           </Link>
 
@@ -142,10 +169,12 @@ const Header = () => {
         }`}
         style={{
           top: `${headerHeight}px`,
-          background: 'rgba(15,15,15,0.98)',
+          background: isHome ? 'rgba(8, 28, 17, 0.97)' : 'rgba(15,15,15,0.98)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: isHome
+            ? '1px solid rgba(201,161,112,0.14)'
+            : '1px solid rgba(255,255,255,0.08)',
           maxHeight: `calc(100vh - ${headerHeight}px)`,
           overflowY: 'auto',
         }}

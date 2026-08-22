@@ -1,223 +1,427 @@
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import ScrollAnimation, { ParallaxSection } from './ScrollAnimation'
-import TiletDivider from './TiletDivider'
+import logo from '../Artboard 2.png'
+import brandIdentityLarge from '../assets/services/service-brand-identity-1200.webp'
+import brandIdentitySmall from '../assets/services/service-brand-identity-720.webp'
+import webDevelopmentLarge from '../assets/services/service-web-development-1200.webp'
+import webDevelopmentSmall from '../assets/services/service-web-development-720.webp'
+import videoProductionLarge from '../assets/portfolio/documentary-film-1400.webp'
+import videoProductionSmall from '../assets/portfolio/documentary-film-720.webp'
+import videoMotionLarge from '../assets/services/service-video-motion-1200.webp'
+import videoMotionSmall from '../assets/services/service-video-motion-720.webp'
+import socialMediaLarge from '../assets/services/service-social-media-1200.webp'
+import socialMediaSmall from '../assets/services/service-social-media-720.webp'
 
-// Emotional hook headlines that rotate
-const hooks = [
-  'We Make the Unknown Known.',
-  'Brands Customers Remember.',
-  'Your Business Deserves More.',
-  'We Deliver Results. With Evidence.',
-]
-
-const stats = [
-  { value: '50+', label: 'Projects Delivered' },
-  { value: '3+', label: 'Years of Experience' },
-  { value: '100%', label: 'Client Satisfaction' },
-  { value: '5+', label: 'Industries Served' },
-]
-
-// Brand colors — Deep Green + Warm Cream + Muted Gold
 const GOLD = '#C9A170'
 const CREAM = '#F5EDD8'
+const HERO_BACKGROUND_INTERVAL = 6500
 
-const Hero = () => {
-  const [hookIndex, setHookIndex] = useState(0)
-  const [displayText, setDisplayText] = useState('')
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
-  const [isMobile, setIsMobile] = useState(false)
+// Replace either responsive image pair below when real Akrion project imagery is ready.
+const heroBackgrounds = [
+  {
+    id: 'brand-identity-and-packaging',
+    src: brandIdentityLarge,
+    srcSet: `${brandIdentitySmall} 720w, ${brandIdentityLarge} 1200w`,
+    position: 'center 48%',
+    mobilePosition: '61% center',
+    panFrom: '-0.45%',
+    panTo: '0.45%',
+  },
+  {
+    id: 'website-and-application-design',
+    src: webDevelopmentLarge,
+    srcSet: `${webDevelopmentSmall} 720w, ${webDevelopmentLarge} 1200w`,
+    position: '58% center',
+    mobilePosition: '57% center',
+    panFrom: '0.5%',
+    panTo: '-0.4%',
+  },
+  {
+    id: 'video-production',
+    src: videoProductionLarge,
+    srcSet: `${videoProductionSmall} 720w, ${videoProductionLarge} 1400w`,
+    position: 'center 46%',
+    mobilePosition: '45% center',
+    panFrom: '-0.35%',
+    panTo: '0.5%',
+  },
+  {
+    id: 'motion-design',
+    src: videoMotionLarge,
+    srcSet: `${videoMotionSmall} 720w, ${videoMotionLarge} 1200w`,
+    position: '58% center',
+    mobilePosition: '60% center',
+    panFrom: '0.45%',
+    panTo: '-0.5%',
+  },
+  {
+    id: 'social-media-campaigns',
+    src: socialMediaLarge,
+    srcSet: `${socialMediaSmall} 720w, ${socialMediaLarge} 1200w`,
+    position: '56% center',
+    mobilePosition: '70% center',
+    panFrom: '-0.4%',
+    panTo: '0.45%',
+  },
+]
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+const particles = [
+  { size: 2, top: '15%', left: '10%', color: GOLD, depth: 7, delay: 0 },
+  { size: 3, top: '30%', left: '85%', color: '#2D6B3F', depth: 12, delay: 0.8 },
+  { size: 2, top: '65%', left: '75%', color: CREAM, depth: 17, delay: 1.6 },
+  { size: 4, top: '20%', left: '45%', color: GOLD, depth: 9, delay: 2.4 },
+  { size: 2, top: '75%', left: '15%', color: '#2D6B3F', depth: 15, delay: 3.2 },
+  { size: 3, top: '45%', left: '60%', color: GOLD, depth: 20, delay: 4 },
+]
 
-  /* Typewriter effect */
-  useEffect(() => {
-    const current = hooks[hookIndex]
-    let timeout
-
-    if (!isDeleting) {
-      if (displayText.length < current.length) {
-        timeout = setTimeout(() => setDisplayText(current.slice(0, displayText.length + 1)), 55)
-      } else {
-        timeout = setTimeout(() => setIsDeleting(true), 2800)
-      }
-    } else {
-      if (displayText.length > 0) {
-        timeout = setTimeout(() => setDisplayText(current.slice(0, displayText.length - 1)), 30)
-      } else {
-        setIsDeleting(false)
-        setHookIndex((prev) => (prev + 1) % hooks.length)
-      }
-    }
-    return () => clearTimeout(timeout)
-  }, [displayText, isDeleting, hookIndex])
-
-  /* Mouse parallax (desktop only) */
-  useEffect(() => {
-    if (isMobile) return
-    const handleMouseMove = (e) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      })
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [isMobile])
+const ParallaxLayer = ({ cursorX, cursorY, depth, className = '', style, children }) => {
+  const x = useTransform(cursorX, [-1, 1], [-depth, depth])
+  const y = useTransform(cursorY, [-1, 1], [-depth, depth])
 
   return (
-    <section className="min-h-screen relative flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24">
-      {/* Background layer — warm-tinted deep green */}
+    <motion.div className={`hero-parallax-layer ${className}`} style={{ ...style, x, y }}>
+      {children}
+    </motion.div>
+  )
+}
+
+const TiletParticle = ({ cursorX, cursorY, depth, className = '', delay = '0s' }) => (
+  <ParallaxLayer
+    cursorX={cursorX}
+    cursorY={cursorY}
+    depth={depth}
+    className={`pointer-events-none absolute z-[1] ${className}`}
+  >
+    <div
+      className="hero-ambient-motion h-10 w-10 animate-float"
+      style={{ animationDelay: delay, animationDuration: '12s' }}
+    >
+      <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M20 2L38 20L20 38L2 20L20 2Z" stroke={GOLD} strokeWidth="0.5" opacity="0.3" />
+        <circle cx="20" cy="20" r="1.5" fill={GOLD} opacity="0.4" />
+      </svg>
+    </div>
+  </ParallaxLayer>
+)
+
+const ShowreelPlaceholder = () => (
+  <div
+    className="showreel-card group relative aspect-video w-full overflow-hidden rounded-[1.5rem] border border-[rgba(201,161,112,0.30)] bg-bg-card shadow-[0_24px_70px_rgba(0,0,0,0.34),0_0_42px_rgba(201,161,112,0.07)] transition-all duration-500 ease-out hover:-translate-y-1 hover:border-[rgba(201,161,112,0.62)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.42),0_0_52px_rgba(201,161,112,0.14)] motion-reduce:transform-none"
+    role="img"
+    aria-label="Akrion Digitals YouTube showreel placeholder"
+  >
+    {/* Replace this placeholder content with a responsive YouTube iframe when the showreel URL is ready. */}
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_22%,rgba(201,161,112,0.24),transparent_32%),linear-gradient(135deg,#173621_0%,#0D1F13_52%,#09160E_100%)]" />
+    <div className="eth-pattern absolute -right-12 -top-10 h-56 w-56 rotate-12 opacity-25" />
+    <div className="dot-grid absolute inset-0 opacity-30" />
+    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-gold/70 to-transparent" />
+    <div className="absolute -bottom-20 -left-12 h-56 w-56 rounded-full bg-green-light/20 blur-3xl" />
+
+    <img
+      src={logo}
+      alt=""
+      aria-hidden="true"
+      className="absolute left-1/2 top-1/2 w-[52%] -translate-x-1/2 -translate-y-1/2 opacity-[0.07] grayscale"
+    />
+
+    <div className="absolute inset-0 flex items-center justify-center">
+      <span className="showreel-play flex h-20 w-20 items-center justify-center rounded-full border border-accent-gold-light/70 bg-gradient-to-br from-accent-gold-light to-accent-gold text-bg-dark shadow-[0_12px_36px_rgba(201,161,112,0.38)] transition-transform duration-500 ease-out group-hover:scale-110 sm:h-24 sm:w-24 motion-reduce:transform-none">
+        <svg className="ml-1 h-7 w-7 sm:h-8 sm:w-8" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M11.5 8.5L24 16L11.5 23.5V8.5Z" fill="currentColor" />
+        </svg>
+      </span>
+    </div>
+
+    <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-black/55 via-black/20 to-transparent px-5 pb-5 pt-16 sm:px-7 sm:pb-6">
+      <div>
+        <p className="font-display text-base font-semibold tracking-tight text-[#F5EDD8] sm:text-lg">
+          Discover Akrion Digitals.
+        </p>
+        <p className="mt-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-accent-gold-light/70 sm:text-xs">
+          YouTube showreel · Coming soon
+        </p>
+      </div>
+      <span className="hidden rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[rgba(245,237,216,0.55)] backdrop-blur-sm sm:inline-flex">
+        16:9
+      </span>
+    </div>
+  </div>
+)
+
+const Hero = () => {
+  const shouldReduceMotion = useReducedMotion()
+  const [supportsPointerParallax, setSupportsPointerParallax] = useState(false)
+  const [activeBackground, setActiveBackground] = useState(0)
+  const [mountedBackgrounds, setMountedBackgrounds] = useState(() => new Set([0]))
+  const [prefersReducedSlideshowMotion, setPrefersReducedSlideshowMotion] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ))
+  const [isPageVisible, setIsPageVisible] = useState(() => (
+    typeof document === 'undefined' || document.visibilityState === 'visible'
+  ))
+  const cursorX = useMotionValue(0)
+  const cursorY = useMotionValue(0)
+  const smoothX = useSpring(cursorX, { stiffness: 45, damping: 24, mass: 0.8 })
+  const smoothY = useSpring(cursorY, { stiffness: 45, damping: 24, mass: 0.8 })
+  const shouldReduceSlideshowMotion = Boolean(shouldReduceMotion || prefersReducedSlideshowMotion)
+
+  useEffect(() => {
+    const pointerQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const updatePointerSupport = () => setSupportsPointerParallax(pointerQuery.matches)
+
+    updatePointerSupport()
+    pointerQuery.addEventListener('change', updatePointerSupport)
+    return () => pointerQuery.removeEventListener('change', updatePointerSupport)
+  }, [])
+
+  useEffect(() => {
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updateMotionPreference = () => setPrefersReducedSlideshowMotion(motionQuery.matches)
+
+    updateMotionPreference()
+    motionQuery.addEventListener('change', updateMotionPreference)
+    return () => motionQuery.removeEventListener('change', updateMotionPreference)
+  }, [])
+
+  useEffect(() => {
+    const preloadAttribute = 'data-akrion-hero-preload'
+    if (document.head.querySelector(`link[${preloadAttribute}]`)) return undefined
+
+    const preloadLink = document.createElement('link')
+    preloadLink.rel = 'preload'
+    preloadLink.as = 'image'
+    preloadLink.href = heroBackgrounds[0].src
+    preloadLink.imageSrcset = heroBackgrounds[0].srcSet
+    preloadLink.imageSizes = '100vw'
+    preloadLink.fetchPriority = 'high'
+    preloadLink.setAttribute(preloadAttribute, 'true')
+    document.head.appendChild(preloadLink)
+
+    return () => preloadLink.remove()
+  }, [])
+
+  useEffect(() => {
+    const updatePageVisibility = () => {
+      setIsPageVisible(document.visibilityState === 'visible')
+    }
+
+    document.addEventListener('visibilitychange', updatePageVisibility)
+    return () => document.removeEventListener('visibilitychange', updatePageVisibility)
+  }, [])
+
+  useEffect(() => {
+    if (shouldReduceSlideshowMotion) {
+      setActiveBackground(0)
+      setMountedBackgrounds(new Set([0]))
+      return undefined
+    }
+
+    if (!isPageVisible) return undefined
+
+    const nextBackground = (activeBackground + 1) % heroBackgrounds.length
+    const stageTimer = window.setTimeout(() => {
+      setMountedBackgrounds((current) => {
+        if (current.has(nextBackground)) return current
+
+        const next = new Set(current)
+        next.add(nextBackground)
+        return next
+      })
+    }, HERO_BACKGROUND_INTERVAL - 1800)
+
+    const rotationTimer = window.setTimeout(() => {
+      setActiveBackground(nextBackground)
+    }, HERO_BACKGROUND_INTERVAL)
+
+    return () => {
+      window.clearTimeout(stageTimer)
+      window.clearTimeout(rotationTimer)
+    }
+  }, [activeBackground, isPageVisible, shouldReduceSlideshowMotion])
+
+  const handlePointerMove = (event) => {
+    if (!supportsPointerParallax || shouldReduceMotion || event.pointerType !== 'mouse') return
+
+    const bounds = event.currentTarget.getBoundingClientRect()
+    cursorX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 2)
+    cursorY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 2)
+  }
+
+  const resetParallax = () => {
+    cursorX.set(0)
+    cursorY.set(0)
+  }
+
+  const entrance = (delay = 0) => ({
+    initial: shouldReduceMotion ? false : { opacity: 0, y: 24 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.65, delay, ease: [0.25, 0.46, 0.45, 0.94] },
+  })
+
+  return (
+    <section
+      className="hero-section relative flex min-h-[calc(100svh-80px)] items-center overflow-hidden py-14 sm:py-16 lg:py-20"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetParallax}
+    >
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_72%_24%,rgba(201,161,112,0.10)_0%,transparent_43%),radial-gradient(ellipse_at_18%_76%,rgba(45,107,63,0.13)_0%,transparent_48%),#0D1F13]" />
+
       <div
-        className="absolute inset-0 z-0"
-        style={{
-          background: `radial-gradient(ellipse at ${mousePosition.x}% ${mousePosition.y}%, rgba(245,237,216,0.06) 0%, transparent 55%), radial-gradient(ellipse at 75% 25%, rgba(201,161,112,0.09) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(45,107,63,0.10) 0%, transparent 50%), #0D1F13`,
-        }}
-      />
+        className="hero-background-slideshow pointer-events-none absolute inset-0 z-0"
+        data-paused={!isPageVisible || shouldReduceSlideshowMotion}
+        aria-hidden="true"
+      >
+        {heroBackgrounds.map((background, index) => {
+          if ((shouldReduceSlideshowMotion && index !== 0) || !mountedBackgrounds.has(index)) return null
 
-      {/* Dot grid overlay */}
-      <div className="absolute inset-0 z-0 dot-grid opacity-50" />
+          return (
+            <img
+              key={background.id}
+              src={background.src}
+              srcSet={background.srcSet}
+              sizes="100vw"
+              alt=""
+              loading={index === 0 ? 'eager' : 'lazy'}
+              fetchPriority={index === 0 ? 'high' : 'low'}
+              decoding="async"
+              className={`hero-background-image ${index === activeBackground ? 'is-active' : ''}`}
+              style={{
+                '--hero-background-position': background.position,
+                '--hero-background-mobile-position': background.mobilePosition,
+                '--hero-background-pan-from': background.panFrom,
+                '--hero-background-pan-to': background.panTo,
+              }}
+            />
+          )
+        })}
+      </div>
+      <div className="hero-background-wash pointer-events-none absolute inset-0 z-0" aria-hidden="true" />
 
-      {/* Ornamental Tilet Corners */}
-      <div className="absolute top-0 left-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0" />
-      <div className="absolute top-0 right-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0 transform rotate-90" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0 transform -rotate-90" />
-      <div className="absolute bottom-0 right-0 w-32 h-32 eth-corner opacity-20 pointer-events-none z-0 transform rotate-180" />
+      <ParallaxLayer cursorX={smoothX} cursorY={smoothY} depth={5} className="absolute -inset-6 z-0">
+        <div className="hero-pattern-grid dot-grid h-full w-full" />
+      </ParallaxLayer>
 
-      {/* Warm cream & gold glow orbs */}
-      <div className="absolute top-1/4 left-1/5 w-[550px] h-[550px] rounded-full blur-[140px] animate-pulse" style={{ background: 'rgba(245,237,216,0.04)' }} />
-      <div
-        className="absolute bottom-1/4 right-1/5 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse"
-        style={{ background: 'rgba(201,161,112,0.07)', animationDelay: '2s' }}
-      />
+      <ParallaxLayer cursorX={smoothX} cursorY={smoothY} depth={8} className="pointer-events-none absolute left-0 top-0 z-0">
+        <div className="hero-pattern-corner eth-corner h-32 w-32" />
+      </ParallaxLayer>
+      <ParallaxLayer cursorX={smoothX} cursorY={smoothY} depth={13} className="pointer-events-none absolute right-0 top-0 z-0">
+        <div className="hero-pattern-corner eth-corner h-32 w-32 rotate-90" />
+      </ParallaxLayer>
+      <ParallaxLayer cursorX={smoothX} cursorY={smoothY} depth={10} className="pointer-events-none absolute bottom-0 left-0 z-0">
+        <div className="hero-pattern-corner eth-corner h-32 w-32 -rotate-90" />
+      </ParallaxLayer>
+      <ParallaxLayer cursorX={smoothX} cursorY={smoothY} depth={16} className="pointer-events-none absolute bottom-0 right-0 z-0">
+        <div className="hero-pattern-corner eth-corner h-32 w-32 rotate-180" />
+      </ParallaxLayer>
 
-      {/* Floating particles */}
-      {[...Array(8)].map((_, i) => {
-        const isTilet = i >= 6
-        return (
-          <div
-            key={i}
-            className="absolute rounded-full animate-float pointer-events-none"
+      <ParallaxLayer cursorX={smoothX} cursorY={smoothY} depth={7} className="pointer-events-none absolute left-[12%] top-[8%] z-0">
+        <div className="hero-ambient-motion h-[420px] w-[420px] animate-pulse rounded-full bg-[rgba(245,237,216,0.035)] blur-[130px]" />
+      </ParallaxLayer>
+      <ParallaxLayer cursorX={smoothX} cursorY={smoothY} depth={18} className="pointer-events-none absolute bottom-[5%] right-[8%] z-0">
+        <div className="hero-ambient-motion h-[360px] w-[360px] animate-pulse rounded-full bg-[rgba(201,161,112,0.065)] blur-[100px] [animation-delay:2s]" />
+      </ParallaxLayer>
+
+      {particles.map((particle) => (
+        <ParallaxLayer
+          key={`${particle.top}-${particle.left}`}
+          cursorX={smoothX}
+          cursorY={smoothY}
+          depth={particle.depth}
+          className="pointer-events-none absolute z-[1]"
+          style={{ top: particle.top, left: particle.left }}
+        >
+          <span
+            className="hero-ambient-motion block animate-float rounded-full"
             style={{
-              width: isTilet ? '40px' : `${[2, 3, 2, 4, 2, 3][i]}px`,
-              height: isTilet ? '40px' : `${[2, 3, 2, 4, 2, 3][i]}px`,
-              background: isTilet ? 'none' : [GOLD, '#2D6B3F', CREAM, GOLD, '#2D6B3F', GOLD][i],
-              backgroundImage: isTilet ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L38 20 L20 38 L2 20 Z' stroke='%23C9A170' stroke-width='0.5' fill='none' opacity='0.3'/%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23C9A170' opacity='0.4'/%3E%3C/svg%3E")` : 'none',
-              top: [`15%`, `30%`, `65%`, `20%`, `75%`, `45%`, `25%`, `80%`][i],
-              left: [`10%`, `85%`, `75%`, `45%`, `15%`, `60%`, `80%`, `20%`][i],
-              opacity: isTilet ? 0.4 : 0.55,
-              animationDelay: `${i * 0.8}s`,
-              animationDuration: isTilet ? '12s' : '6s',
-              zIndex: 1,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              background: particle.color,
+              opacity: 0.55,
+              animationDelay: `${particle.delay}s`,
             }}
           />
-        )
-      })}
+        </ParallaxLayer>
+      ))}
 
-      {/* Main content */}
-      <ParallaxSection speed={0.15} className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="flex flex-col items-center text-center gap-6 sm:gap-8 lg:gap-10">
+      <TiletParticle cursorX={smoothX} cursorY={smoothY} depth={19} className="left-[8%] top-[46%]" />
+      <TiletParticle cursorX={smoothX} cursorY={smoothY} depth={14} className="right-[8%] top-[32%]" delay="1.4s" />
 
-          {/* Label chip */}
-          <ScrollAnimation animation="fadeDown" delay={0.1} duration={0.6}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.12em] uppercase" style={{ border: '1px solid rgba(201,161,112,0.2)', background: 'rgba(245,237,216,0.04)', color: 'rgba(245,237,216,0.6)' }}>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#C9A170' }} />
-              Creative Agency · Addis Ababa, Ethiopia
-            </div>
-          </ScrollAnimation>
+      <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10">
+        <div className="grid items-center gap-12 xl:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)] xl:gap-16 2xl:gap-20">
+          <div className="mx-auto flex w-full max-w-3xl flex-col items-start text-left xl:mx-0 xl:max-w-none">
+            <motion.div {...entrance(0.05)}>
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent-gold/25 bg-[rgba(245,237,216,0.05)] px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[rgba(245,237,216,0.70)] backdrop-blur-sm sm:text-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent-gold motion-safe:animate-pulse" />
+                Creative Agency · Addis Ababa, Ethiopia
+              </div>
+            </motion.div>
 
-          {/* Emotional headline with typewriter */}
-          <ScrollAnimation animation="fadeUp" delay={0.2} duration={0.8}>
-            <h1 className="section-heading text-[clamp(2.4rem,7.5vw,6.5rem)] leading-[1.0] tracking-[-0.04em]">
-              <span
-                className="relative inline-block gradient-text-gold"
-                style={{ minWidth: '2ch' }}
-              >
-                {displayText}
-                <span className="animate-blink" style={{ color: '#C9A170' }}>|</span>
-              </span>
-            </h1>
-          </ScrollAnimation>
+            <motion.h1
+              {...entrance(0.13)}
+              className="section-heading mt-6 max-w-[12ch] text-[clamp(2.75rem,6vw,5.25rem)] leading-[0.98] tracking-[-0.045em] sm:mt-7"
+            >
+              <span className="gradient-text-gold">We Make the Unknown Known.</span>
+            </motion.h1>
 
-          {/* Emotional sub-headline */}
-          <ScrollAnimation animation="fadeUp" delay={0.35} duration={0.8}>
-            <p className="text-[clamp(1rem,2.2vw,1.25rem)] leading-relaxed max-w-2xl font-light" style={{ color: 'rgba(245,237,216,0.55)' }}>
+            <motion.p
+              {...entrance(0.21)}
+              className="mt-6 max-w-2xl text-[clamp(1rem,1.55vw,1.2rem)] font-light leading-relaxed text-[rgba(245,237,216,0.78)] sm:mt-7"
+            >
               We help businesses build brands customers{' '}
-              <span style={{ color: CREAM, fontWeight: 400 }}>actually remember</span>
+              <span className="font-normal text-[#F5EDD8]">actually remember</span>
               {' '}— with creativity, strategy, and{' '}
-              <span style={{ color: GOLD, fontWeight: 400 }}>evidence-backed results.</span>
-            </p>
-          </ScrollAnimation>
+              <span className="font-normal text-accent-gold-light">evidence-backed results.</span>
+            </motion.p>
 
-          {/* CTA Buttons — more options, stronger language */}
-          <ScrollAnimation animation="fadeUp" delay={0.5} duration={0.7}>
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              {/* Primary CTA */}
-              <Link
-                to="/portfolio"
-                className="btn-primary text-base px-8 py-4 rounded-2xl group min-h-[52px]"
-              >
-                See How We Grow Your Brand
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
-                  <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
-
-              {/* Free Strategy Call CTA */}
-              <a
-                href="https://wa.me/251976601172?text=Hi!%20I'd%20like%20a%20free%20strategy%20call%20to%20discuss%20my%20brand."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-ghost text-base px-8 py-4 rounded-2xl min-h-[52px] group"
-              >
-                Book Free Strategy Call
-              </a>
-            </div>
-
-            {/* Trust signal */}
-            <p className="text-xs mt-3 text-center" style={{ color: 'rgba(201,161,112,0.35)' }}>
-              No commitment · 30-min call · Real results, not promises
-            </p>
-          </ScrollAnimation>
-
-          {/* Premium Ethiopian Tilet Divider */}
-          <TiletDivider className="py-2 opacity-80" />
-
-          {/* Stats row */}
-          <ScrollAnimation animation="fadeUp" delay={0.75} duration={0.7}>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden" style={{ background: 'rgba(201,161,112,0.08)', border: '1px solid rgba(201,161,112,0.12)' }}>
-              {stats.map((stat, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center gap-0.5 px-6 sm:px-8 py-5 transition-all duration-300 hover:bg-white/[0.02]"
-                  style={{
-                    background: 'rgba(245,237,216,0.02)',
-                    backdropFilter: 'blur(10px)',
-                    borderRight: i < stats.length - 1 ? '1px solid rgba(201,161,112,0.08)' : 'none'
-                  }}
+            <motion.div {...entrance(0.29)} className="mt-8 w-full sm:mt-9">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                <Link
+                  to="/portfolio"
+                  className="hero-primary-cta btn-primary group min-h-[52px] rounded-2xl px-5 py-4 text-center text-sm sm:px-8 sm:text-base"
                 >
-                  <span className="counter-text text-2xl sm:text-3xl font-bold" style={{ color: '#C9A170', textShadow: '0 0 20px rgba(201,161,112,0.2)' }}>{stat.value}</span>
-                  <span className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-center leading-tight" style={{ color: 'rgba(245,237,216,0.35)' }}>
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </ScrollAnimation>
+                  See How We Grow Your Brand
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" className="transition-transform duration-300 group-hover:translate-x-1.5 motion-reduce:transform-none" aria-hidden="true">
+                    <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
 
+                <a
+                  href="https://wa.me/251976601172?text=Hi!%20I'd%20like%20a%20free%20strategy%20call%20to%20discuss%20my%20brand."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hero-secondary-cta btn-ghost group min-h-[52px] rounded-2xl px-5 py-4 text-center text-sm sm:px-8 sm:text-base"
+                >
+                  Book Free Strategy Call
+                </a>
+              </div>
+
+              <p className="mt-4 hidden text-left text-xs font-medium tracking-[0.015em] text-accent-gold-light/[0.68] xs:block sm:text-sm">
+                No commitment · 30-min call · Real results, not promises
+              </p>
+            </motion.div>
+          </div>
+
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0, x: 32 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="mx-auto w-full max-w-4xl xl:max-w-none"
+          >
+            <ShowreelPlaceholder />
+          </motion.div>
         </div>
-      </ParallaxSection>
+      </div>
 
-      {/* Scroll hint */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-40">
-        <span className="text-[10px] tracking-[0.2em] uppercase font-medium" style={{ color: '#C9A170' }}>Scroll</span>
-        <div className="w-px h-12" style={{ background: 'linear-gradient(to bottom, rgba(201,161,112,0.5), transparent)' }} />
+      <div className="pointer-events-none absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 opacity-40 xl:flex">
+        <span className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-accent-gold">Scroll</span>
+        <div className="h-10 w-px bg-gradient-to-b from-accent-gold/50 to-transparent" />
       </div>
     </section>
   )

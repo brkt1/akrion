@@ -1,229 +1,468 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import PageMeta from '../components/PageMeta'
+import ResponsiveArticleImage from '../components/blog/ResponsiveArticleImage'
 import ScrollAnimation, { StaggerContainer, StaggerItem } from '../components/ScrollAnimation'
+import {
+  BLOG_FILTERS,
+  blogArticles,
+  blogHeroMedia,
+  getArticlePath,
+  mergeBlogRecords,
+} from '../data/blogArticles'
 import { authAPI } from '../lib/api/auth'
 import { blogAPI } from '../lib/api/blog'
 import { uploadAPI } from '../lib/api/upload'
 
-const GOLD = '#C9A170'
-const GOLD_LIGHT = '#E2C49A'
-const CARD_BG = 'rgba(19,32,25,0.9)'
-const CARD_BORDER = 'rgba(201,161,112,0.1)'
+const EMPTY_FORM = {
+  title: '',
+  content: '',
+  author: 'Akrion Digitals',
+  date: '',
+  image: '',
+  category: '',
+}
 const INPUT_STYLE = {
-  width: '100%', padding: '12px 16px',
+  width: '100%',
+  padding: '12px 16px',
   background: 'rgba(201,161,112,0.05)',
-  border: '1px solid rgba(201,161,112,0.15)',
-  borderRadius: '12px', color: '#F0EAD6', fontSize: '14px',
-  outline: 'none', transition: 'border-color 0.2s, background 0.2s',
+  border: '1px solid rgba(201,161,112,0.18)',
+  borderRadius: '12px',
+  color: '#F0EAD6',
+  fontSize: '14px',
+  outline: 'none',
+  transition: 'border-color 0.2s, background 0.2s',
 }
 
+const ArrowIcon = () => (
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none">
+    <path d="M3.5 10H15.5M11 5.5L15.5 10L11 14.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+const HeroCollageImage = ({ media, index }) => {
+  const srcSet = media.srcSmall && media.smallWidth && media.width
+    ? `${media.srcSmall} ${media.smallWidth}w, ${media.src} ${media.width}w`
+    : undefined
+
+  return (
+    <figure className={`blog-hero-collage-tile blog-hero-collage-tile--${index + 1}`} aria-hidden="true">
+      <img
+        src={media.src}
+        srcSet={srcSet}
+        sizes="(min-width: 960px) 24vw, 42vw"
+        width={media.width || undefined}
+        height={media.height || undefined}
+        alt=""
+        loading={index === 0 ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+      <span />
+    </figure>
+  )
+}
+
+const formatPublishedDate = (value) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const ArticleMeta = ({ article, compact = false }) => {
+  const details = [article.publisher, formatPublishedDate(article.publishedAt), article.readingTime].filter(Boolean)
+
+  if (!details.length) return null
+
+  return (
+    <ul className={`blog-article-meta${compact ? ' blog-article-meta--compact' : ''}`} aria-label="Article details">
+      {details.map((detail) => <li key={detail}>{detail}</li>)}
+    </ul>
+  )
+}
+
+const ArticleCard = ({ article, featured = false, isAdmin, onEdit, onDelete }) => (
+  <article className={featured ? 'blog-featured-card group' : 'blog-editorial-card group'}>
+    <Link
+      to={getArticlePath(article)}
+      className={featured ? 'blog-featured-link' : 'blog-editorial-link'}
+      aria-label={`Read ${article.title}`}
+    >
+      <div className={featured ? 'blog-featured-media' : 'blog-editorial-media'}>
+        <ResponsiveArticleImage
+          media={article.hero}
+          sizes={featured
+            ? '(min-width: 900px) 55vw, 100vw'
+            : '(min-width: 1100px) 42vw, (min-width: 720px) 50vw, 100vw'}
+          loading={featured ? 'eager' : 'lazy'}
+          fetchPriority={featured ? 'high' : undefined}
+          className="blog-article-image"
+        />
+        <span className="blog-article-image-wash" aria-hidden="true" />
+        {article.readingTime && <span className="blog-card-reading-time">{article.readingTime}</span>}
+      </div>
+
+      <div className={featured ? 'blog-featured-copy' : 'blog-editorial-copy'}>
+        <div className="blog-category-row">
+          <span>{article.category}</span>
+          <i aria-hidden="true" />
+          {featured && <strong>Featured story</strong>}
+        </div>
+        <h2>{article.title}</h2>
+        <p>{article.excerpt}</p>
+        <ArticleMeta article={article} compact={!featured} />
+        <span className="blog-read-action">
+          Read Article <span className="blog-read-arrow"><ArrowIcon /></span>
+        </span>
+      </div>
+    </Link>
+
+    {isAdmin && article.sourceRecord && (
+      <div className="blog-admin-card-actions">
+        <button type="button" onClick={() => onEdit(article.sourceRecord)}>Edit</button>
+        <button type="button" onClick={() => onDelete(article.sourceRecord.id)}>Delete</button>
+      </div>
+    )}
+  </article>
+)
+
 const Blog = () => {
-  const [posts, setPosts] = useState([])
+  const [records, setRecords] = useState([])
+  const [hasLoadedRecords, setHasLoadedRecords] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
   const [editingPost, setEditingPost] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
-  const [formData, setFormData] = useState({
-    title: '', content: '', author: '',
-    date: new Date().toISOString().split('T')[0],
-    image: '', category: ''
-  })
+  const [activeFilter, setActiveFilter] = useState('All')
+  const [formData, setFormData] = useState(EMPTY_FORM)
 
   useEffect(() => {
+    const loadPosts = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await blogAPI.getAll()
+        setRecords(data)
+        setHasLoadedRecords(true)
+      } catch (loadError) {
+        console.error('Unable to load live blog records; using the local editorial edition.', loadError)
+        setError('The latest posts could not be checked. Showing the saved editorial edition.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const checkAdmin = async () => {
+      const adminMode = localStorage.getItem('blogAdminMode') === 'true'
+      if (!adminMode) {
+        setIsAdmin(false)
+        return
+      }
+      const isActuallyAdmin = await authAPI.isAdmin()
+      setIsAdmin(isActuallyAdmin)
+      if (!isActuallyAdmin) localStorage.removeItem('blogAdminMode')
+    }
+
     loadPosts()
     checkAdmin()
   }, [])
 
-  const checkAdmin = async () => {
-    const adminMode = localStorage.getItem('blogAdminMode') === 'true'
-    if (adminMode) {
-      const isActuallyAdmin = await authAPI.isAdmin()
-      setIsAdmin(isActuallyAdmin)
-      if (!isActuallyAdmin) localStorage.removeItem('blogAdminMode')
-    } else {
-      setIsAdmin(false)
+  useEffect(() => {
+    const featuredImage = blogArticles.find((article) => article.featured)?.hero
+    if (!featuredImage?.src) return undefined
+
+    const selector = 'link[rel="preload"][data-blog-featured-image]'
+    let preload = document.head.querySelector(selector)
+    const created = !preload
+
+    if (!preload) {
+      preload = document.createElement('link')
+      preload.rel = 'preload'
+      preload.as = 'image'
+      preload.setAttribute('data-blog-featured-image', '')
+      document.head.appendChild(preload)
     }
-  }
+
+    preload.href = featuredImage.src
+    if (featuredImage.srcSmall && featuredImage.smallWidth && featuredImage.width) {
+      preload.setAttribute(
+        'imagesrcset',
+        `${featuredImage.srcSmall} ${featuredImage.smallWidth}w, ${featuredImage.src} ${featuredImage.width}w`,
+      )
+      preload.setAttribute('imagesizes', '(min-width: 900px) 55vw, 100vw')
+    }
+
+    return () => {
+      if (created) preload.remove()
+    }
+  }, [])
+
+  const displayedArticles = useMemo(
+    () => (hasLoadedRecords ? mergeBlogRecords(records) : blogArticles),
+    [hasLoadedRecords, records],
+  )
+  const filteredArticles = useMemo(
+    () => activeFilter === 'All'
+      ? displayedArticles
+      : displayedArticles.filter((article) => article.category === activeFilter),
+    [activeFilter, displayedArticles],
+  )
+  const featuredArticle = filteredArticles.find((article) => article.featured)
+    || (activeFilter === 'All' ? filteredArticles[0] : null)
+  const supportingArticles = featuredArticle
+    ? filteredArticles.filter((article) => article.slug !== featuredArticle.slug)
+    : filteredArticles
 
   const loadPosts = async () => {
-    try { setLoading(true); setError(null); const data = await blogAPI.getAll(); setPosts(data) }
-    catch (err) { console.error(err); setError('Failed to load blog posts.') }
-    finally { setLoading(false) }
+    const data = await blogAPI.getAll()
+    setRecords(data)
+    setHasLoadedRecords(true)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const resetForm = () => {
+    setFormData(EMPTY_FORM)
+    setEditingPost(null)
+    setShowForm(false)
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
     try {
-      setLoading(true); setError(null)
-      if (editingPost) { await blogAPI.update(editingPost.id, formData) }
-      else { await blogAPI.create(formData) }
+      setLoading(true)
+      setError(null)
+      if (editingPost) await blogAPI.update(editingPost.id, formData)
+      else await blogAPI.create(formData)
       await loadPosts()
-      setFormData({ title: '', content: '', author: '', date: new Date().toISOString().split('T')[0], image: '', category: '' })
-      setShowForm(false); setIsEditing(false); setEditingPost(null)
-    } catch (err) { console.error(err); setError('Failed to save post.') }
-    finally { setLoading(false) }
+      resetForm()
+    } catch (saveError) {
+      console.error(saveError)
+      setError('Failed to save the article. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleEdit = (post) => {
     setEditingPost(post)
-    setFormData({ title: post.title, content: post.content, author: post.author, date: post.date, image: post.image || '', category: post.category || '' })
-    setShowForm(true); setIsEditing(true)
+    setFormData({
+      title: post.title || '',
+      content: post.content || '',
+      author: post.author === 'Akrion Team' ? 'Akrion Digitals' : post.author || 'Akrion Digitals',
+      date: post.date || '',
+      image: post.image || '',
+      category: post.category || '',
+    })
+    setShowForm(true)
+    window.requestAnimationFrame(() => document.getElementById('blog-admin-form')?.scrollIntoView({ block: 'start' }))
   }
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this post?')) {
-      try { setLoading(true); await blogAPI.delete(id); await loadPosts() }
-      catch (err) { setError('Failed to delete post.') }
-      finally { setLoading(false) }
+    if (!window.confirm('Delete this article?')) return
+    try {
+      setLoading(true)
+      setError(null)
+      await blogAPI.delete(id)
+      await loadPosts()
+    } catch (deleteError) {
+      console.error(deleteError)
+      setError('Failed to delete the article. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
+  const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5 MB.')
+      return
+    }
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
-
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0]; if (!file) return
-    if (!file.type.startsWith('image/')) { setError('Please upload an image file'); return }
-    if (file.size > 5 * 1024 * 1024) { setError('Image must be < 5MB'); return }
     try {
-      setUploading(true); setError(null)
+      setUploading(true)
+      setError(null)
       const imageUrl = await uploadAPI.uploadImage(file, 'blog')
-      setFormData({ ...formData, image: imageUrl })
-    } catch (err) { setError('Failed to upload image.') }
-    finally { setUploading(false) }
+      setFormData((current) => ({ ...current, image: imageUrl }))
+    } catch (uploadError) {
+      console.error(uploadError)
+      setError('Failed to upload the image. Please try again.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
     <>
+      <PageMeta
+        title="Blog | Akrion Digitals"
+        description="Ideas, practical guidance, and creative perspectives for building stronger brands."
+        image={blogArticles[0]?.hero?.src}
+        imageAlt={blogArticles[0]?.hero?.alt}
+        path="/blog"
+      />
       <Header />
-      <main className="min-h-screen relative overflow-hidden" style={{ background: '#0D1F13' }}>
-        <div className="fixed inset-0 dot-grid opacity-30 z-0 pointer-events-none" />
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full blur-[160px] z-0 pointer-events-none" style={{ background: 'rgba(201,161,112,0.04)' }} />
-
-        <div className="relative z-10 pt-28 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-10">
-          <div className="max-w-[1200px] mx-auto flex flex-col gap-10 sm:gap-14">
-
-            {/* Header */}
-            <div>
-              <ScrollAnimation animation="fadeUp" delay={0.1}>
-                <div className="section-label mb-4"><span className="section-dot" />Insights &amp; Stories</div>
+      <main className="blog-page">
+        <section className="blog-hero" aria-labelledby="blog-page-title">
+          <div className="blog-pattern blog-pattern--hero eth-pattern-subtle" aria-hidden="true" />
+          <div className="blog-hero-glow" aria-hidden="true" />
+          <div className="blog-shell blog-hero-grid">
+            <div className="blog-hero-copy">
+              <ScrollAnimation animation="fadeUp" delay={0.08} respectReducedMotion>
+                <p className="blog-eyebrow"><span />Insights &amp; Stories</p>
               </ScrollAnimation>
-              <ScrollAnimation animation="fadeUp" delay={0.2} duration={0.8}>
-                <h1 className="section-heading text-[clamp(3rem,8vw,5.5rem)]">BLOG</h1>
+              <ScrollAnimation animation="fadeUp" delay={0.16} duration={0.75} respectReducedMotion>
+                <h1 id="blog-page-title">BLOG</h1>
               </ScrollAnimation>
-              <ScrollAnimation animation="fadeUp" delay={0.35}>
-                <p className="text-lg leading-relaxed mt-4 max-w-2xl font-light" style={{ color: 'rgba(201,161,112,0.5)' }}>
-                  Creative insights, digital storytelling, and design trends from the Akrion team.
-                </p>
+              <ScrollAnimation animation="fadeUp" delay={0.25} respectReducedMotion>
+                <p className="blog-hero-intro">Ideas, practical guidance, and creative perspectives for building stronger brands.</p>
               </ScrollAnimation>
-                {isAdmin && (
-                  <button
-                    onClick={() => { setShowForm(!showForm); if (showForm) { setIsEditing(false); setEditingPost(null); setFormData({ title:'',content:'',author:'',date:new Date().toISOString().split('T')[0],image:'',category:'' }) }}}
-                    className="btn-primary text-sm px-5 py-2.5"
-                  >{showForm ? 'Cancel' : '+ New Post'}</button>
-                )}
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => (showForm ? resetForm() : setShowForm(true))}
+                  className="btn-primary blog-admin-new"
+                >
+                  {showForm ? 'Cancel' : '+ New Article'}
+                </button>
+              )}
             </div>
 
-            {/* Admin form */}
+            <ScrollAnimation className="blog-hero-visual" animation="fadeLeft" delay={0.18} respectReducedMotion>
+              <div className="blog-hero-collage" role="img" aria-label="Akrion creative work across branding, content, web design, marketing, and production">
+                {blogHeroMedia.map((media, index) => <HeroCollageImage key={media.src} media={media} index={index} />)}
+              </div>
+            </ScrollAnimation>
+          </div>
+        </section>
+
+        <section className="blog-edition" aria-labelledby="blog-edition-title">
+          <div className="blog-pattern eth-pattern-subtle" aria-hidden="true" />
+          <div className="blog-shell">
+            <h2 id="blog-edition-title" className="sr-only">Akrion Digitals articles</h2>
+
             {showForm && (
-              <div className="p-6 sm:p-8 rounded-2xl border" style={{ background: CARD_BG, borderColor: 'rgba(201,161,112,0.2)', backdropFilter: 'blur(20px)' }}>
-                <h2 className="text-xl font-bold mb-6" style={{ color: '#F0EAD6' }}>{isEditing ? 'Edit Post' : 'Create New Post'}</h2>
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div id="blog-admin-form" className="blog-admin-form">
+                <h2>{editingPost ? 'Edit Article' : 'Create New Article'}</h2>
+                <form onSubmit={handleSubmit}>
+                  <div className="blog-admin-fields">
                     {[
-                      { name: 'title', label: 'Title', placeholder: 'Post title', required: true, type: 'text' },
-                      { name: 'author', label: 'Author', placeholder: 'Author name', required: true, type: 'text' },
-                      { name: 'date', label: 'Date', placeholder: '', required: true, type: 'date' },
-                      { name: 'category', label: 'Category', placeholder: 'e.g. Design', type: 'text' },
-                    ].map(f => (
-                      <div key={f.name}>
-                        <label className="block text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: 'rgba(201,161,112,0.45)' }}>{f.label}</label>
-                        <input type={f.type} name={f.name} value={formData[f.name]} onChange={handleChange} style={INPUT_STYLE} placeholder={f.placeholder} required={f.required}
-                          onFocus={e => e.currentTarget.style.borderColor = GOLD} onBlur={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.15)'} />
+                      { name: 'title', label: 'Title', placeholder: 'Article title', required: true, type: 'text' },
+                      { name: 'author', label: 'Publisher', placeholder: 'Akrion Digitals', required: true, type: 'text' },
+                      { name: 'date', label: 'Verified publication date', placeholder: '', required: true, type: 'date' },
+                      { name: 'category', label: 'Category', placeholder: 'e.g. Branding', required: true, type: 'text' },
+                    ].map((field) => (
+                      <div key={field.name}>
+                        <label htmlFor={`blog-${field.name}`}>{field.label}</label>
+                        <input
+                          id={`blog-${field.name}`}
+                          type={field.type}
+                          name={field.name}
+                          value={formData[field.name]}
+                          onChange={(event) => setFormData((current) => ({ ...current, [event.target.name]: event.target.value }))}
+                          style={INPUT_STYLE}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
                       </div>
                     ))}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: 'rgba(201,161,112,0.45)' }}>Image</label>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="w-full text-sm cursor-pointer" style={{ ...INPUT_STYLE, padding: '10px 16px' }} />
-                    {uploading && <p className="text-xs mt-1" style={{ color: GOLD }}>Uploading…</p>}
-                    {!uploading && (
-                      <input type="url" name="image" value={formData.image} onChange={handleChange} style={{ ...INPUT_STYLE, marginTop: '8px' }} placeholder="Or paste image URL"
-                        onFocus={e => e.currentTarget.style.borderColor = GOLD} onBlur={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.15)'} />
+                    <label htmlFor="blog-image">Article image</label>
+                    <input id="blog-image" type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="blog-admin-file" style={INPUT_STYLE} />
+                    {uploading ? (
+                      <p className="blog-admin-status">Uploading…</p>
+                    ) : (
+                      <input
+                        aria-label="Article image URL"
+                        type="url"
+                        name="image"
+                        value={formData.image}
+                        onChange={(event) => setFormData((current) => ({ ...current, image: event.target.value }))}
+                        style={{ ...INPUT_STYLE, marginTop: '8px' }}
+                        placeholder="Or paste an image URL"
+                      />
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold tracking-wide uppercase mb-2" style={{ color: 'rgba(201,161,112,0.45)' }}>Content</label>
-                    <textarea name="content" value={formData.content} onChange={handleChange} rows="5" style={INPUT_STYLE} placeholder="Post content…" required
-                      onFocus={e => e.currentTarget.style.borderColor = GOLD} onBlur={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.15)'} />
+                    <label htmlFor="blog-content">Content</label>
+                    <textarea id="blog-content" name="content" value={formData.content} onChange={(event) => setFormData((current) => ({ ...current, content: event.target.value }))} rows="6" style={INPUT_STYLE} required />
                   </div>
-                  <button type="submit" className="btn-primary self-start px-7 py-3">{isEditing ? 'Update Post' : 'Create Post'}</button>
+                  <button type="submit" className="btn-primary" disabled={loading || uploading}>
+                    {loading ? 'Saving…' : editingPost ? 'Update Article' : 'Create Article'}
+                  </button>
                 </form>
               </div>
             )}
 
-            {error && <div className="p-4 rounded-xl text-red-400 text-sm" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>{error}</div>}
+            {error && <p className="blog-load-notice" role="status">{error}</p>}
 
-            {/* Posts grid */}
-            {loading && posts.length === 0 ? (
-              <div className="text-center py-16 text-sm" style={{ color: 'rgba(201,161,112,0.4)' }}>Loading blog posts…</div>
-            ) : posts.length === 0 ? (
-              <div className="text-center py-16 text-sm" style={{ color: 'rgba(201,161,112,0.4)' }}>No blog posts yet. {isAdmin && 'Create your first post!'}</div>
+            <ScrollAnimation animation="fadeUp" respectReducedMotion>
+              <div className="blog-filter-wrap">
+                <p>Explore by topic</p>
+                <div className="blog-filter-scroll">
+                  <div className="blog-filters" role="group" aria-label="Filter articles by category">
+                    {BLOG_FILTERS.map((filter) => (
+                      <button key={filter} type="button" aria-pressed={activeFilter === filter} onClick={() => setActiveFilter(filter)}>
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="sr-only" aria-live="polite">{filteredArticles.length} {filteredArticles.length === 1 ? 'article' : 'articles'} shown for {activeFilter}.</p>
+              </div>
+            </ScrollAnimation>
+
+            {filteredArticles.length === 0 ? (
+              <div className="blog-empty-state" role="status">
+                <span aria-hidden="true" />
+                <h3>No articles in this category yet.</h3>
+                <p>Choose another topic to continue exploring the journal.</p>
+              </div>
             ) : (
-              <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" staggerDelay={0.08}>
-                {posts.map((post) => (
-                  <StaggerItem key={post.id}>
-                    <article
-                      className="group cursor-pointer rounded-2xl overflow-hidden border transition-all duration-400 hover:-translate-y-1"
-                      style={{ background: CARD_BG, borderColor: CARD_BORDER, backdropFilter: 'blur(16px)' }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(201,161,112,0.25)'}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = CARD_BORDER}
-                    >
-                      {/* Image */}
-                      {post.image && (
-                        <div className="aspect-video overflow-hidden">
-                          <img src={post.image} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                        </div>
-                      )}
+              <>
+                {featuredArticle && (
+                  <ScrollAnimation className="blog-featured-wrap" animation="fadeUp" delay={0.08} amount={0.08} respectReducedMotion>
+                    <ArticleCard article={featuredArticle} featured isAdmin={isAdmin} onEdit={handleEdit} onDelete={handleDelete} />
+                  </ScrollAnimation>
+                )}
 
-                      {/* Content */}
-                      <div className="p-6">
-                        {post.category && (
-                          <span className="tag-pill mb-3 inline-block">{post.category}</span>
-                        )}
-                        <h3 className="text-base sm:text-lg font-bold mb-2 leading-snug transition-colors duration-200" style={{ color: '#F0EAD6' }}
-                          onMouseEnter={e => e.currentTarget.style.color = GOLD_LIGHT}
-                          onMouseLeave={e => e.currentTarget.style.color = '#F0EAD6'}
-                        >
-                          {post.title}
-                        </h3>
-                        <p className="text-sm leading-relaxed mb-4 line-clamp-3 font-light" style={{ color: 'rgba(201,161,112,0.5)' }}>
-                          {post.content}
-                        </p>
-                        <div className="flex justify-between items-center text-xs pt-4" style={{ borderTop: `1px solid ${CARD_BORDER}`, color: 'rgba(201,161,112,0.35)' }}>
-                          <span>{post.author}</span>
-                          <span>{new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                        </div>
-                        {isAdmin && (
-                          <div className="flex gap-3 mt-4 pt-4" style={{ borderTop: `1px solid ${CARD_BORDER}` }}>
-                            <button onClick={(e) => { e.stopPropagation(); handleEdit(post) }} className="text-xs transition-colors" style={{ color: GOLD }}>Edit</button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDelete(post.id) }} className="text-xs text-red-400">Delete</button>
-                          </div>
-                        )}
-                      </div>
-                    </article>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
+                {supportingArticles.length > 0 && (
+                  <StaggerContainer className="blog-editorial-grid" staggerDelay={0.1} respectReducedMotion>
+                    {supportingArticles.map((article) => (
+                      <StaggerItem key={article.slug}>
+                        <ArticleCard article={article} isAdmin={isAdmin} onEdit={handleEdit} onDelete={handleDelete} />
+                      </StaggerItem>
+                    ))}
+                  </StaggerContainer>
+                )}
+              </>
             )}
+
+            {loading && !showForm && <p className="blog-loading-note" aria-live="polite">Checking for the latest articles…</p>}
           </div>
-        </div>
+        </section>
+
+        <section className="blog-final-cta" aria-labelledby="blog-cta-title">
+          <div className="blog-final-cta-pattern eth-pattern-subtle" aria-hidden="true" />
+          <div className="blog-shell blog-final-cta-inner">
+            <div>
+              <p>Have an idea you want to bring to life?</p>
+              <h2 id="blog-cta-title">Let’s turn it into something meaningful.</h2>
+            </div>
+            <Link to="/contact" className="blog-cta-button">Start a Conversation <ArrowIcon /></Link>
+          </div>
+        </section>
       </main>
-      <Footer />
+      <Footer hideCtaBanner />
     </>
   )
 }

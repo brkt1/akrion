@@ -4,6 +4,38 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/blog",
+      "destination": "/blog/index.html"
+    },
+    {
+      "source": "/blog/",
+      "destination": "/blog/index.html"
+    },
+    {
+      "source": "/blog/professional-content-for-business",
+      "destination": "/blog/professional-content-for-business/index.html"
+    },
+    {
+      "source": "/blog/professional-content-for-business/",
+      "destination": "/blog/professional-content-for-business/index.html"
+    },
+    {
+      "source": "/blog/how-video-marketing-increases-sales",
+      "destination": "/blog/how-video-marketing-increases-sales/index.html"
+    },
+    {
+      "source": "/blog/how-video-marketing-increases-sales/",
+      "destination": "/blog/how-video-marketing-increases-sales/index.html"
+    },
+    {
+      "source": "/blog/building-brands-that-matter",
+      "destination": "/blog/building-brands-that-matter/index.html"
+    },
+    {
+      "source": "/blog/building-brands-that-matter/",
+      "destination": "/blog/building-brands-that-matter/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

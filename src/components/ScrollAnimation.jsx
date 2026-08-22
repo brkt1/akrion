@@ -1,4 +1,4 @@
-import { motion, useInView, useScroll, useTransform } from 'framer-motion'
+import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import React, { useRef } from 'react'
 
 const ScrollAnimation = ({ 
@@ -7,10 +7,13 @@ const ScrollAnimation = ({
   animation = 'fadeUp',
   delay = 0,
   duration = 0.6,
-  amount = 0.3
+  amount = 0.3,
+  respectReducedMotion = false,
 }) => {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount })
+  const shouldReduceMotion = useReducedMotion()
+  const motionDisabled = respectReducedMotion && shouldReduceMotion
 
   // Animation variants
   const animations = {
@@ -53,12 +56,12 @@ const ScrollAnimation = ({
   return (
     <motion.div
       ref={ref}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial={motionDisabled ? false : "hidden"}
+      animate={motionDisabled || isInView ? "visible" : "hidden"}
       variants={selectedAnimation}
       transition={{
-        duration,
-        delay,
+        duration: motionDisabled ? 0 : duration,
+        delay: motionDisabled ? 0 : delay,
         ease: [0.25, 0.46, 0.45, 0.94] // Smooth easing
       }}
       className={className}
@@ -101,15 +104,17 @@ export const ScrollProgress = () => {
 }
 
 // Stagger container for animating children
-export const StaggerContainer = ({ children, className = '', staggerDelay = 0.1 }) => {
+export const StaggerContainer = ({ children, className = '', staggerDelay = 0.1, respectReducedMotion = false }) => {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.2 })
+  const shouldReduceMotion = useReducedMotion()
+  const motionDisabled = respectReducedMotion && shouldReduceMotion
 
   return (
     <motion.div
       ref={ref}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial={motionDisabled ? false : "hidden"}
+      animate={motionDisabled ? undefined : isInView ? "visible" : "hidden"}
       variants={{
         hidden: { opacity: 0 },
         visible: {
