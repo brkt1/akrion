@@ -12,29 +12,7 @@ import {
   getArticlePath,
   mergeBlogRecords,
 } from '../data/blogArticles'
-import { authAPI } from '../lib/api/auth'
 import { blogAPI } from '../lib/api/blog'
-import { uploadAPI } from '../lib/api/upload'
-
-const EMPTY_FORM = {
-  title: '',
-  content: '',
-  author: 'Akrion Digitals',
-  date: '',
-  image: '',
-  category: '',
-}
-const INPUT_STYLE = {
-  width: '100%',
-  padding: '12px 16px',
-  background: 'rgba(201,161,112,0.05)',
-  border: '1px solid rgba(201,161,112,0.18)',
-  borderRadius: '12px',
-  color: '#F0EAD6',
-  fontSize: '14px',
-  outline: 'none',
-  transition: 'border-color 0.2s, background 0.2s',
-}
 
 const ArrowIcon = () => (
   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -83,7 +61,7 @@ const ArticleMeta = ({ article, compact = false }) => {
   )
 }
 
-const ArticleCard = ({ article, featured = false, isAdmin, onEdit, onDelete }) => (
+const ArticleCard = ({ article, featured = false }) => (
   <article className={featured ? 'blog-featured-card group' : 'blog-editorial-card group'}>
     <Link
       to={getArticlePath(article)}
@@ -119,34 +97,25 @@ const ArticleCard = ({ article, featured = false, isAdmin, onEdit, onDelete }) =
       </div>
     </Link>
 
-    {isAdmin && article.sourceRecord && (
-      <div className="blog-admin-card-actions">
-        <button type="button" onClick={() => onEdit(article.sourceRecord)}>Edit</button>
-        <button type="button" onClick={() => onDelete(article.sourceRecord.id)}>Delete</button>
-      </div>
-    )}
   </article>
 )
 
 const Blog = () => {
   const [records, setRecords] = useState([])
   const [hasLoadedRecords, setHasLoadedRecords] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [editingPost, setEditingPost] = useState(null)
-  const [showForm, setShowForm] = useState(false)
+  const [publishedWorkflow, setPublishedWorkflow] = useState('legacy')
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
   const [activeFilter, setActiveFilter] = useState('All')
-  const [formData, setFormData] = useState(EMPTY_FORM)
 
   useEffect(() => {
     const loadPosts = async () => {
       try {
         setLoading(true)
         setError(null)
-        const data = await blogAPI.getAll()
-        setRecords(data)
+        const result = await blogAPI.getPublishedResult()
+        setRecords(result.data)
+        setPublishedWorkflow(result.workflow)
         setHasLoadedRecords(true)
       } catch (loadError) {
         console.error('Unable to load live blog records; using the local editorial edition.', loadError)
@@ -156,19 +125,7 @@ const Blog = () => {
       }
     }
 
-    const checkAdmin = async () => {
-      const adminMode = localStorage.getItem('blogAdminMode') === 'true'
-      if (!adminMode) {
-        setIsAdmin(false)
-        return
-      }
-      const isActuallyAdmin = await authAPI.isAdmin()
-      setIsAdmin(isActuallyAdmin)
-      if (!isActuallyAdmin) localStorage.removeItem('blogAdminMode')
-    }
-
     loadPosts()
-    checkAdmin()
   }, [])
 
   useEffect(() => {
@@ -202,8 +159,10 @@ const Blog = () => {
   }, [])
 
   const displayedArticles = useMemo(
-    () => (hasLoadedRecords ? mergeBlogRecords(records) : blogArticles),
-    [hasLoadedRecords, records],
+    () => (hasLoadedRecords
+      ? mergeBlogRecords(records, { includeBundledFallback: publishedWorkflow !== 'advanced' })
+      : blogArticles),
+    [hasLoadedRecords, publishedWorkflow, records],
   )
   const filteredArticles = useMemo(
     () => activeFilter === 'All'
@@ -216,89 +175,6 @@ const Blog = () => {
   const supportingArticles = featuredArticle
     ? filteredArticles.filter((article) => article.slug !== featuredArticle.slug)
     : filteredArticles
-
-  const loadPosts = async () => {
-    const data = await blogAPI.getAll()
-    setRecords(data)
-    setHasLoadedRecords(true)
-  }
-
-  const resetForm = () => {
-    setFormData(EMPTY_FORM)
-    setEditingPost(null)
-    setShowForm(false)
-  }
-
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    try {
-      setLoading(true)
-      setError(null)
-      if (editingPost) await blogAPI.update(editingPost.id, formData)
-      else await blogAPI.create(formData)
-      await loadPosts()
-      resetForm()
-    } catch (saveError) {
-      console.error(saveError)
-      setError('Failed to save the article. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleEdit = (post) => {
-    setEditingPost(post)
-    setFormData({
-      title: post.title || '',
-      content: post.content || '',
-      author: post.author === 'Akrion Team' ? 'Akrion Digitals' : post.author || 'Akrion Digitals',
-      date: post.date || '',
-      image: post.image || '',
-      category: post.category || '',
-    })
-    setShowForm(true)
-    window.requestAnimationFrame(() => document.getElementById('blog-admin-form')?.scrollIntoView({ block: 'start' }))
-  }
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this article?')) return
-    try {
-      setLoading(true)
-      setError(null)
-      await blogAPI.delete(id)
-      await loadPosts()
-    } catch (deleteError) {
-      console.error(deleteError)
-      setError('Failed to delete the article. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleImageUpload = async (event) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file.')
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5 MB.')
-      return
-    }
-
-    try {
-      setUploading(true)
-      setError(null)
-      const imageUrl = await uploadAPI.uploadImage(file, 'blog')
-      setFormData((current) => ({ ...current, image: imageUrl }))
-    } catch (uploadError) {
-      console.error(uploadError)
-      setError('Failed to upload the image. Please try again.')
-    } finally {
-      setUploading(false)
-    }
-  }
 
   return (
     <>
@@ -325,15 +201,6 @@ const Blog = () => {
               <ScrollAnimation animation="fadeUp" delay={0.25} respectReducedMotion>
                 <p className="blog-hero-intro">Ideas, practical guidance, and creative perspectives for building stronger brands.</p>
               </ScrollAnimation>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => (showForm ? resetForm() : setShowForm(true))}
-                  className="btn-primary blog-admin-new"
-                >
-                  {showForm ? 'Cancel' : '+ New Article'}
-                </button>
-              )}
             </div>
 
             <ScrollAnimation className="blog-hero-visual" animation="fadeLeft" delay={0.18} respectReducedMotion>
@@ -348,60 +215,6 @@ const Blog = () => {
           <div className="blog-pattern eth-pattern-subtle" aria-hidden="true" />
           <div className="blog-shell">
             <h2 id="blog-edition-title" className="sr-only">Akrion Digitals articles</h2>
-
-            {showForm && (
-              <div id="blog-admin-form" className="blog-admin-form">
-                <h2>{editingPost ? 'Edit Article' : 'Create New Article'}</h2>
-                <form onSubmit={handleSubmit}>
-                  <div className="blog-admin-fields">
-                    {[
-                      { name: 'title', label: 'Title', placeholder: 'Article title', required: true, type: 'text' },
-                      { name: 'author', label: 'Publisher', placeholder: 'Akrion Digitals', required: true, type: 'text' },
-                      { name: 'date', label: 'Verified publication date', placeholder: '', required: true, type: 'date' },
-                      { name: 'category', label: 'Category', placeholder: 'e.g. Branding', required: true, type: 'text' },
-                    ].map((field) => (
-                      <div key={field.name}>
-                        <label htmlFor={`blog-${field.name}`}>{field.label}</label>
-                        <input
-                          id={`blog-${field.name}`}
-                          type={field.type}
-                          name={field.name}
-                          value={formData[field.name]}
-                          onChange={(event) => setFormData((current) => ({ ...current, [event.target.name]: event.target.value }))}
-                          style={INPUT_STYLE}
-                          placeholder={field.placeholder}
-                          required={field.required}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <label htmlFor="blog-image">Article image</label>
-                    <input id="blog-image" type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="blog-admin-file" style={INPUT_STYLE} />
-                    {uploading ? (
-                      <p className="blog-admin-status">Uploading…</p>
-                    ) : (
-                      <input
-                        aria-label="Article image URL"
-                        type="url"
-                        name="image"
-                        value={formData.image}
-                        onChange={(event) => setFormData((current) => ({ ...current, image: event.target.value }))}
-                        style={{ ...INPUT_STYLE, marginTop: '8px' }}
-                        placeholder="Or paste an image URL"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="blog-content">Content</label>
-                    <textarea id="blog-content" name="content" value={formData.content} onChange={(event) => setFormData((current) => ({ ...current, content: event.target.value }))} rows="6" style={INPUT_STYLE} required />
-                  </div>
-                  <button type="submit" className="btn-primary" disabled={loading || uploading}>
-                    {loading ? 'Saving…' : editingPost ? 'Update Article' : 'Create Article'}
-                  </button>
-                </form>
-              </div>
-            )}
 
             {error && <p className="blog-load-notice" role="status">{error}</p>}
 
@@ -431,7 +244,7 @@ const Blog = () => {
               <>
                 {featuredArticle && (
                   <ScrollAnimation className="blog-featured-wrap" animation="fadeUp" delay={0.08} amount={0.08} respectReducedMotion>
-                    <ArticleCard article={featuredArticle} featured isAdmin={isAdmin} onEdit={handleEdit} onDelete={handleDelete} />
+                    <ArticleCard article={featuredArticle} featured />
                   </ScrollAnimation>
                 )}
 
@@ -439,7 +252,7 @@ const Blog = () => {
                   <StaggerContainer className="blog-editorial-grid" staggerDelay={0.1} respectReducedMotion>
                     {supportingArticles.map((article) => (
                       <StaggerItem key={article.slug}>
-                        <ArticleCard article={article} isAdmin={isAdmin} onEdit={handleEdit} onDelete={handleDelete} />
+                        <ArticleCard article={article} />
                       </StaggerItem>
                     ))}
                   </StaggerContainer>
@@ -447,7 +260,7 @@ const Blog = () => {
               </>
             )}
 
-            {loading && !showForm && <p className="blog-loading-note" aria-live="polite">Checking for the latest articles…</p>}
+            {loading && <p className="blog-loading-note" aria-live="polite">Checking for the latest articles…</p>}
           </div>
         </section>
 

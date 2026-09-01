@@ -1,98 +1,91 @@
-# Admin User Setup Guide
+# Secure Admin Setup
 
-## Admin Credentials
+The repository does not contain an administrator email, password, or service-role key. Admin access is granted only through server-controlled Supabase `app_metadata`:
 
-- **Email**: `Hailakemelaku1223@gmail.com`
-- **Password**: `Open@1223`
-
-## Method 1: Via Supabase Dashboard (Easiest)
-
-1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Select your project
-3. Navigate to **Authentication** → **Users**
-4. Click **"Add user"** → **"Create new user"**
-5. Fill in:
-   - **Email**: `Hailakemelaku1223@gmail.com`
-   - **Password**: `Open@1223`
-   - **Auto Confirm User**: ✅ Yes (to skip email verification)
-6. Click **"Create user"**
-
-✅ Done! The admin user is now created and can log in.
-
-## Method 2: Via Node.js Script
-
-1. Get your **Service Role Key**:
-   - Go to Supabase Dashboard → **Settings** → **API**
-   - Copy the **"service_role"** key (⚠️ Keep it secret!)
-
-2. Run the script:
-   ```bash
-   export SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
-   node create-admin.js
-   ```
-
-3. The script will:
-   - Check if user already exists
-   - Create the admin user if it doesn't exist
-   - Set email as confirmed (no verification needed)
-
-## Method 3: Via Supabase Management API
-
-```bash
-curl -X POST 'https://api.supabase.com/v1/projects/{project_ref}/auth/users' \
-  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "Hailakemelaku1223@gmail.com",
-    "password": "Open@1223",
-    "email_confirm": true,
-    "user_metadata": {
-      "role": "admin"
-    }
-  }'
+```json
+{ "role": "admin" }
 ```
 
-Replace `{project_ref}` with your project reference ID.
+Do not use `user_metadata` for authorization. A signed-in user can edit their own user metadata.
 
-## After Creating the User
+## Required security action
 
-1. **Test Login**:
-   - Start your dev server: `npm run dev`
-   - Click the **"Login"** button in the footer
-   - Enter the credentials
-   - You should be logged in and see your email in the footer
+An earlier repository revision contained an administrator email and password. Removing them from the current files does not invalidate the exposed password or erase Git history.
 
-2. **Admin Mode**:
-   - Once logged in, admin mode is automatically enabled
-   - You'll see admin controls on Blog, Portfolio, and Services pages
-   - You can create, edit, and delete content
+1. Reset that account's password immediately in **Supabase Dashboard → Authentication → Users**.
+2. Revoke and replace any server secret or service-role key that may have been copied into an unsafe location.
+3. Review recent Auth and database activity.
+4. Apply `supabase-migrations.sql` before enabling the admin CMS in production.
 
-3. **Logout**:
-   - Click **"Logout"** in the footer to sign out
-   - Admin mode will be disabled
+## 1. Apply the migration
 
-## Troubleshooting
+Open **Supabase Dashboard → SQL Editor**, paste the complete contents of `supabase-migrations.sql`, and run it with the project-owner role. The migration is idempotent, preserves existing Auth users and content, and does not create credentials.
 
-### "Invalid login credentials"
-- Double-check the email and password
-- Make sure the user was created successfully
-- Verify email confirmation is enabled (Auto Confirm User)
+## 2. Create or retain the Auth user
 
-### "Email not confirmed"
-- In Supabase Dashboard → Authentication → Users
-- Find the user and click "..." → "Send confirmation email"
-- Or enable "Auto Confirm User" when creating the user
+Under **Authentication → Users**, create the administrator if it does not already exist. Use an administrator-controlled address and a unique password of at least 16 characters. Do not place either value in source control.
 
-### User already exists
-- You can reset the password in Supabase Dashboard
-- Or use the Management API to update the user
+## 3. Rotate the password and assign the admin claim
 
-## Security Notes
+Copy `.env.example` to a local `.env` file and replace every placeholder. `.env` is ignored by Git. With Node 20.6 or newer, run:
 
-- The service_role key has full access - never expose it in client-side code
-- For production, consider:
-  - Using environment variables for sensitive keys
-  - Implementing role-based access control (RBAC)
-  - Adding 2FA for admin accounts
-  - Restricting admin access by IP or domain
+```bash
+node --env-file=.env create-admin.js
+```
 
+Or set the values only for the current shell session:
+
+PowerShell:
+
+```powershell
+$env:SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
+$env:SUPABASE_SECRET_KEY = "YOUR_SERVER_SECRET_KEY"
+$env:ADMIN_EMAIL = "<ADMIN_EMAIL>"
+$env:ADMIN_PASSWORD = "<STRONG_UNIQUE_PASSWORD>"
+node create-admin.js
+```
+
+Bash:
+
+```bash
+SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co" \
+SUPABASE_SECRET_KEY="YOUR_SERVER_SECRET_KEY" \
+ADMIN_EMAIL="<ADMIN_EMAIL>" \
+ADMIN_PASSWORD="<STRONG_UNIQUE_PASSWORD>" \
+node create-admin.js
+```
+
+The script uses a Supabase server secret (or a legacy service-role key) only in the local Node process. It creates the user when absent, or rotates the password when present, and writes `role: admin` to `app_metadata`. It never prints the password.
+
+Alternatively, a project owner can replace `<ADMIN_EMAIL>` in `create-admin-user.sql` and run that one statement after resetting the password in the Dashboard.
+
+## 4. Refresh and verify the session
+
+Sign out and back in so Supabase issues a new JWT. Verify the signed-in user's token contains:
+
+```json
+{
+  "app_metadata": {
+    "role": "admin"
+  }
+}
+```
+
+Then verify:
+
+- An anonymous visitor can read published content but cannot create, edit, publish, archive, or delete it.
+- A normal authenticated user cannot open or mutate admin content.
+- The designated admin can manage CMS content and uploads.
+- Anonymous and non-admin users cannot read contact inquiries.
+- Draft page sections and draft site settings are not returned by the public API.
+
+## Contact inquiries
+
+The current public contact form opens WhatsApp and does not submit to Supabase. Keep Contact Inquiries marked unavailable. A future trusted server endpoint may validate a submission and insert it with the service role; do not add an anonymous table-insert policy.
+
+## Secret handling
+
+- Never add a server secret or service-role key to a `VITE_*` variable; Vite exposes those values to browsers.
+- Keep `.env` local and use the deployment provider's encrypted environment settings in production.
+- The public anon key is not an admin secret. RLS still must remain enabled and restrictive.
+- Prefer individual admin accounts, MFA, and regular access reviews.

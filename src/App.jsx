@@ -1,4 +1,5 @@
-import { Route, Routes, useParams } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Route, Routes, useLocation, useParams } from 'react-router-dom'
 import About from './components/About'
 import Footer from './components/Footer'
 import Header from './components/Header'
@@ -16,6 +17,9 @@ import Contact from './pages/Contact'
 import Portfolio from './pages/Portfolio'
 import ProjectCaseStudy from './pages/ProjectCaseStudy'
 import Services from './pages/Services'
+
+const Admin = lazy(() => import('./pages/Admin'))
+const AdminPasswordSetup = lazy(() => import('./pages/AdminPasswordSetup'))
 
 function Home() {
   return (
@@ -47,10 +51,23 @@ function BlogArticleRoute() {
 }
 
 function App() {
+  const location = useLocation()
+  const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/')
+
   return (
-    <div className="min-h-screen bg-bg-dark">
-      <ScrollProgress />
+    <div className={isAdmin ? 'min-h-screen' : 'min-h-screen bg-bg-dark'}>
+      {!isAdmin && <ScrollProgress />}
       <Routes>
+        <Route path="/admin/setup-password" element={(
+          <Suspense fallback={<main className="admin-auth-page"><div className="admin-auth-loading" role="status"><span /><p>Opening secure account setup…</p></div></main>}>
+            <AdminPasswordSetup />
+          </Suspense>
+        )} />
+        <Route path="/admin/*" element={(
+          <Suspense fallback={<main className="admin-auth-page"><div className="admin-auth-loading" role="status"><span /><p>Opening Content Studio…</p></div></main>}>
+            <Admin />
+          </Suspense>
+        )} />
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />

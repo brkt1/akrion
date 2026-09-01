@@ -1,114 +1,46 @@
-# Supabase Storage Setup Guide
+# Supabase Storage Setup
 
-This guide will help you set up Supabase Storage for file uploads in the admin panel.
+Storage buckets and policies are managed by `supabase-migrations.sql`. Do not create separate public upload, update, or delete policies in the Dashboard.
 
-## Step 1: Create Storage Bucket
+## Buckets
 
-1. Go to your Supabase Dashboard: https://supabase.com/dashboard
-2. Navigate to **Storage** in the left sidebar
-3. Click **New bucket**
-4. Name it: `images`
-5. Set it to **Public** (so uploaded images can be accessed via URL)
-6. Click **Create bucket**
+The idempotent migration creates or updates:
 
-## Step 2: Set Up Storage Policies
+| Bucket | Public delivery | Maximum size | Allowed MIME types |
+| --- | --- | ---: | --- |
+| `images` | Yes | 10 MB | JPEG, PNG, WebP, AVIF |
+| `media` | Yes | 50 MB | JPEG, PNG, WebP, AVIF, MP4, WebM |
 
-After creating the bucket, you need to set up policies for file access:
+Public delivery is required for current website assets. It does not permit uploads or destructive actions. Storage mutations require a signed-in user whose server-controlled `app_metadata.role` is `admin`.
 
-### Policy 1: Public Read Access
+SVG and GIF uploads are intentionally excluded. SVG can contain active content, and GIF is inefficient for the short loops used by this site; use optimized WebP/AVIF images and MP4/WebM video instead.
 
-1. Go to **Storage** → **Policies** → Select `images` bucket
-2. Click **New Policy**
-3. Choose **For full customization**
-4. Policy name: `Public read access`
-5. Allowed operation: `SELECT`
-6. Policy definition:
-   ```sql
-   (bucket_id = 'images')
-   ```
-7. Click **Review** and **Save policy**
+## Apply
 
-### Policy 2: Public Upload Access (for demo)
+1. Open **Supabase Dashboard → SQL Editor**.
+2. Run the complete `supabase-migrations.sql` file.
+3. Under **Storage**, confirm the `images` and `media` buckets exist.
+4. Under **Storage → Policies**, confirm the only Akrion write policies are the three `Akrion admins … media` policies.
+5. Configure the administrator as described in `ADMIN-SETUP.md`.
 
-For production, you should restrict uploads to authenticated users only. For now, we'll allow public uploads:
+## Verification
 
-1. Click **New Policy**
-2. Choose **For full customization**
-3. Policy name: `Public upload access`
-4. Allowed operation: `INSERT`
-5. Policy definition:
-   ```sql
-   (bucket_id = 'images')
-   ```
-6. Click **Review** and **Save policy**
+Use separate sessions for each test:
 
-### Policy 3: Public Update Access
+- Anonymous: public media URLs load; upload, replace, and delete fail.
+- Authenticated non-admin: public media loads; every mutation fails.
+- Admin: allowed file types within the size limit upload; replace and delete succeed.
+- Invalid file: SVG, GIF, executable content, an unsupported MIME type, or an oversized file is rejected.
 
-1. Click **New Policy**
-2. Choose **For full customization**
-3. Policy name: `Public update access`
-4. Allowed operation: `UPDATE`
-5. Policy definition:
-   ```sql
-   (bucket_id = 'images')
-   ```
-6. Click **Review** and **Save policy**
+The UI must still validate extensions, MIME type, and size before upload and show an understandable error. Bucket restrictions are the final server-side boundary, not a replacement for UI validation.
 
-### Policy 4: Public Delete Access
+## Media metadata
 
-1. Click **New Policy**
-2. Choose **For full customization**
-3. Policy name: `Public delete access`
-4. Allowed operation: `DELETE`
-5. Policy definition:
-   ```sql
-   (bucket_id = 'images')
-   ```
-6. Click **Review** and **Save policy**
-
-## Step 3: Test File Upload
-
-1. Start your development server: `npm run dev`
-2. Navigate to Blog, Portfolio, or Services page
-3. Enter Admin Mode
-4. Click "New Post" or "New Project"
-5. Try uploading an image file
-6. Verify the image appears in the preview
-
-## File Upload Features
-
-- **Supported formats**: All image formats (JPEG, PNG, GIF, WebP, etc.)
-- **Max file size**: 5MB (configurable in code)
-- **Storage structure**: 
-  - Blog images: `images/blog/`
-  - Portfolio images: `images/portfolio/`
-- **Image preview**: Shows preview after upload
-- **Fallback**: Can still use image URLs if preferred
-
-## Production Security
-
-For production, you should:
-
-1. **Restrict uploads to authenticated users only**
-   - Change INSERT policy to require authentication
-   - Add user authentication to your app
-
-2. **Add file validation**
-   - Already implemented: file type and size validation
-   - Consider adding virus scanning
-
-3. **Set up CDN**
-   - Use Supabase CDN for faster image delivery
-   - Configure cache headers
-
-4. **Monitor storage usage**
-   - Set up alerts for storage limits
-   - Implement cleanup policies for old files
+After a successful upload, the CMS should store the file in `media_assets`, including alternative text and placeholder status. `media_usages` records where the asset is used. Deletion should be blocked while usage rows exist (`ON DELETE RESTRICT`) unless the administrator deliberately replaces every reference first.
 
 ## Troubleshooting
 
-- **Error: "Bucket not found"** - Make sure you created the `images` bucket
-- **Error: "Permission denied"** - Check that policies are set up correctly
-- **Images not displaying** - Verify bucket is set to Public
-- **Upload fails** - Check file size (max 5MB) and file type (images only)
-
+- **Bucket not found:** rerun the authoritative migration with the project-owner role.
+- **Permission denied for an admin:** verify `app_metadata.role = "admin"`, then sign out and back in to refresh the JWT.
+- **Anonymous upload succeeds:** remove the unexpected permissive policy immediately and rerun the migration. Check for manually created policies whose names are not managed by this repository.
+- **Public image does not load:** confirm the object is in `images` or `media` and the bucket remains public.

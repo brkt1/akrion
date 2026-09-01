@@ -29,6 +29,33 @@ export const authAPI = {
     return data
   },
 
+  // Send a secure password setup/recovery link back to the admin setup page.
+  // The destination must also be allow-listed in Supabase Auth URL settings.
+  async requestPasswordSetup(email) {
+    const redirectTo = `${window.location.origin}/admin/setup-password`
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    })
+
+    if (error) {
+      console.error('Error requesting password setup:', error)
+      throw error
+    }
+    return data
+  },
+
+  // Password changes are performed only inside an authenticated invite or
+  // recovery session. The password never passes through application storage.
+  async updatePassword(password) {
+    const { data, error } = await supabase.auth.updateUser({ password })
+
+    if (error) {
+      console.error('Error updating password:', error)
+      throw error
+    }
+    return data
+  },
+
   // Sign out current user
   async signOut() {
     const { error } = await supabase.auth.signOut()
@@ -73,10 +100,17 @@ export const authAPI = {
   async isAdmin() {
     try {
       const user = await this.getUser()
-      return user?.user_metadata?.role === 'admin'
+      return this.isAdminUser(user)
     } catch (err) {
       return false
     }
-  }
+  },
+
+  // Roles used for authorization must be stored in server-controlled
+  // app_metadata. user_metadata can be edited by the signed-in user and is
+  // intentionally never accepted as an admin claim.
+  isAdminUser(user) {
+    return user?.app_metadata?.role === 'admin'
+  },
 }
 

@@ -1,114 +1,66 @@
 #!/usr/bin/env node
 
 /**
- * Simple SQL Migration Validator
- * Checks for common SQL syntax issues
+ * Lightweight structural/security checks for the authoritative migration.
+ * This does not replace executing the migration twice in a Supabase project.
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const rootDirectory = path.dirname(fileURLToPath(import.meta.url))
+const migrationPath = path.join(rootDirectory, 'supabase-migrations.sql')
+const sql = fs.readFileSync(migrationPath, 'utf8')
 
-const sqlFile = path.join(__dirname, 'supabase-migrations.sql');
+const requiredTables = [
+  'blog_posts',
+  'portfolio_projects',
+  'services',
+  'page_sections',
+  'testimonials',
+  'media_assets',
+  'media_usages',
+  'site_settings',
+  'contact_messages',
+]
 
-console.log('🔍 Validating SQL Migration File...\n');
+const checks = [
+  ['migration is wrapped in a transaction', /^BEGIN;[\s\S]*COMMIT;/m.test(sql)],
+  [
+    'all CMS tables use idempotent creation',
+    requiredTables.every((table) => sql.includes(`CREATE TABLE IF NOT EXISTS public.${table}`)),
+  ],
+  ['admin helper reads signed app_metadata', /auth\.jwt\(\)\s*->\s*'app_metadata'/.test(sql)],
+  ['admin helper never trusts user_metadata', !/user_metadata/.test(sql)],
+  ['RLS is enabled for every CMS table', requiredTables.every(
+    (table) => sql.includes(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`),
+  )],
+  ['content mutations require the admin helper', /FOR ALL TO authenticated[\s\S]{0,120}cms_is_admin\(\)/.test(sql)],
+  ['storage mutations require the admin helper', /storage\.objects FOR INSERT TO authenticated[\s\S]{0,220}cms_is_admin\(\)/.test(sql)],
+  ['legacy public storage-write policies are removed', [
+    'Public upload access',
+    'Public update access',
+    'Public delete access',
+  ].every((name) => sql.includes(`DROP POLICY IF EXISTS "${name}"`))],
+  ['no true/true mutation policy remains', !/FOR\s+(INSERT|UPDATE|DELETE)[\s\S]{0,100}(USING|WITH CHECK)\s*\(true\)/i.test(sql)],
+  ['migration never creates Auth credentials', !/INSERT\s+INTO\s+auth\.(users|identities)|encrypted_password|\bcrypt\s*\(/i.test(sql)],
+  ['migration does not seed fabricated content', !/INSERT\s+INTO\s+(public\.)?(blog_posts|portfolio_projects|services|testimonials|page_sections)\b/i.test(sql)],
+  ['storage bucket upsert is idempotent', /INSERT INTO storage\.buckets[\s\S]*ON CONFLICT \(id\) DO UPDATE/.test(sql)],
+  ['updated-at helper and triggers exist', sql.includes('FUNCTION public.set_updated_at()') && sql.includes('EXECUTE FUNCTION public.set_updated_at()')],
+  ['draft snapshots use public projection views', sql.includes('published_page_sections') && sql.includes('published_site_settings')],
+]
 
-try {
-  const sql = fs.readFileSync(sqlFile, 'utf8');
-  
-  const checks = [
-    {
-      name: 'File exists and is readable',
-      test: () => sql.length > 0,
-      error: 'SQL file is empty or cannot be read'
-    },
-    {
-      name: 'Contains table creation statements',
-      test: () => sql.includes('CREATE TABLE'),
-      error: 'Missing CREATE TABLE statements'
-    },
-    {
-      name: 'Uses IF NOT EXISTS for tables',
-      test: () => sql.includes('CREATE TABLE IF NOT EXISTS'),
-      error: 'Tables should use IF NOT EXISTS to be idempotent'
-    },
-    {
-      name: 'Contains RLS policies',
-      test: () => sql.includes('CREATE POLICY'),
-      error: 'Missing RLS policy creation'
-    },
-    {
-      name: 'Uses DROP POLICY IF EXISTS',
-      test: () => sql.includes('DROP POLICY IF EXISTS'),
-      error: 'Should use DROP POLICY IF EXISTS for idempotency'
-    },
-    {
-      name: 'Contains storage policies',
-      test: () => sql.includes('storage.objects'),
-      error: 'Missing storage policies'
-    },
-    {
-      name: 'Contains trigger function',
-      test: () => sql.includes('update_updated_at_column'),
-      error: 'Missing trigger function'
-    },
-    {
-      name: 'Contains default data inserts',
-      test: () => sql.includes('INSERT INTO'),
-      error: 'Missing default data inserts'
-    },
-    {
-      name: 'Uses ON CONFLICT for inserts',
-      test: () => sql.includes('ON CONFLICT DO NOTHING'),
-      error: 'Should use ON CONFLICT DO NOTHING for idempotent inserts'
-    },
-    {
-      name: 'No storage extension reference',
-      test: () => !sql.includes('CREATE EXTENSION') || !sql.includes('"storage"'),
-      error: 'Should not try to create storage extension (it does not exist)'
-    }
-  ];
+console.log('Validating supabase-migrations.sql\n')
 
-  let passed = 0;
-  let failed = 0;
-
-  checks.forEach(check => {
-    try {
-      if (check.test()) {
-        console.log(`✅ ${check.name}`);
-        passed++;
-      } else {
-        console.log(`❌ ${check.name}`);
-        console.log(`   ${check.error}`);
-        failed++;
-      }
-    } catch (error) {
-      console.log(`❌ ${check.name}`);
-      console.log(`   Error: ${error.message}`);
-      failed++;
-    }
-  });
-
-  console.log(`\n📊 Results: ${passed} passed, ${failed} failed\n`);
-
-  if (failed === 0) {
-    console.log('✅ SQL migration file looks good!');
-    console.log('\n📝 Next steps:');
-    console.log('1. Copy the contents of supabase-migrations.sql');
-    console.log('2. Go to Supabase Dashboard → SQL Editor');
-    console.log('3. Paste and run the SQL');
-    console.log('4. Create the storage bucket manually (see TESTING-GUIDE.md)');
-    process.exit(0);
-  } else {
-    console.log('⚠️  Some checks failed. Please review the SQL file.');
-    process.exit(1);
-  }
-
-} catch (error) {
-  console.error('❌ Error reading SQL file:', error.message);
-  process.exit(1);
+let failures = 0
+for (const [name, passed] of checks) {
+  console.log(`${passed ? 'PASS' : 'FAIL'}  ${name}`)
+  if (!passed) failures += 1
 }
 
+console.log(`\n${checks.length - failures} passed, ${failures} failed`)
+
+if (failures > 0) process.exit(1)
+
+console.log('\nNext: apply the migration twice in Supabase, then complete TESTING-GUIDE.md.')

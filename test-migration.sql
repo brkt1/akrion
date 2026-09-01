@@ -1,30 +1,81 @@
--- Test script to validate SQL migration
--- This checks for common issues before running the full migration
+-- Read-only audit to run AFTER supabase-migrations.sql.
+-- It raises an exception when a required security invariant is missing.
 
--- Test 1: Check if tables already exist (will fail if they do and we're not using IF NOT EXISTS)
 DO $$
+DECLARE
+  expected_tables text[] := ARRAY[
+    'blog_posts', 'portfolio_projects', 'services', 'page_sections',
+    'testimonials', 'media_assets', 'media_usages', 'site_settings',
+    'contact_messages'
+  ];
+  existing_count integer;
 BEGIN
-  RAISE NOTICE 'Testing table creation syntax...';
-END $$;
+  SELECT count(*) INTO existing_count
+  FROM information_schema.tables
+  WHERE table_schema = 'public' AND table_name = ANY(expected_tables);
 
--- Test 2: Check RLS syntax
-DO $$
-BEGIN
-  RAISE NOTICE 'Testing RLS syntax...';
-END $$;
+  IF existing_count <> cardinality(expected_tables) THEN
+    RAISE EXCEPTION 'CMS schema incomplete: found % of % required tables',
+      existing_count, cardinality(expected_tables);
+  END IF;
 
--- Test 3: Check policy syntax
-DO $$
-BEGIN
-  RAISE NOTICE 'Testing policy syntax...';
-END $$;
+  IF EXISTS (
+    SELECT 1
+    FROM pg_tables
+    WHERE schemaname = 'public'
+      AND tablename = ANY(expected_tables)
+      AND rowsecurity = false
+  ) THEN
+    RAISE EXCEPTION 'RLS is disabled on one or more CMS tables';
+  END IF;
 
--- Test 4: Check trigger function syntax
-DO $$
-BEGIN
-  RAISE NOTICE 'Testing trigger function syntax...';
-END $$;
+  IF to_regprocedure('public.cms_is_admin()') IS NULL THEN
+    RAISE EXCEPTION 'Missing public.cms_is_admin()';
+  END IF;
 
--- If all tests pass, you can run the full migration
-SELECT 'All syntax checks passed. Ready to run full migration.' AS status;
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = ANY(expected_tables)
+      AND cmd IN ('ALL', 'INSERT', 'UPDATE', 'DELETE')
+      AND COALESCE(qual, '') NOT LIKE '%cms_is_admin()%'
+      AND COALESCE(with_check, '') NOT LIKE '%cms_is_admin()%'
+  ) THEN
+    RAISE EXCEPTION 'Found a CMS mutation policy that does not require cms_is_admin()';
+  END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'storage'
+      AND tablename = 'objects'
+      AND cmd IN ('ALL', 'INSERT', 'UPDATE', 'DELETE')
+      AND COALESCE(qual, '') NOT LIKE '%cms_is_admin()%'
+      AND COALESCE(with_check, '') NOT LIKE '%cms_is_admin()%'
+  ) THEN
+    RAISE EXCEPTION 'Found a Storage mutation policy that does not require cms_is_admin()';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'contact_messages'
+      AND ('public'::name = ANY(roles) OR 'anon'::name = ANY(roles))
+  ) THEN
+    RAISE EXCEPTION 'Contact inquiries are exposed to anonymous/public roles';
+  END IF;
+
+  IF to_regclass('public.published_page_sections') IS NULL
+     OR to_regclass('public.published_site_settings') IS NULL THEN
+    RAISE EXCEPTION 'Published projection views are missing';
+  END IF;
+
+  IF (SELECT count(*) FROM storage.buckets WHERE id IN ('images', 'media')) <> 2 THEN
+    RAISE EXCEPTION 'Required Storage buckets are missing';
+  END IF;
+END
+$$;
+
+SELECT 'Migration security audit passed.' AS status;

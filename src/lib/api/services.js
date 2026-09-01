@@ -1,5 +1,29 @@
 import { supabase } from '../supabase'
 
+const buildServicePayload = (service) => {
+  const payload = {
+    title: service.title,
+    description: service.description,
+    icon: service.icon || null,
+  }
+
+  if (service.advanced === true) {
+    Object.assign(payload, {
+      slug: service.slug || null,
+      number: service.number || null,
+      deliverables: Array.isArray(service.deliverables) ? service.deliverables : [],
+      main_image: service.mainImage || null,
+      secondary_images: Array.isArray(service.secondaryImages) ? service.secondaryImages : [],
+      sort_order: Number.isFinite(Number(service.sortOrder)) ? Number(service.sortOrder) : 0,
+      status: service.status || 'draft',
+      published_at: service.status === 'published' ? (service.publishedAt || new Date().toISOString()) : null,
+      archived_at: service.status === 'archived' ? (service.archivedAt || new Date().toISOString()) : null,
+    })
+  }
+
+  return payload
+}
+
 export const servicesAPI = {
   // Get all services
   async getAll() {
@@ -34,13 +58,7 @@ export const servicesAPI = {
   async create(service) {
     const { data, error } = await supabase
       .from('services')
-      .insert([
-        {
-          title: service.title,
-          description: service.description,
-          icon: service.icon || null
-        }
-      ])
+      .insert([buildServicePayload(service)])
       .select()
       .single()
     
@@ -56,9 +74,7 @@ export const servicesAPI = {
     const { data, error } = await supabase
       .from('services')
       .update({
-        title: service.title,
-        description: service.description,
-        icon: service.icon || null,
+        ...buildServicePayload(service),
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

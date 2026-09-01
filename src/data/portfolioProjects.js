@@ -386,9 +386,10 @@ const isCurrentSourceValue = (recordValue, sourceValue) =>
   String(recordValue || '').trim() === String(sourceValue || '').trim()
 
 const getStructuredApproach = (record) => {
-  const understand = record.approach_understand || record.understand
-  const create = record.approach_create || record.create_stage
-  const deliver = record.approach_deliver || record.deliver
+  const structured = record.approach && typeof record.approach === 'object' ? record.approach : {}
+  const understand = structured.understand || record.approach_understand || record.understand
+  const create = structured.create || record.approach_create || record.create_stage
+  const deliver = structured.deliver || record.approach_deliver || record.deliver
   return understand && create && deliver ? { understand, create, deliver } : undefined
 }
 
@@ -417,9 +418,9 @@ export const hydratePortfolioProject = (project, record) => {
   const category = categoryMatches
     ? project.category
     : record.category || project.category
-  const summary = descriptionMatches
-    ? project.summary
-    : record.description || project.summary
+  const summary = record.project_summary || record.card_description || (
+    descriptionMatches ? project.summary : record.description || project.summary
+  )
   const useOptimizedMedia = !record.image || isCurrentSourceValue(record.image, project.sourceImage)
   const authoredAlt = String(record.alt_text || record.image_alt || '').trim()
   const hero = useOptimizedMedia
@@ -444,7 +445,8 @@ export const hydratePortfolioProject = (project, record) => {
     summary,
     description: summary,
     tags: tags.length ? tags : project.tags,
-    externalLink: record.link || project.externalLink,
+    slug: record.slug ? slugifyProjectTitle(record.slug) : project.slug,
+    externalLink: record.external_url || record.link || project.externalLink,
     hero,
     alt: hero.alt,
     image: hero.src,
@@ -455,17 +457,24 @@ export const hydratePortfolioProject = (project, record) => {
     gallery: hero.alt ? [createGalleryItem(project.slug, hero, galleryCaption)] : [],
     sourceRecord: record,
     seo: {
-      title: `${title} | Akrion Digitals`,
-      description: summary,
+      title: record.seo_title || `${title} | Akrion Digitals`,
+      description: record.seo_description || summary,
       image: hero.src,
     },
   }
 
   if (!contentMatches) {
-    hydrated.overview = authoredServices.length ? { services: authoredServices } : {}
+    hydrated.overview = {
+      ...(record.client_name ? { client: record.client_name } : {}),
+      ...(record.industry ? { industry: record.industry } : {}),
+      ...(authoredServices.length ? { services: authoredServices } : {}),
+      ...(record.project_year ? { year: record.project_year } : {}),
+    }
     hydrated.challenge = record.problem || record.challenge || undefined
     hydrated.approach = getStructuredApproach(record)
-    hydrated.result = record.result ? { statement: record.result } : undefined
+    hydrated.result = record.result
+      ? { statement: record.result, metrics: Array.isArray(record.metrics) ? record.metrics : [] }
+      : undefined
     hydrated.testimonial = getVerifiedTestimonial(record)
   }
 
@@ -485,12 +494,13 @@ export const normalizePortfolioRecord = (record) => {
       ? `project-${recordId}`
       : slugifyProjectTitle(title)
   const category = String(record?.category || '').trim()
-  const summary = String(record?.description || '').trim()
+  const summary = String(record?.project_summary || record?.card_description || record?.description || '').trim()
   const tags = parseTags(record?.tags)
   const authoredAlt = String(record?.alt_text || record?.image_alt || '').trim()
-  const hero = record?.image
+  const heroSource = record?.featured_image || record?.image
+  const hero = heroSource
     ? createMedia({
-        src: record.image,
+        src: heroSource,
         alt: authoredAlt,
         fit: 'contain',
       })
@@ -513,25 +523,39 @@ export const normalizePortfolioRecord = (record) => {
     summary,
     description: summary,
     tags,
-    externalLink: record?.link || undefined,
+    externalLink: record?.external_url || record?.link || undefined,
     hero,
     image: hero?.src,
     alt: hero?.alt,
-    overview: services.length ? { services } : {},
+    overview: {
+      ...(record?.client_name ? { client: record.client_name } : {}),
+      ...(record?.industry ? { industry: record.industry } : {}),
+      ...(services.length ? { services } : {}),
+      ...(record?.project_year ? { year: record.project_year } : {}),
+    },
     challenge: record?.problem || record?.challenge || undefined,
     approach,
-    result: record?.result ? { statement: record.result } : undefined,
+    result: record?.result
+      ? { statement: record.result, metrics: Array.isArray(record.metrics) ? record.metrics : [] }
+      : undefined,
     testimonial: getVerifiedTestimonial(record || {}),
     gallery,
     seo: {
-      title: `${title} | Akrion Digitals`,
-      description: summary,
+      title: record?.seo_title || `${title} | Akrion Digitals`,
+      description: record?.seo_description || summary,
       image: hero?.src,
     },
   }
 }
 
-export const mergePortfolioRecords = (records = []) => {
+export const mergePortfolioRecords = (records = [], { includeBundledFallback = true } = {}) => {
+  if (!includeBundledFallback) {
+    return records.map((record) => {
+      const knownProject = getProjectBySourceId(record.id)
+      return knownProject ? hydratePortfolioProject(knownProject, record) : normalizePortfolioRecord(record)
+    })
+  }
+
   const recordMap = new Map(records.map((record) => [String(record.id), record]))
   const known = portfolioProjects.map((project) =>
     recordMap.has(String(project.sourceId))

@@ -1,76 +1,26 @@
--- ============================================
--- CREATE ADMIN USER
--- ============================================
--- This SQL creates an admin user in Supabase Auth
--- Note: User creation is typically done via Supabase Dashboard or Auth API
--- 
--- Admin Credentials:
--- Email: Hailakemelaku1223@gmail.com
--- Password: Open@1223
--- ============================================
+-- =============================================================================
+-- ADMIN AUTHORIZATION HELPER (NO CREDENTIAL CREATION)
+-- =============================================================================
+-- Supabase Auth users and passwords must be created or rotated through the
+-- Dashboard or a trusted Admin API environment. This file never creates a user,
+-- stores a password, or grants access through editable user_metadata.
+--
+-- Preferred workflow:
+--   1. Run supabase-migrations.sql.
+--   2. Create/reset the user under Authentication > Users.
+--   3. Run create-admin.js from a trusted machine with environment variables;
+--      it safely places { "role": "admin" } in server-controlled app_metadata.
+--
+-- If a project owner must assign the role in the SQL Editor, replace the
+-- placeholder before running ONLY the statement below. It does not change the
+-- user's password and does not create a user.
+-- =============================================================================
 
--- IMPORTANT: User creation cannot be done via SQL in Supabase
--- You must use one of these methods:
+UPDATE auth.users
+SET raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb)
+  || jsonb_build_object('role', 'admin'),
+    updated_at = timezone('utc', now())
+WHERE lower(email) = lower('<ADMIN_EMAIL>');
 
--- ============================================
--- METHOD 1: Via Supabase Dashboard (Recommended)
--- ============================================
--- 1. Go to Supabase Dashboard → Authentication → Users
--- 2. Click "Add user" → "Create new user"
--- 3. Enter:
---    - Email: Hailakemelaku1223@gmail.com
---    - Password: Open@1223
---    - Auto Confirm User: Yes (to skip email verification)
--- 4. Click "Create user"
-
--- ============================================
--- METHOD 2: Via Supabase Management API
--- ============================================
--- POST https://api.supabase.com/v1/projects/{project_ref}/auth/users
--- Headers:
---   Authorization: Bearer {service_role_key}
---   Content-Type: application/json
--- Body:
--- {
---   "email": "Hailakemelaku1223@gmail.com",
---   "password": "Open@1223",
---   "email_confirm": true,
---   "user_metadata": {
---     "role": "admin"
---   }
--- }
-
--- ============================================
--- METHOD 3: Via JavaScript/Node.js
--- ============================================
--- Use the Supabase Admin API (requires service_role key):
--- 
--- import { createClient } from '@supabase/supabase-js'
--- 
--- const supabaseAdmin = createClient(
---   'https://umgztbsclpznwgdocgbh.supabase.co',
---   'YOUR_SERVICE_ROLE_KEY' // Get from Supabase Dashboard → Settings → API
--- )
--- 
--- const { data, error } = await supabaseAdmin.auth.admin.createUser({
---   email: 'Hailakemelaku1223@gmail.com',
---   password: 'Open@1223',
---   email_confirm: true,
---   user_metadata: {
---     role: 'admin'
---   }
--- })
-
--- ============================================
--- METHOD 4: Via Sign Up (User Self-Registration)
--- ============================================
--- The user can sign up through the app, but they'll need to verify email
--- unless email confirmation is disabled in Auth settings.
-
--- ============================================
--- AFTER CREATING THE USER
--- ============================================
--- 1. The user can now log in through the Login button in the footer
--- 2. Once logged in, admin mode will be automatically enabled
--- 3. They'll have full CRUD access to Blog, Portfolio, and Services
-
+-- Expected result: UPDATE 1. If it reports UPDATE 0, stop and verify the user
+-- in Authentication > Users. Sign out/in afterward to refresh the JWT claims.

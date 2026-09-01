@@ -3,97 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
-import brandIdentity1200 from '../assets/services/service-brand-identity-1200.webp'
-import brandIdentity720 from '../assets/services/service-brand-identity-720.webp'
-import creativeConsulting1200 from '../assets/services/service-creative-consulting-1200.webp'
-import creativeConsulting720 from '../assets/services/service-creative-consulting-720.webp'
-import socialMedia1200 from '../assets/services/service-social-media-1200.webp'
-import socialMedia720 from '../assets/services/service-social-media-720.webp'
-import videoMotion1200 from '../assets/services/service-video-motion-1200.webp'
-import videoMotion720 from '../assets/services/service-video-motion-720.webp'
-import webDevelopment1200 from '../assets/services/service-web-development-1200.webp'
-import webDevelopment720 from '../assets/services/service-web-development-720.webp'
+import { mergeServiceStories, serviceStories as fallbackServiceStories } from '../data/servicesContent'
+import { servicesAPI } from '../lib/api/services'
 
 const HERO_ROTATION_MS = 6200
-
-// Replace either responsive image pair here to swap in real Akrion project work.
-const serviceStories = [
-  {
-    id: 'brand-identity',
-    number: '01',
-    title: 'Brand Identity',
-    description: 'Distinctive identities built to make your business clear, consistent, and memorable.',
-    included: ['Strategy', 'Logo design', 'Visual identity', 'Guidelines', 'Packaging', 'Brand applications'],
-    image: {
-      small: brandIdentity720,
-      large: brandIdentity1200,
-      width: 1200,
-      height: 800,
-      position: 'center 48%',
-      alt: 'Brand identity and packaging presentation arranged in Akrion’s emerald and gold palette',
-    },
-  },
-  {
-    id: 'web-applications',
-    number: '02',
-    title: 'Web & Applications',
-    description: 'Responsive digital experiences designed around your users and business goals.',
-    included: ['Websites', 'Landing pages', 'Web applications', 'UI/UX', 'Ongoing support'],
-    image: {
-      small: webDevelopment720,
-      large: webDevelopment1200,
-      width: 1200,
-      height: 800,
-      position: '58% center',
-      alt: 'Responsive website and application interfaces displayed across desktop and mobile devices',
-    },
-  },
-  {
-    id: 'video-motion-photography',
-    number: '03',
-    title: 'Video, Motion & Photography',
-    description: 'Visual stories produced to capture attention, communicate clearly, and remain memorable.',
-    included: ['Video production', 'Motion graphics', 'Photography', 'Documentaries', 'Event coverage'],
-    image: {
-      small: videoMotion720,
-      large: videoMotion1200,
-      width: 1200,
-      height: 800,
-      position: '58% center',
-      alt: 'Cinematic video-production and motion-design editing workspace',
-    },
-  },
-  {
-    id: 'social-media-advertising',
-    number: '04',
-    title: 'Social Media & Advertising',
-    description: 'Content and campaigns designed to build visibility, engagement, and meaningful action.',
-    included: ['Strategy', 'Content production', 'Account management', 'Organic campaigns', 'Paid advertising'],
-    image: {
-      small: socialMedia720,
-      large: socialMedia1200,
-      width: 1200,
-      height: 800,
-      position: '60% center',
-      alt: 'Coordinated social-media campaign with post, carousel, and Reel compositions',
-    },
-  },
-  {
-    id: 'creative-consulting',
-    number: '05',
-    title: 'Creative Consulting',
-    description: 'Practical creative direction for businesses that need clarity before execution.',
-    included: ['Brand audits', 'Campaign planning', 'Creative strategy', 'Digital guidance'],
-    image: {
-      small: creativeConsulting720,
-      large: creativeConsulting1200,
-      width: 1200,
-      height: 800,
-      position: 'center 46%',
-      alt: 'Creative strategy workspace with moodboards, sketches, colors, and material studies',
-    },
-  },
-]
 
 const heroStoryIndexes = [0, 1, 2, 3]
 
@@ -155,6 +68,17 @@ const Services = () => {
   const heroInView = useInView(heroRef, { amount: 0.12 })
   const [heroActiveIndex, setHeroActiveIndex] = useState(0)
   const [collageReady, setCollageReady] = useState(false)
+  const [serviceStories, setServiceStories] = useState(fallbackServiceStories)
+
+  useEffect(() => {
+    let active = true
+    servicesAPI.getAll()
+      .then((records) => {
+        if (active && records.length) setServiceStories(mergeServiceStories(records))
+      })
+      .catch((error) => console.warn('Unable to load managed service copy; using verified local content.', error))
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     const preloadAttribute = 'data-akrion-services-hero-preload'

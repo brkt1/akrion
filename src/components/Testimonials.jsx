@@ -1,22 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion'
+import { testimonialsAPI } from '../lib/api/testimonials'
 
-const VERIFIED_TESTIMONIALS = [
-  {
-    id: 'yenege-games',
-    name: 'Biruk Haile',
-    title: 'CEO',
-    company: 'Yenege Games',
-    quote: 'From brand design to launch strategy — Akrion handled everything with professionalism and passion. We went from zero to 10,000 downloads in our first week.',
-    result: '10,000+ downloads in the first week',
-    initials: 'BH',
-    companyInitials: 'YG',
-    services: ['Brand Design', 'Launch Strategy'],
-    rating: null,
-    projectVisual: null,
-    projectHref: null,
-  },
-]
+const initials = (value = '') => value.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+const normalizeTestimonial = (row) => ({ id: row.id, name: row.client_name, title: row.client_role || 'Client', company: row.client_company || 'Akrion client', quote: row.quotation, result: row.verified_result || 'Verified client testimonial', initials: initials(row.client_name), companyInitials: initials(row.client_company || row.client_name), services: [], rating: row.rating, projectHref: null, projectVisual: row.project_image ? { src: row.project_image, alt: `Portrait of ${row.client_name}`, sizes: '(min-width: 1024px) 42vw, 100vw' } : null })
 
 const APPROVED_CLIENT_LOGOS = []
 const AUTOPLAY_DELAY = 8000
@@ -76,15 +63,15 @@ const ProjectVisual = ({ testimonial, reduceMotion }) => {
         <div className="social-proof-company-initial">{testimonial.companyInitials}</div>
         <div>
           <p>{testimonial.company}</p>
-          <span>{testimonial.services.join(' · ')}</span>
+        <span>{testimonial.services.length ? testimonial.services.join(' · ') : 'Verified client'}</span>
         </div>
       </div>
 
       <div className="social-proof-snapshot-divider" aria-hidden="true"><span /></div>
 
       <div className="social-proof-snapshot-result" aria-hidden="true">
-        <span>10,000+</span>
-        <small>downloads · first week</small>
+        <span>{testimonial.companyInitials}</span>
+        <small>{testimonial.result}</small>
       </div>
     </div>
   )
@@ -105,10 +92,17 @@ const Testimonials = () => {
   const [pageIsHidden, setPageIsHidden] = useState(
     () => typeof document !== 'undefined' && document.visibilityState === 'hidden',
   )
+  const [testimonials, setTestimonials] = useState([])
 
-  const testimonialCount = VERIFIED_TESTIMONIALS.length
+  useEffect(() => {
+    let activeRequest = true
+    testimonialsAPI.getPublished().then((rows) => { if (activeRequest) setTestimonials(rows.map(normalizeTestimonial)) }).catch(() => { if (activeRequest) setTestimonials([]) })
+    return () => { activeRequest = false }
+  }, [])
+
+  const testimonialCount = testimonials.length
   const hasMultipleTestimonials = testimonialCount > 1
-  const current = VERIFIED_TESTIMONIALS[active]
+  const current = testimonials[active]
 
   const pauseAfterInteraction = useCallback(() => {
     setIsInteracting(true)
@@ -200,6 +194,8 @@ const Testimonials = () => {
         transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
       }
 
+  if (!current) return null
+
   return (
     <section
       id="testimonials"
@@ -235,7 +231,7 @@ const Testimonials = () => {
               aria-label="Verified client testimonials"
               onKeyDown={handleSelectorKeyDown}
             >
-              {VERIFIED_TESTIMONIALS.map((testimonial, index) => (
+              {testimonials.map((testimonial, index) => (
                 <button
                   key={testimonial.id}
                   id={`social-proof-selector-${testimonial.id}`}

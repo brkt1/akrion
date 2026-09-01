@@ -83,13 +83,16 @@ const ProjectCaseStudy = () => {
 
     const loadProject = async () => {
       try {
-        const records = await portfolioAPI.getAll()
+        const result = await portfolioAPI.getPublishedResult()
         if (cancelled) return
-        const merged = mergePortfolioRecords(records)
+        const merged = mergePortfolioRecords(result.data, { includeBundledFallback: result.workflow !== 'advanced' })
         setProjectCollection(merged)
 
         if (canonicalProject) {
-          setProject(merged.find((item) => item.slug === canonicalProject.slug) || canonicalProject)
+          setProject(
+            merged.find((item) => item.slug === canonicalProject.slug)
+              || (result.workflow === 'advanced' ? null : canonicalProject),
+          )
           return
         }
 

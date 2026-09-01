@@ -242,6 +242,9 @@ const normalizeCategory = (value = '') => {
 }
 
 const getVerifiedPublishedAt = (record = {}) => {
+  const managedPublicationDate = cleanValue(record.publication_date)
+  if (managedPublicationDate) return managedPublicationDate
+
   const isVerified =
     record.date_verified === true ||
     record.dateVerified === true ||
@@ -279,6 +282,8 @@ export const hydrateBlogArticle = (article, record) => {
     !cleanValue(record.image) || isCurrentSourceValue(record.image, article.sourceImage)
   const title = cleanValue(record.title) || article.title
   const content = cleanValue(record.content) || article.content
+  const explicitSlug = cleanValue(record.slug)
+  const excerpt = cleanValue(record.excerpt) || content
   const category = contentMatches
     ? article.category
     : normalizeCategory(record.category) || article.category
@@ -292,24 +297,34 @@ export const hydrateBlogArticle = (article, record) => {
       : undefined
   )
   const readingTime = getExplicitReadingTime(record)
+  const publisher = cleanValue(record.publisher || record.author)
+  const featured = typeof record.featured === 'boolean'
+    ? record.featured
+    : contentMatches
+      ? article.featured
+      : false
+  const seoTitle = cleanValue(record.seo_title) || `${title} | Akrion Digitals`
+  const seoDescription = cleanValue(record.seo_description) || excerpt
 
   return {
     ...article,
+    slug: explicitSlug ? slugifyArticleTitle(explicitSlug) : article.slug,
     title,
     content,
-    excerpt: content,
+    excerpt,
     introduction: editorialText.introduction,
     body: editorialText.body,
     category,
-    publisher: PUBLISHER,
+    publisher: publisher && publisher !== 'Akrion Team' ? publisher : PUBLISHER,
     publishedAt,
     readingTime,
-    featured: contentMatches ? article.featured : false,
+    featured,
+    relatedArticleIds: Array.isArray(record.related_article_ids) ? record.related_article_ids : [],
     hero,
     sourceRecord: record,
     seo: {
-      title: `${title} | Akrion Digitals`,
-      description: content,
+      title: seoTitle,
+      description: seoDescription,
       image: hero.src,
     },
   }
@@ -337,6 +352,10 @@ export const normalizeBlogRecord = (record) => {
   // are handled above and remain hidden until their placeholder date changes.
   const publishedAt = getVerifiedPublishedAt(record) || cleanValue(record?.date) || undefined
   const readingTime = getExplicitReadingTime(record)
+  const excerpt = cleanValue(record?.excerpt) || content
+  const publisher = cleanValue(record?.publisher || record?.author)
+  const seoTitle = cleanValue(record?.seo_title) || `${title} | Akrion Digitals`
+  const seoDescription = cleanValue(record?.seo_description) || excerpt
 
   return {
     id: slug,
@@ -344,25 +363,35 @@ export const normalizeBlogRecord = (record) => {
     sourceId: record?.id,
     title,
     content,
-    excerpt: content,
+    excerpt,
     introduction: editorialText.introduction,
     body: editorialText.body,
     category: normalizeCategory(record?.category),
-    publisher: PUBLISHER,
+    publisher: publisher && publisher !== 'Akrion Team' ? publisher : PUBLISHER,
     publishedAt,
     readingTime,
     featured: record?.featured === true,
+    relatedArticleIds: Array.isArray(record?.related_article_ids) ? record.related_article_ids : [],
     hero,
     sourceRecord: record,
     seo: {
-      title: `${title} | Akrion Digitals`,
-      description: content,
+      title: seoTitle,
+      description: seoDescription,
       image: hero.src,
     },
   }
 }
 
-export const mergeBlogRecords = (records = []) => {
+export const mergeBlogRecords = (records = [], { includeBundledFallback = true } = {}) => {
+  if (!includeBundledFallback) {
+    return records
+      .map((record) => {
+        const knownArticle = getArticleBySourceId(record.id)
+        return knownArticle ? hydrateBlogArticle(knownArticle, record) : normalizeBlogRecord(record)
+      })
+      .filter(Boolean)
+  }
+
   const recordMap = new Map(records.map((record) => [String(record.id), record]))
   const known = blogArticles.map((article) =>
     recordMap.has(String(article.sourceId))
@@ -380,12 +409,18 @@ export const mergeBlogRecords = (records = []) => {
 export const getRelatedArticles = (article, articles = blogArticles, limit = 2) => {
   if (!article) return []
 
-  return articles
+  const explicitlyRelated = (article.relatedArticleIds || [])
+    .map((id) => articles.find((candidate) => String(candidate.sourceId) === String(id)))
+    .filter((candidate) => candidate && candidate.slug !== article.slug)
+  const explicitSlugs = new Set(explicitlyRelated.map((candidate) => candidate.slug))
+  const automaticallyRelated = articles
     .filter((candidate) => candidate.slug !== article.slug)
+    .filter((candidate) => !explicitSlugs.has(candidate.slug))
     .sort((left, right) => {
       const leftMatches = left.category === article.category ? 1 : 0
       const rightMatches = right.category === article.category ? 1 : 0
       return rightMatches - leftMatches
     })
-    .slice(0, limit)
+
+  return [...explicitlyRelated, ...automaticallyRelated].slice(0, limit)
 }

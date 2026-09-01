@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import logo from '../Artboard 2.png'
-import { authAPI } from '../lib/api/auth'
 import TiletDivider from './TiletDivider'
 
 const navLinks = [
@@ -84,84 +82,6 @@ const socialLinks = [
 ]
 
 const Footer = ({ hideCtaBanner = false }) => {
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    checkAuth()
-    const { data: { subscription } } = authAPI.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        setIsAuthenticated(true)
-        setUser(session?.user || null)
-      } else if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false)
-        setUser(null)
-      }
-    })
-    return () => { subscription.unsubscribe() }
-  }, [])
-
-  const checkAuth = async () => {
-    try {
-      const session = await authAPI.getSession()
-      if (session) {
-        setIsAuthenticated(true)
-        setUser(session.user)
-      }
-    } catch (err) {
-      console.error('Error checking auth:', err)
-    }
-  }
-
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await authAPI.signIn(loginData.email, loginData.password)
-      if (data.user) {
-        setIsAuthenticated(true)
-        setUser(data.user)
-        setShowLoginModal(false)
-        setLoginData({ email: '', password: '' })
-        
-        // Only set admin mode if they are actually an admin
-        const isAdmin = data.user.user_metadata?.role === 'admin'
-        if (isAdmin) {
-          localStorage.setItem('blogAdminMode', 'true')
-          localStorage.setItem('portfolioAdminMode', 'true')
-          localStorage.setItem('servicesAdminMode', 'true')
-        } else {
-          localStorage.setItem('blogAdminMode', 'false')
-          localStorage.setItem('portfolioAdminMode', 'false')
-          localStorage.setItem('servicesAdminMode', 'false')
-        }
-      }
-    } catch (err) {
-      console.error('Login error:', err)
-      setError(err.message || 'Failed to sign in. Please check your credentials.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleLogout = async () => {
-    try {
-      await authAPI.signOut()
-      setIsAuthenticated(false)
-      setUser(null)
-      localStorage.removeItem('blogAdminMode')
-      localStorage.removeItem('portfolioAdminMode')
-      localStorage.removeItem('servicesAdminMode')
-    } catch (err) {
-      console.error('Logout error:', err)
-    }
-  }
-
   return (
     <>
       <footer className="bg-bg-darker border-t border-white/[0.06] relative overflow-hidden">
@@ -294,24 +214,9 @@ const Footer = ({ hideCtaBanner = false }) => {
               <p className="text-sm font-light" style={{ color: 'rgba(201,161,112,0.35)' }}>{CONTACT.location}</p>
 
               <div className="pt-3" style={{ borderTop: '1px solid rgba(201,161,112,0.08)' }}>
-                {isAuthenticated ? (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs text-white/30 truncate">{user?.email}</p>
-                    <button
-                      onClick={handleLogout}
-                      className="text-xs text-white/40 hover:text-accent-orange transition-colors text-left"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowLoginModal(true)}
-                    className="text-xs text-white/30 hover:text-white/60 transition-colors"
-                  >
-                    AD
-                  </button>
-                )}
+                <Link to="/admin" className="text-xs text-white/30 hover:text-white/60 transition-colors">
+                  Admin
+                </Link>
               </div>
             </div>
           </div>
@@ -331,78 +236,6 @@ const Footer = ({ hideCtaBanner = false }) => {
         </div>
       </footer>
 
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-md z-[2000] flex items-center justify-center p-4"
-          onClick={() => setShowLoginModal(false)}
-        >
-          <div
-            className="bg-bg-darker rounded-2xl p-6 sm:p-8 border border-white/[0.1] max-w-md w-full shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal header */}
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-white mb-0.5">AD</h2>
-                <p className="text-xs text-white/40">Content management access</p>
-              </div>
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {error && (
-              <div className="mb-5 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-semibold tracking-wide uppercase text-white/40 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={loginData.email}
-                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-white text-sm placeholder-white/25 focus:outline-none focus:border-accent-orange/50 focus:bg-white/[0.06] transition-all"
-                  placeholder="you@example.com"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold tracking-wide uppercase text-white/40 mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.1] rounded-xl text-white text-sm placeholder-white/25 focus:outline-none focus:border-accent-orange/50 focus:bg-white/[0.06] transition-all"
-                  placeholder="••••••••"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary py-3.5 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Signing in…' : 'Sign In'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   )
 }

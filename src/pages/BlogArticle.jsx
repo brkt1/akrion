@@ -95,14 +95,17 @@ const BlogArticle = () => {
 
     const loadArticle = async () => {
       try {
-        const records = await blogAPI.getAll()
+        const result = await blogAPI.getPublishedResult()
         if (cancelled) return
-        const merged = mergeBlogRecords(records)
+        const merged = mergeBlogRecords(result.data, {
+          includeBundledFallback: result.workflow !== 'advanced',
+        })
         setArticleCollection(merged)
 
         if (canonicalArticle) {
           setArticle(
-            merged.find((item) => item.slug === canonicalArticle.slug) || canonicalArticle,
+            merged.find((item) => item.slug === canonicalArticle.slug)
+              || (result.workflow === 'advanced' ? null : canonicalArticle),
           )
           return
         }

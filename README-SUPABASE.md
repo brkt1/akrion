@@ -1,75 +1,63 @@
-# Supabase Backend Setup
+# Supabase Backend and CMS Setup
 
-This project uses Supabase as the backend database. Follow these steps to set up the database:
+`supabase-migrations.sql` is the single authoritative database and storage migration. Run it from the Supabase SQL Editor with the project-owner role. It is idempotent and does not seed invented content, create an Auth user, or set a password.
 
-## 1. Database Setup
+Do not run `master-setup.sql`; it is retained only as a safe deprecated entry point.
 
-1. Go to your Supabase project dashboard: https://supabase.com/dashboard
-2. Navigate to the SQL Editor
-3. Copy and paste the contents of `supabase-migrations.sql` into the SQL Editor
-4. Run the SQL script to create all necessary tables and policies
+## Schema
 
-## 2. Tables Created
+The migration preserves and extends the existing content tables:
 
-The migration script creates the following tables:
+- `blog_posts` — article content, slugs, publishing/scheduling state, SEO, reading time, and related articles
+- `portfolio_projects` — case-study content, verified result/testimonial fields, media, SEO, status, and ordering
+- `services` — the five service records, deliverables, media, status, and ordering
+- `contact_messages` — optional backend inquiries, statuses, and internal notes
 
-- **blog_posts** - Stores blog posts with title, content, author, date, image, and category
-- **portfolio_projects** - Stores portfolio projects with title, description, image, category, link, and tags
-- **services** - Stores services with title, description, and icon type
-- **contact_messages** - Stores contact form submissions
+It also creates:
 
-## 3. Row Level Security (RLS)
+- `page_sections` — draft and published snapshots for Homepage and About content
+- `testimonials` — verified testimonial records with an explicit verification gate and publishing state
+- `media_assets` and `media_usages` — media metadata and where-used protection
+- `site_settings` — draft and published contact, brand, footer, and SEO settings
+- `published_page_sections` and `published_site_settings` — public views that never expose draft values
 
-All tables have RLS enabled with public read/write policies. For production, you should:
-- Restrict write operations to authenticated users only
-- Add proper authentication
-- Implement role-based access control
+Existing records default to `published` so current public content remains readable. New page sections, settings, and testimonials default to `draft`. No demo projects, articles, testimonials, dates, or metrics are inserted.
 
-## 4. API Configuration
+## Authorization model
 
-The Supabase client is configured in `src/lib/supabase.js` with:
-- Project URL: `https://umgztbsclpznwgdocgbh.supabase.co`
-- Anon Key: Already configured
+Row Level Security is enabled on every CMS table.
 
-## 5. API Services
+- Anonymous and ordinary authenticated visitors can read published content only.
+- Only a signed-in user with server-controlled `app_metadata.role = "admin"` can create, update, publish, archive, or delete CMS content.
+- Contact inquiries have no anonymous read or insert policy.
+- Storage objects are publicly readable for website delivery, but only an authorized admin can upload, replace, or delete them.
 
-The following API services are available:
+See `ADMIN-SETUP.md` for credential rotation and admin-claim assignment.
 
-- `src/lib/api/blog.js` - Blog posts CRUD operations
-- `src/lib/api/portfolio.js` - Portfolio projects CRUD operations
-- `src/lib/api/services.js` - Services CRUD operations
-- `src/lib/api/contacts.js` - Contact messages operations
+## Storage
 
-## 6. Default Data
+The migration creates or updates two buckets:
 
-The migration script includes default data for:
-- 5 default services
-- 5 default portfolio projects
-- 2 default blog posts
+- `images`: JPEG, PNG, WebP, or AVIF; maximum 10 MB
+- `media`: the same image types plus MP4 and WebM; maximum 50 MB
 
-## 7. Testing
+GIF and SVG uploads are intentionally excluded. File restrictions exist in the bucket and should also be validated in the admin UI before upload.
 
-After running the migration:
-1. Start the development server: `npm run dev`
-2. Navigate to Blog, Portfolio, or Services pages
-3. Enter Admin Mode to test CRUD operations
-4. Verify data is being saved to and loaded from Supabase
+## Browser configuration
 
-## 8. Environment Variables (Optional)
+The current browser client contains the project URL and publishable/anon key in `src/lib/supabase.js`. Those values identify the public project and are not admin credentials; RLS is the security boundary. They may be moved to Vite environment variables as configuration hygiene:
 
-For better security, you can move the Supabase keys to environment variables:
+```dotenv
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
+```
 
-1. Create a `.env` file in the root directory
-2. Add:
-   ```
-   VITE_SUPABASE_URL=https://umgztbsclpznwgdocgbh.supabase.co
-   VITE_SUPABASE_ANON_KEY=your_anon_key_here
-   ```
-3. Update `src/lib/supabase.js` to use `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_ANON_KEY`
+The client must be updated to read these variables before that optional move takes effect. The anon key is expected in a browser application; it is not permission to bypass RLS. Never expose a Supabase secret or service-role key through a `VITE_*` variable.
 
-## Troubleshooting
+## Contact inquiries
 
-- **Error: "relation does not exist"** - Make sure you've run the SQL migration script
-- **Error: "permission denied"** - Check that RLS policies are correctly set up
-- **Data not loading** - Check browser console for API errors and verify Supabase connection
+The current Contact page continues to WhatsApp and does not save an inquiry. The admin must label inquiries unavailable until a real server endpoint validates and stores submissions. A trusted server handler may use the service role; the browser must not.
 
+## Verification
+
+After applying the migration, follow `TESTING-GUIDE.md`. At minimum, test an anonymous session, a normal authenticated session, and the designated admin separately.
