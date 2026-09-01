@@ -4,6 +4,7 @@ import About from './components/About'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import Hero from './components/Hero'
+import MobileBottomNav from './components/MobileBottomNav'
 import OurWork from './components/OurWork'
 import { ScrollProgress } from './components/ScrollAnimation'
 import Testimonials from './components/Testimonials'
@@ -55,7 +56,7 @@ function App() {
   const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/')
 
   return (
-    <div className={isAdmin ? 'min-h-screen' : 'min-h-screen bg-bg-dark'}>
+    <div className={isAdmin ? 'min-h-screen' : 'site-shell min-h-screen bg-bg-dark'}>
       {!isAdmin && <ScrollProgress />}
       <Routes>
         <Route path="/admin/setup-password" element={(
@@ -77,6 +78,7 @@ function App() {
         <Route path="/blog/:slug" element={<BlogArticleRoute />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
+      {!isAdmin && <MobileBottomNav />}
     </div>
   )
 }

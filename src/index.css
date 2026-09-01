@@ -1410,7 +1410,176 @@
   .admin-recent-item .admin-status-badge { display: none; }
 }
 
+.desktop-primary-nav {
+  display: none;
+}
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .desktop-primary-nav {
+    display: flex;
+  }
+}
+
+@media (max-width: 768px) {
+  .site-shell {
+    padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    right: 0;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    z-index: 1200;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding-inline: 12px;
+    pointer-events: none;
+  }
+
+  .mobile-bottom-nav__inner {
+    display: flex;
+    align-items: stretch;
+    width: min(94vw, 650px);
+    height: 78px;
+    padding: 7px 8px;
+    overflow: hidden;
+    pointer-events: auto;
+    background: rgba(7, 23, 15, 0.9);
+    border: 1px solid rgba(245, 232, 198, 0.1);
+    border-radius: 42px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.34), 0 0 24px rgba(201, 161, 112, 0.05);
+    -webkit-backdrop-filter: blur(16px) saturate(145%);
+    backdrop-filter: blur(16px) saturate(145%);
+  }
+
+  .mobile-bottom-nav__item {
+    position: relative;
+    display: flex;
+    flex: 1 1 20%;
+    min-width: 0;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 2px 8px;
+    color: rgba(255, 255, 255, 0.54);
+    text-decoration: none;
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 250ms ease, transform 250ms ease;
+  }
+
+  .mobile-bottom-nav__active-surface {
+    position: absolute;
+    inset: 0 3px;
+    z-index: -1;
+    border: 1px solid transparent;
+    border-radius: 26px;
+    background: transparent;
+    opacity: 0;
+    transform: scale(0.88);
+    transition: opacity 250ms ease, transform 250ms ease, background-color 250ms ease, border-color 250ms ease;
+  }
+
+  .mobile-bottom-nav__item svg {
+    width: 23px;
+    height: 23px;
+    flex: 0 0 auto;
+    transition: color 250ms ease, transform 250ms ease, filter 250ms ease;
+  }
+
+  .mobile-bottom-nav__label {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 9.5px;
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: 0.055em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: color 250ms ease;
+  }
+
+  .mobile-bottom-nav__dot {
+    position: absolute;
+    bottom: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #DAB480;
+    box-shadow: 0 0 9px rgba(218, 180, 128, 0.72);
+    opacity: 0;
+    transform: translateY(3px) scale(0.5);
+    transition: opacity 250ms ease, transform 250ms ease;
+  }
+
+  .mobile-bottom-nav__item.is-active {
+    color: #F7E8C5;
+  }
+
+  .mobile-bottom-nav__item.is-active .mobile-bottom-nav__active-surface {
+    background: linear-gradient(145deg, rgba(218, 180, 128, 0.17), rgba(218, 180, 128, 0.07));
+    border-color: rgba(218, 180, 128, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .mobile-bottom-nav__item.is-active svg {
+    color: #DAB480;
+    filter: drop-shadow(0 0 7px rgba(218, 180, 128, 0.25));
+    transform: translateY(-1px);
+  }
+
+  .mobile-bottom-nav__item.is-active .mobile-bottom-nav__dot {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .mobile-bottom-nav__item:focus-visible {
+    outline: 2px solid #DAB480;
+    outline-offset: -3px;
+    border-radius: 26px;
+  }
+}
+
+@media (max-width: 345px) {
+  .mobile-bottom-nav {
+    padding-inline: 8px;
+  }
+
+  .mobile-bottom-nav__inner {
+    width: calc(100vw - 16px);
+    padding-inline: 5px;
+  }
+
+  .mobile-bottom-nav__active-surface {
+    inset-inline: 1px;
+  }
+
+  .mobile-bottom-nav__label {
+    font-size: 8.5px;
+    letter-spacing: 0.025em;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .mobile-bottom-nav__item,
+  .mobile-bottom-nav__active-surface,
+  .mobile-bottom-nav__item svg,
+  .mobile-bottom-nav__label,
+  .mobile-bottom-nav__dot {
+    transition-duration: 0.01ms !important;
+  }
+
   .admin-app *,
   .admin-auth-page * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }

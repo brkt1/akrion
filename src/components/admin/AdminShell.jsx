@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import logo from '../../Artboard 2.png'
+import logo from '../../assets/brand/akrion-mark-gold.png'
 import AdminIcon from './AdminIcons'
 
 const ADMIN_NAV_ITEMS = [

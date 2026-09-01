@@ -7,7 +7,7 @@ import {
 } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import logo from '../Artboard 2.png'
+import logo from '../assets/brand/akrion-mark-gold.png'
 import brandIdentityLarge from '../assets/services/service-brand-identity-1200.webp'
 import brandIdentitySmall from '../assets/services/service-brand-identity-720.webp'
 import webDevelopmentLarge from '../assets/services/service-web-development-1200.webp'
@@ -128,7 +128,7 @@ const ShowreelPlaceholder = () => (
       src={logo}
       alt=""
       aria-hidden="true"
-      className="absolute left-1/2 top-1/2 w-[52%] -translate-x-1/2 -translate-y-1/2 opacity-[0.07] grayscale"
+      className="absolute left-1/2 top-1/2 h-[72%] w-auto max-w-[46%] -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.09]"
     />
 
     <div className="absolute inset-0 flex items-center justify-center">

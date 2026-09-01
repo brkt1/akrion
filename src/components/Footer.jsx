@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import logo from '../Artboard 2.png'
+import logo from '../assets/brand/akrion-mark-gold.png'
 import TiletDivider from './TiletDivider'
 
 const navLinks = [
@@ -130,7 +130,7 @@ const Footer = ({ hideCtaBanner = false }) => {
             {/* Brand column */}
             <div className="sm:col-span-2 lg:col-span-1 flex flex-col gap-5">
               <Link to="/" className="inline-block">
-                <img src={logo} alt="Akrion Digitals" className="h-10 w-auto" />
+                <img src={logo} alt="Akrion Digitals" className="h-14 w-auto transition-transform duration-300 hover:-translate-y-1" />
               </Link>
               <p className="text-sm leading-relaxed font-light max-w-xs" style={{ color: 'rgba(201,161,112,0.5)' }}>
                 A creative agency transforming imagination into experience — from Addis Ababa to the world.
