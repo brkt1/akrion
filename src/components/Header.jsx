@@ -30,7 +30,7 @@ const Header = () => {
   return (
     <>
       <header
-        className={`top-0 z-[1000] w-full transition-all duration-500 ${
+        className={`site-header top-0 z-[1000] w-full transition-all duration-500 ${
           isHome
             ? `sticky border-b ${
                 scrolled
@@ -59,7 +59,7 @@ const Header = () => {
             : 'blur(20px) saturate(180%)',
         }}
       >
-        <div className="flex justify-between items-center max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="site-header__inner flex justify-between items-center max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
           {/* Logo */}
           <Link
             to="/"

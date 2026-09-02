@@ -1429,6 +1429,32 @@
     padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px));
   }
 
+  .site-header {
+    padding: 10px 0 0 !important;
+    border-bottom: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .site-header__inner {
+    width: min(94vw, 650px);
+    min-height: 62px;
+    justify-content: center;
+    padding: 7px 18px;
+    border: 1px solid rgba(245, 232, 198, 0.1);
+    border-radius: 36px;
+    background: rgba(7, 23, 15, 0.78);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), 0 0 18px rgba(201, 161, 112, 0.04);
+    -webkit-backdrop-filter: blur(16px) saturate(145%);
+    backdrop-filter: blur(16px) saturate(145%);
+  }
+
+  .site-header__inner .akrion-logo {
+    height: 48px;
+  }
+
   .mobile-bottom-nav {
     position: fixed;
     right: 0;
