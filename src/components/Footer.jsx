@@ -133,7 +133,7 @@ const Footer = ({ hideCtaBanner = false }) => {
                 <img src={logo} alt="Akrion Digitals" className="h-14 w-auto transition-transform duration-300 hover:-translate-y-1" />
               </Link>
               <p className="text-sm leading-relaxed font-light max-w-xs" style={{ color: 'rgba(201,161,112,0.5)' }}>
-                A creative agency transforming imagination into experience — from Addis Ababa to the world.
+                Built to Be Seen.
               </p>
               <p className="text-xs font-medium" style={{ color: 'rgba(201,161,112,0.35)' }}>{CONTACT.ceo} &mdash; CEO &amp; Manager</p>
               {/* Social icons */}

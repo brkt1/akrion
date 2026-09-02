@@ -367,7 +367,7 @@ const Hero = () => {
               {...entrance(0.13)}
               className="section-heading mt-6 max-w-[12ch] text-[clamp(2.75rem,6vw,5.25rem)] leading-[0.98] tracking-[-0.045em] sm:mt-7"
             >
-              <span className="gradient-text-gold">We Make the Unknown Known.</span>
+              <span className="gradient-text-gold">Built to Be Seen.</span>
             </motion.h1>
 
             <motion.p
