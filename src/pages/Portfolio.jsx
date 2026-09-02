@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import { ResponsiveImage } from '../components/portfolio/ProjectGallery'
-import ScrollAnimation, { StaggerContainer, StaggerItem } from '../components/ScrollAnimation'
+import ScrollAnimation from '../components/ScrollAnimation'
 import {
   getProjectPath,
   mergePortfolioRecords,
@@ -223,16 +223,16 @@ const Portfolio = () => {
               </div>
             </ScrollAnimation>
 
-            <StaggerContainer className="portfolio-card-grid" staggerDelay={0.08} respectReducedMotion>
+            <div className="portfolio-card-grid">
               {displayedProjects.map((project, index) => (
-                <StaggerItem
+                <div
                   key={project.slug}
                   className={getCardGridClassName(project, index, displayedProjects.length)}
                 >
                   <CaseStudyCard project={project} />
-                </StaggerItem>
+                </div>
               ))}
-            </StaggerContainer>
+            </div>
 
             {loading && <p className="text-center text-xs" aria-live="polite" style={{ color: 'rgba(201,161,112,0.45)' }}>Checking for the latest projects…</p>}
 
