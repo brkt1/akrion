@@ -116,6 +116,11 @@ const Admin = () => {
   }, [])
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setAuthState('configuration-error')
+      return undefined
+    }
+
     let mounted = true
     authAPI.getSession()
       .then((nextSession) => { if (mounted) evaluateSession(nextSession) })
