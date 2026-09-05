@@ -18,6 +18,7 @@ import { AdminNotice } from '../components/admin/AdminUi'
 import PageMeta from '../components/PageMeta'
 import { adminAPI } from '../lib/api/admin'
 import { authAPI } from '../lib/api/auth'
+import { isSupabaseConfigured } from '../lib/supabase'
 
 const DEFAULT_CAPABILITIES = {
   pageContent: false,
@@ -76,6 +77,23 @@ const AdminNotFound = () => (
       <Link className="admin-button" to="/admin">Open Dashboard</Link>
     </div>
   </div>
+)
+
+const AdminConfigurationScreen = () => (
+  <main className="admin-auth-page">
+    <div className="admin-auth-pattern" aria-hidden="true" />
+    <section className="admin-auth-card" aria-labelledby="admin-auth-title">
+      <Link to="/" className="admin-auth-back"><AdminIcon name="arrowDown" size={16} />Back to website</Link>
+      <div className="admin-auth-mark" aria-hidden="true">AD</div>
+      <p className="admin-page-eyebrow">Configuration required</p>
+      <h1 id="admin-auth-title">Admin sign-in is temporarily unavailable.</h1>
+      <p>The website is online, but its secure content connection has not been configured for this deployment.</p>
+      <div className="admin-auth-security-note">
+        <AdminIcon name="warning" />
+        <span>Add the Supabase URL and anonymous browser key to the deployment environment, then redeploy the site.</span>
+      </div>
+    </section>
+  </main>
 )
 
 const Admin = () => {
@@ -158,6 +176,15 @@ const Admin = () => {
             <AdminDashboard />
           </div>
         </AdminShell>
+      </>
+    )
+  }
+
+  if (!isSupabaseConfigured) {
+    return (
+      <>
+        <PageMeta title="Admin Configuration Required | Akrion Digitals" description="Akrion Content Studio configuration status." path="/admin" noIndex />
+        <AdminConfigurationScreen />
       </>
     )
   }
