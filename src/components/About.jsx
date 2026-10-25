@@ -21,6 +21,7 @@ import documentaryFilm1400 from '../assets/portfolio/documentary-film-1400.webp'
 import documentaryFilm720 from '../assets/portfolio/documentary-film-720.webp'
 import Footer from './Footer'
 import Header from './Header'
+import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
 
 const HERO_ROTATION_MS = 6200
 const PROCESS_ROTATION_MS = 6000
@@ -193,6 +194,11 @@ const reveal = (reducedMotion, delay = 0, distance = 22) => (
 )
 
 const About = () => {
+  const heroContent = usePublishedSection('about', 'about_hero')
+  const principleContent = usePublishedSection('about', 'brand_principles')
+  const processContent = usePublishedSection('about', 'how_we_think')
+  const closingContent = usePublishedSection('about', 'closing_content')
+  const displayedPrinciples = principles.map((item, index) => ({ ...item, title: principleContent[`principle_${index + 1}_title`] || item.title, description: principleContent[`principle_${index + 1}_description`] || item.description }))
   const reducedMotion = usePrefersReducedMotion()
   const pageVisible = usePageVisibility()
   const heroRef = useRef(null)
@@ -319,15 +325,14 @@ const About = () => {
                 className="about-story-title section-heading"
                 {...reveal(reducedMotion, 0.1, 28)}
               >
-                ABOUT.
+                {heroContent.heading || 'ABOUT.'}
               </motion.h1>
               <motion.p className="about-story-intro" {...reveal(reducedMotion, 0.17)}>
-                Akrion Digitals is an Ethiopian creative and technology agency turning ideas into brands,
-                digital experiences, and stories people remember.
+                {heroContent.introduction || 'Akrion Digitals is an Ethiopian creative and technology agency turning ideas into brands, digital experiences, and stories people remember.'}
               </motion.p>
               <motion.p className="about-story-location" {...reveal(reducedMotion, 0.24, 16)}>
                 <span aria-hidden="true" />
-                Rooted in Addis Ababa. Created for impact everywhere.
+                {heroContent.identity_statement || 'Rooted in Addis Ababa. Created for impact everywhere.'}
               </motion.p>
             </div>
 
@@ -390,7 +395,7 @@ const About = () => {
 
             <div className="about-story-principles-grid">
               <div className="about-story-principle-list">
-                {principles.map((principle, index) => (
+                {displayedPrinciples.map((principle, index) => (
                   <motion.div
                     key={principle.number}
                     {...reveal(reducedMotion, index * 0.06)}
@@ -450,9 +455,9 @@ const About = () => {
           >
             <motion.div className="about-story-process-copy" {...reveal(reducedMotion, 0.04)}>
               <p className="about-story-ivory-label">HOW WE THINK</p>
-              <h2 id="about-process-heading">Strategy gives creativity direction.</h2>
+              <h2 id="about-process-heading">{processContent.heading || 'Strategy gives creativity direction.'}</h2>
               <p>
-                We understand the challenge, shape the idea, create the experience, and refine it until it works.
+                {processContent.description || 'We understand the challenge, shape the idea, create the experience, and refine it until it works.'}
               </p>
 
               <div className="about-story-stage-nav" role="tablist" aria-label="How we think stages">
@@ -510,13 +515,13 @@ const About = () => {
             <motion.div {...reveal(reducedMotion, 0.03)}>
               <div className="section-label"><span className="section-dot" />OUR MISSION</div>
               <p className="about-story-mission-copy">
-                To help ambitious businesses become clearer, stronger, and more memorable through creativity and technology.
+                {closingContent.mission_statement || 'To help ambitious businesses become clearer, stronger, and more memorable through creativity and technology.'}
               </p>
             </motion.div>
             <motion.div className="about-story-mission-action" {...reveal(reducedMotion, 0.1)}>
-              <h2 id="about-mission-heading">Let’s create something meaningful.</h2>
-              <Link to="/contact" className="about-story-mission-cta btn-primary">
-                Start a Project
+              <h2 id="about-mission-heading">{closingContent.heading || 'Let’s create something meaningful.'}</h2>
+              <Link to={safeContentUrl(closingContent.final_cta_destination, '/contact')} className="about-story-mission-cta btn-primary">
+                {closingContent.final_cta_label || 'Start a Project'}
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>

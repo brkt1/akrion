@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import logo from '../assets/brand/akrion-mark-gold.png'
+import { safeContentUrl, useSiteSettings } from '../lib/publishedContent'
 
 const navItems = [
   { label: 'Home', path: '/' },
@@ -12,6 +13,7 @@ const navItems = [
 ]
 
 const Header = () => {
+  const settings = useSiteSettings()
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
   const isHome = location.pathname === '/'
@@ -67,7 +69,7 @@ const Header = () => {
             aria-label="Akrion Digitals Home"
           >
             <img
-              src={logo}
+              src={safeContentUrl(settings['Logo URL'], logo)}
               alt="Akrion Digitals"
               className={isHome
                 ? 'akrion-logo h-11 w-auto sm:h-12 lg:h-[3.75rem]'

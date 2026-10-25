@@ -69,6 +69,7 @@ export const authAPI = {
 
   // Get current session
   async getSession() {
+    if (!supabase) return null
     const { data: { session }, error } = await supabase.auth.getSession()
     
     if (error) {
@@ -91,6 +92,7 @@ export const authAPI = {
 
   // Listen to auth state changes
   onAuthStateChange(callback) {
+    if (!supabase) return { data: { subscription: { unsubscribe() {} } } }
     return supabase.auth.onAuthStateChange((event, session) => {
       callback(event, session)
     })

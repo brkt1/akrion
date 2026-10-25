@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { usePublishedSection } from '../lib/publishedContent'
 import {
   AnimatePresence,
   motion,
@@ -312,6 +313,8 @@ const BeforeAfterSlider = ({ media }) => {
 }
 
 const WhyChooseUs = () => {
+  const content = usePublishedSection('homepage', 'why_choose_us')
+  const reasons = REASONS.map((reason, index) => ({ ...reason, title: content[`reason_${index + 1}_title`] || reason.title, description: content[`reason_${index + 1}_description`] || reason.description }))
   const reasonsRef = useRef(null)
   const reducedMotion = useReducedMotion()
   const [activeReason, setActiveReason] = useState(0)
@@ -381,7 +384,7 @@ const WhyChooseUs = () => {
             </motion.div>
 
             <ol ref={reasonsRef} className="why-us-reasons" aria-label="Reasons to choose Akrion Digitals">
-              {REASONS.map((reason, index) => (
+              {reasons.map((reason, index) => (
                 <ReasonItem
                   key={reason.id}
                   reason={reason}

@@ -7,6 +7,7 @@ import {
 } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
 import logo from '../assets/brand/akrion-mark-gold.png'
 import brandIdentityLarge from '../assets/services/service-brand-identity-1200.webp'
 import brandIdentitySmall from '../assets/services/service-brand-identity-720.webp'
@@ -156,6 +157,8 @@ const ShowreelPlaceholder = () => (
 )
 
 const Hero = () => {
+  const content = usePublishedSection('homepage', 'hero')
+  const showreel = safeContentUrl(content.showreel_url)
   const shouldReduceMotion = useReducedMotion()
   const [supportsPointerParallax, setSupportsPointerParallax] = useState(false)
   const [activeBackground, setActiveBackground] = useState(0)
@@ -367,43 +370,43 @@ const Hero = () => {
               {...entrance(0.13)}
               className="section-heading mt-6 max-w-[12ch] text-[clamp(2.75rem,6vw,5.25rem)] leading-[0.98] tracking-[-0.045em] sm:mt-7"
             >
-              <span className="gradient-text-gold">Built to Be Seen.</span>
+              <span className="gradient-text-gold">{content.heading || 'Built to Be Seen.'}</span>
             </motion.h1>
 
             <motion.p
               {...entrance(0.21)}
               className="mt-6 max-w-2xl text-[clamp(1rem,1.55vw,1.2rem)] font-light leading-relaxed text-[rgba(245,237,216,0.78)] sm:mt-7"
             >
-              We help businesses build brands customers{' '}
+              {content.description && content.description !== 'We help businesses build brands customers actually remember — with creativity, strategy, and evidence-backed results.' ? content.description : <>We help businesses build brands customers{' '}
               <span className="font-normal text-[#F5EDD8]">actually remember</span>
               {' '}— with creativity, strategy, and{' '}
-              <span className="font-normal text-accent-gold-light">evidence-backed results.</span>
+              <span className="font-normal text-accent-gold-light">evidence-backed results.</span></>}
             </motion.p>
 
             <motion.div {...entrance(0.29)} className="mt-8 w-full sm:mt-9">
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                 <Link
-                  to="/portfolio"
+                  to={safeContentUrl(content.primary_button_destination, '/portfolio')}
                   className="hero-primary-cta btn-primary group min-h-[52px] rounded-2xl px-5 py-4 text-center text-sm sm:px-8 sm:text-base"
                 >
-                  See How We Grow Your Brand
+                  {content.primary_button_label || 'See How We Grow Your Brand'}
                   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" className="transition-transform duration-300 group-hover:translate-x-1.5 motion-reduce:transform-none" aria-hidden="true">
                     <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </Link>
 
                 <a
-                  href="https://wa.me/251976601172?text=Hi!%20I'd%20like%20a%20free%20strategy%20call%20to%20discuss%20my%20brand."
+                  href={safeContentUrl(content.secondary_button_destination, "https://wa.me/251976601172?text=Hi!%20I'd%20like%20a%20free%20strategy%20call%20to%20discuss%20my%20brand.")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hero-secondary-cta btn-ghost group min-h-[52px] rounded-2xl px-5 py-4 text-center text-sm sm:px-8 sm:text-base"
                 >
-                  Book Free Strategy Call
+                  {content.secondary_button_label || 'Book Free Strategy Call'}
                 </a>
               </div>
 
               <p className="mt-4 hidden text-left text-xs font-medium tracking-[0.015em] text-accent-gold-light/[0.68] xs:block sm:text-sm">
-                No commitment · 30-min call · Real results, not promises
+                {content.supporting_text ?? 'No commitment · 30-min call · Real results, not promises'}
               </p>
             </motion.div>
           </div>
@@ -414,7 +417,7 @@ const Hero = () => {
             transition={{ duration: 0.8, delay: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="mx-auto w-full max-w-4xl xl:max-w-none"
           >
-            <ShowreelPlaceholder />
+            {showreel ? <div className="showreel-card relative aspect-video w-full overflow-hidden rounded-[1.5rem] border border-accent-gold/30 bg-bg-card"><a href={showreel} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center text-accent-gold font-semibold">Watch the Akrion showreel ↗</a></div> : <ShowreelPlaceholder />}
           </motion.div>
         </div>
       </div>

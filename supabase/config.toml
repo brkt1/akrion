@@ -1,0 +1,11 @@
+project_id = "akrion"
+
+[auth]
+site_url = "https://akrion-digitals.vercel.app"
+additional_redirect_urls = [
+  "http://127.0.0.1:4173/**",
+  "https://akrion-digitals.vercel.app/admin/setup-password",
+  "https://www.akriondigitals.com/admin/setup-password",
+  "https://akriondigitals.com/admin/setup-password"
+]
+enable_signup = false

@@ -1,8 +1,10 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getProjectPath, portfolioProjects } from '../data/portfolioProjects'
+import { getProjectPath, mergePortfolioRecords, portfolioProjects } from '../data/portfolioProjects'
+import { portfolioAPI } from '../lib/api/portfolio'
 
-const projects = portfolioProjects.slice(0, 5)
+const fallbackProjects = portfolioProjects.slice(0, 5)
 
 const ArrowIcon = ({ className = '' }) => (
   <svg
@@ -37,7 +39,7 @@ const PlayIcon = () => (
 const ResponsiveProjectImage = ({ project, className = '' }) => (
   <img
     src={project.image}
-    srcSet={`${project.imageSmall} ${project.imageSmallWidth}w, ${project.image} ${project.width}w`}
+    srcSet={project.imageSmall && project.imageSmallWidth && project.width ? `${project.imageSmall} ${project.imageSmallWidth}w, ${project.image} ${project.width}w` : undefined}
     sizes={
       project.featured
         ? '(min-width: 1280px) 57vw, (min-width: 768px) 92vw, 100vw'
@@ -156,6 +158,17 @@ const ProjectCard = ({ project, index, reducedMotion }) => {
 }
 
 const OurWork = () => {
+  const [projects, setProjects] = useState(fallbackProjects)
+  useEffect(() => {
+    let mounted = true
+    portfolioAPI.getPublishedResult().then(({ data, workflow }) => {
+      if (!mounted) return
+      const collection = mergePortfolioRecords(data, { includeBundledFallback: workflow !== 'advanced' })
+      const selected = collection.filter((project) => project.sourceRecord?.homepage_featured)
+      setProjects((selected.length ? selected : collection).slice(0, 5))
+    }).catch(() => {})
+    return () => { mounted = false }
+  }, [])
   const reducedMotion = useReducedMotion()
   const headingReveal = reducedMotion
     ? { initial: false }

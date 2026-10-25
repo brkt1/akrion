@@ -3,8 +3,9 @@ import Footer from '../components/Footer'
 import Header from '../components/Header'
 import PageMeta from '../components/PageMeta'
 import ScrollAnimation from '../components/ScrollAnimation'
+import { useContactSettings } from '../lib/publishedContent'
 
-const CONTACT = {
+const DEFAULT_CONTACT = {
   email: 'akriondigitals@gmail.com',
   phone: '+251 97 660 1172',
   whatsapp: '251976601172',
@@ -102,6 +103,7 @@ const buildWhatsAppMessage = (values) => [
 ].join('\n')
 
 const Contact = () => {
+  const CONTACT = useContactSettings(DEFAULT_CONTACT)
   const [formData, setFormData] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [launchState, setLaunchState] = useState('idle')

@@ -10,7 +10,7 @@ const teamImage = {
   alt: 'Ethiopian creative professionals collaborating on design and filming concepts in a studio',
 }
 
-const WhoWeAreImage = () => {
+const WhoWeAreImage = ({ imageUrl, imageAlt }) => {
   const frameRef = useRef(null)
   const isInView = useInView(frameRef, { once: true, amount: 0.25 })
   const shouldReduceMotion = useReducedMotion()
@@ -28,14 +28,14 @@ const WhoWeAreImage = () => {
 
       <figure className="who-we-are-image-frame group relative aspect-[3/2] w-full overflow-hidden rounded-[1.35rem] border bg-bg-card sm:rounded-[1.6rem]">
         <img
-          src={teamImage.src}
-          srcSet={teamImage.srcSet}
+          src={imageUrl || teamImage.src}
+          srcSet={imageUrl ? undefined : teamImage.srcSet}
           sizes="(min-width: 1400px) 660px, (min-width: 1024px) 45vw, calc(100vw - 2rem)"
           width="1200"
           height="800"
           loading="lazy"
           decoding="async"
-          alt={teamImage.alt}
+          alt={imageAlt || teamImage.alt}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025] motion-reduce:transform-none"
         />
 

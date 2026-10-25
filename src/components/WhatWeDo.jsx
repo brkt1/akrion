@@ -6,6 +6,8 @@ import {
   useSpring,
 } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { findServiceRecord, serviceStories } from '../data/servicesContent'
+import { servicesAPI } from '../lib/api/services'
 import brandIdentityImage720 from '../assets/services/service-brand-identity-720.webp'
 import brandIdentityImage1200 from '../assets/services/service-brand-identity-1200.webp'
 import webDevelopmentImage720 from '../assets/services/service-web-development-720.webp'
@@ -17,7 +19,7 @@ import socialMediaImage1200 from '../assets/services/service-social-media-1200.w
 import creativeConsultingImage720 from '../assets/services/service-creative-consulting-720.webp'
 import creativeConsultingImage1200 from '../assets/services/service-creative-consulting-1200.webp'
 
-const services = [
+const defaultServices = [
   {
     id: 'brand-identity',
     number: '01',
@@ -112,6 +114,20 @@ const ServicesDivider = () => (
 )
 
 const WhatWeDo = () => {
+  const [records, setRecords] = useState([])
+  const services = defaultServices.map((service, index) => {
+    const record = findServiceRecord(serviceStories[index], records)
+    if (!record || record.status === 'draft' || record.archived_at) return service
+    // Legacy aliases identify the redesigned category; they should not undo
+    // its public label when an old database is restored.
+    const isLegacyTitle = serviceStories[index].recordAliases.includes(String(record.title || '').trim().toLowerCase())
+    return { ...service, name: isLegacyTitle ? service.name : (record.title || service.name), description: record.description || service.description, image: record.main_image || service.image, imageLarge: record.main_image || service.imageLarge }
+  })
+  useEffect(() => {
+    let mounted = true
+    servicesAPI.getAll().then((rows) => { if (mounted) setRecords(rows) }).catch(() => {})
+    return () => { mounted = false }
+  }, [])
   const shouldReduceMotion = useReducedMotion()
   const [activeService, setActiveService] = useState(0)
   const [supportsFinePointer, setSupportsFinePointer] = useState(false)

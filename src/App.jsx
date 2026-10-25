@@ -18,6 +18,7 @@ import Contact from './pages/Contact'
 import Portfolio from './pages/Portfolio'
 import ProjectCaseStudy from './pages/ProjectCaseStudy'
 import Services from './pages/Services'
+import { PublishedContentProvider } from './lib/publishedContent'
 
 const Admin = lazy(() => import('./pages/Admin'))
 const AdminPasswordSetup = lazy(() => import('./pages/AdminPasswordSetup'))
@@ -56,6 +57,7 @@ function App() {
   const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/')
 
   return (
+    <PublishedContentProvider>
     <div className={isAdmin ? 'min-h-screen' : 'site-shell min-h-screen bg-bg-dark'}>
       {!isAdmin && <ScrollProgress />}
       <Routes>
@@ -80,6 +82,7 @@ function App() {
       </Routes>
       {!isAdmin && <MobileBottomNav />}
     </div>
+    </PublishedContentProvider>
   )
 }
 

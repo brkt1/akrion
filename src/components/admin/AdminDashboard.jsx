@@ -64,8 +64,8 @@ const AdminDashboard = () => {
         )}
       />
 
-      <AdminNotice tone="warning" title="Security migration required before production editing">
-        <p>The current Supabase setup contains legacy public-write policies. This dashboard stays honest about unsupported workflows; apply the included secure CMS migration and rotate the exposed legacy password before relying on production administration.</p>
+      <AdminNotice title="Keep your administrator account private">
+        <p>Use a unique password and never share password-setup links. Publishing makes content visible on the website; review client information and results before publishing.</p>
       </AdminNotice>
 
       {loading ? <AdminLoading label="Reading the current website content…" /> : (
@@ -152,11 +152,11 @@ const AdminDashboard = () => {
             </div>
             <div className="admin-readiness-grid">
               {[
-                ['Portfolio', true, 'Basic project fields and images use the existing database.'],
-                ['Blog', true, 'Basic articles and featured images use the existing database.'],
-                ['Media library', true, 'Current Supabase image inventory is available read-only.'],
+                ['Portfolio', true, 'Manage projects, case studies, images, and homepage visibility.'],
+                ['Blog', true, 'Manage articles, featured images, and publication status.'],
+                ['Media library', true, 'Browse and upload images; destructive actions remain disabled.'],
                 ['Services', Boolean(capabilities?.advancedServices), capabilities?.advancedServices ? 'Extended service fields are ready.' : 'Legacy records exist; the redesigned page is still code-managed.'],
-                ['Homepage & About', Boolean(capabilities?.pageContent), capabilities?.pageContent ? 'Page-section storage is available.' : 'Shared page-content storage is not configured.'],
+                ['Homepage & About', Boolean(capabilities?.pageContent), capabilities?.pageContent ? 'Publish copy through the shared public-page content source.' : 'Shared page-content storage is not configured.'],
                 ['Inquiries', false, 'The public form opens WhatsApp and does not save submissions.'],
               ].map(([label, ready, description]) => (
                 <div className="admin-readiness-item" key={label}>

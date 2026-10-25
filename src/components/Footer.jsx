@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import logo from '../assets/brand/akrion-mark-gold.png'
 import TiletDivider from './TiletDivider'
+import { safeContentUrl, useContactSettings, useSiteSettings } from '../lib/publishedContent'
 
 const navLinks = [
   { label: 'Home', path: '/' },
@@ -20,7 +21,7 @@ const services = [
 ]
 
 // Real brand contact info (from business card)
-const CONTACT = {
+const DEFAULT_CONTACT = {
   email:    'Akriondigitals@gmail.com',
   phone:    '+2519 7660 1172',
   whatsapp: '251976601172',
@@ -82,6 +83,8 @@ const socialLinks = [
 ]
 
 const Footer = ({ hideCtaBanner = false }) => {
+  const CONTACT = useContactSettings(DEFAULT_CONTACT)
+  const settings = useSiteSettings()
   return (
     <>
       <footer className="bg-bg-darker border-t border-white/[0.06] relative overflow-hidden">
@@ -130,7 +133,7 @@ const Footer = ({ hideCtaBanner = false }) => {
             {/* Brand column */}
             <div className="sm:col-span-2 lg:col-span-1 flex flex-col gap-5">
               <Link to="/" className="inline-block">
-                <img src={logo} alt="Akrion Digitals" className="h-14 w-auto transition-transform duration-300 hover:-translate-y-1" />
+                <img src={safeContentUrl(settings['Logo URL'], logo)} alt="Akrion Digitals" className="h-14 w-auto transition-transform duration-300 hover:-translate-y-1" />
               </Link>
               <p className="text-sm leading-relaxed font-light max-w-xs" style={{ color: 'rgba(201,161,112,0.5)' }}>
                 Built to Be Seen.
@@ -141,7 +144,7 @@ const Footer = ({ hideCtaBanner = false }) => {
                 {socialLinks.map((social) => (
                   <a
                     key={social.name}
-                    href={social.url}
+                    href={safeContentUrl(settings[`${social.name} link`], social.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.name}

@@ -2,6 +2,7 @@ import ScrollAnimation from './ScrollAnimation'
 import TiletDivider from './TiletDivider'
 import WhoWeAreImage from './WhoWeAreImage'
 import OurCreativeProcess from './OurCreativeProcess'
+import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
 
 const pillars = [
   {
@@ -31,6 +32,7 @@ const GOLD = '#C9A170'
 const CREAM = '#F5EDD8'
 
 const WhoWeAre = () => {
+  const content = usePublishedSection('homepage', 'who_we_are')
   return (
     <section
       aria-labelledby="who-we-are-heading"
@@ -64,12 +66,11 @@ const WhoWeAre = () => {
                 className="max-w-[62ch] text-[clamp(1.05rem,1.7vw,1.18rem)] leading-[1.75] font-light"
                 style={{ color: 'rgba(245,237,216,0.78)' }}
               >
-                Akrion Digitals is an Ethiopian creative and technology agency helping ambitious
-                businesses build brands people remember, trust, and choose.
+                {content.introduction || 'Akrion Digitals is an Ethiopian creative and technology agency helping ambitious businesses build brands people remember, trust, and choose.'}
               </p>
             </ScrollAnimation>
 
-            <WhoWeAreImage />
+            <WhoWeAreImage imageUrl={safeContentUrl(content.image_url)} imageAlt={content.image_alternative_text} />
 
             {/* Pillars */}
             <ScrollAnimation animation="fadeLeft" delay={0.4} respectReducedMotion>
@@ -147,7 +148,7 @@ const WhoWeAre = () => {
                       Our Identity
                     </p>
                     <h3 className="font-display font-bold text-2xl leading-tight" style={{ color: CREAM }}>
-                      Rooted in Ethiopia.<br />Built for global impact.
+                      {content.identity_heading ? <span className="whitespace-pre-line">{content.identity_heading}</span> : <>Rooted in Ethiopia.<br />Built for global impact.</>}
                     </h3>
                   </div>
 
@@ -155,8 +156,7 @@ const WhoWeAre = () => {
                     className="max-w-[60ch] text-[0.98rem] sm:text-base leading-[1.75] font-light"
                     style={{ color: 'rgba(245,237,216,0.72)' }}
                   >
-                    We combine local insight, creative strategy, and technology to build brands that
-                    connect and grow.
+                    {content.identity_description || 'We combine local insight, creative strategy, and technology to build brands that connect and grow.'}
                   </p>
 
                   {/* Impact statistics */}
