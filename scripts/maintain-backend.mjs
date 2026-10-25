@@ -63,7 +63,7 @@ const createOwner = async () => {
     password ||= `${randomBytes(18).toString('base64url')}aA9!`
     const { error: createError } = await client.auth.admin.createUser({ email, password, email_confirm: true, app_metadata: { role: 'admin' } })
     if (createError) throw createError
-    await writeFile(credentialsPath, `ADMIN_EMAIL=${email}\nADMIN_PASSWORD=${password}\nADMIN_URL=https://akrion-digitals.vercel.app/admin\n`, { mode: 0o600 })
+    await writeFile(credentialsPath, `ADMIN_EMAIL=${email}\nADMIN_PASSWORD=${password}\nADMIN_URL=https://www.akriondigitals.com/admin\n`, { mode: 0o600 })
     console.log(`Created owner account. Private credentials saved to ${credentialsPath}`)
   } else {
     const { error: updateError } = await client.auth.admin.updateUserById(existing.id, { app_metadata: { ...existing.app_metadata, role: 'admin' } })
@@ -84,7 +84,7 @@ const createOwner = async () => {
   }
 }
 
-const ownerLink = async (redirectTo = 'https://akrion-digitals.vercel.app/admin') => {
+const ownerLink = async (redirectTo = 'https://www.akriondigitals.com/admin') => {
   const client = getAdminClient()
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase()
   if (!email) throw new Error('Set ADMIN_EMAIL to the verified owner email.')

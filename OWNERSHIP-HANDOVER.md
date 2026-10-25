@@ -4,8 +4,9 @@ Updated 25 October 2026.
 
 ## Live deployment
 
-- Website: https://akrion-digitals.vercel.app
-- Content Studio: https://akrion-digitals.vercel.app/admin
+- Website: https://www.akriondigitals.com
+- Content Studio: https://www.akriondigitals.com/admin
+- Alternate deployment address: https://akrion-digitals.vercel.app
 - Vercel team: `akrion-s-projects`
 - Vercel project: `akrion-digitals`
 - Supabase project: `Akrion` (`gavhkkrnsuisqsjnnaow`), in the owner's existing organization.
@@ -48,13 +49,15 @@ The new Vercel project currently uses CLI deployment; Git integration must be
 connected separately through an authorized GitHub account if automatic builds
 are desired.
 
-`akriondigitals.com` and `www.akriondigitals.com` must be connected to this new
-Vercel project through the domain owner's DNS account. Until that transfer is
-verified, use the working `.vercel.app` address above. Do not delete the old
-Vercel project or change email-related DNS records during the domain transfer.
-Both domains have been added to the new project, pending the TXT ownership
-challenges shown in Vercel. Existing A records already resolve to Vercel and
-do not need to be replaced to complete those challenges.
+`akriondigitals.com` and `www.akriondigitals.com` are now verified and serving
+this new Vercel project over HTTPS. Two `_vercel` TXT verification records were
+added through the owner's IONOS account with explicit approval. Existing A,
+MX, SPF, DKIM, DMARC, autodiscover, and nameserver records were left unchanged.
+Both domains were checked against the current production JavaScript asset.
+Keep the verification records in place; the registration remains with IONOS.
+`VITE_SITE_URL` and the default Supabase Auth site URL use the `www` domain;
+password-setup redirects remain allowed for both domain forms and the alternate
+Vercel address.
 
 Supabase Free projects can pause after inactivity. If that happens, the owner
 can resume `Akrion` in the Supabase dashboard; creating a replacement database
