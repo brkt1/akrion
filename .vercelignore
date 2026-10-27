@@ -6,3 +6,7 @@ dist
 .env.*
 .backend-backups
 supabase/.temp
+test-results
+playwright-report
+tests
+playwright.config.mjs

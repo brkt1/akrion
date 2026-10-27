@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { serializeMediaItems } from '../../data/portfolioMedia'
 
 const isLegacyWorkflowSchemaError = (error) => {
   const code = String(error?.code || '')
@@ -70,6 +71,7 @@ const buildPortfolioPayload = (project) => {
       testimonial_organization: project.testimonialOrganization || null,
       alt_text: project.altText || null,
       image_caption: project.imageCaption || null,
+      featured_image: project.image || null,
       gallery: Array.isArray(project.gallery) ? project.gallery : [],
       video_url: project.videoUrl || null,
       seo_title: project.seoTitle || null,
@@ -81,6 +83,15 @@ const buildPortfolioPayload = (project) => {
       published_at: status === 'published' ? (project.publishedAt || new Date().toISOString()) : null,
       archived_at: status === 'archived' ? (project.archivedAt || new Date().toISOString()) : null,
     })
+  }
+
+  if (project.collectionsEnabled === true) {
+    payload.collection_type = project.collectionType === 'company' ? 'company' : 'project'
+    payload.media_items = serializeMediaItems(project.mediaItems || [])
+    // Keep the original fields as a recoverable compatibility source. New
+    // collections use media_items exclusively; do not flatten old metadata.
+    delete payload.gallery
+    delete payload.video_url
   }
 
   return payload

@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { isMediaCategory } from '../data/portfolioMedia'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import PageMeta from '../components/PageMeta'
@@ -60,6 +61,8 @@ const getOverviewFacts = (project) => {
 
 const ProjectCaseStudy = () => {
   const { slug } = useParams()
+  const [searchParams] = useSearchParams()
+  const mediaFilter = isMediaCategory(searchParams.get('type')) ? searchParams.get('type') : 'all'
   const reducedMotion = useReducedMotion()
   const canonicalProject = useMemo(() => getProjectBySlug(slug), [slug])
   const [project, setProject] = useState(canonicalProject || null)
@@ -197,7 +200,7 @@ const ProjectCaseStudy = () => {
     facts.length && { key: 'overview' },
     project.challenge && { key: 'challenge' },
     project.approach && { key: 'approach' },
-    project.gallery?.length && { key: 'work' },
+    project.mediaItems?.length && { key: 'work' },
     project.result?.statement && { key: 'result' },
     project.testimonial?.quote && project.testimonial?.name && { key: 'testimonial' },
   ].filter(Boolean)
@@ -250,7 +253,7 @@ const ProjectCaseStudy = () => {
         return (
           <Reveal className="portfolio-case-shell" reducedMotion={reducedMotion}>
             <SectionHeading eyebrow="The Work" title="A closer look at the project." id="project-work-heading" />
-            <ProjectGallery key={project.slug} items={project.gallery} projectTitle={project.title} />
+            <ProjectGallery key={`${project.slug}-${mediaFilter}`} items={project.mediaItems} projectTitle={project.title} initialFilter={mediaFilter} />
           </Reveal>
         )
       case 'result':
@@ -317,6 +320,7 @@ const ProjectCaseStudy = () => {
                 <ArrowIcon direction="left" /> Back to Portfolio
               </Link>
               <div className="portfolio-case-hero-meta" role="group" aria-label="Project details">
+                {project.collectionType === 'company' && <span>Company collection</span>}
                 {project.category && <span>{project.category}</span>}
                 {project.overview?.client && <span>{project.overview.client}</span>}
                 {project.overview?.year && <span>{project.overview.year}</span>}

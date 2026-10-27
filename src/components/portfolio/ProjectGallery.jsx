@@ -1,230 +1,43 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getMediaCategoryLabel, getMediaCounts } from '../../data/portfolioMedia'
+import MediaFilters from './MediaFilters'
+import MediaViewer from './MediaViewer'
 
 const ResponsiveImage = ({ media, className = '', loading = 'lazy', sizes = '100vw', fetchPriority }) => {
-  const srcSet = media.srcSmall && media.smallWidth && media.width
-    ? `${media.srcSmall} ${media.smallWidth}w, ${media.src} ${media.width}w`
-    : undefined
-
-  return (
-    <img
-      src={media.src}
-      srcSet={srcSet}
-      sizes={srcSet ? sizes : undefined}
-      width={media.width || undefined}
-      height={media.height || undefined}
-      alt={media.alt}
-      loading={loading}
-      fetchpriority={fetchPriority}
-      decoding="async"
-      className={className}
-      style={{
-        '--portfolio-case-image-fit': media.fit || 'cover',
-        '--portfolio-case-image-position': media.position || 'center',
-      }}
-    />
-  )
+  const srcSet = media.srcSmall && media.smallWidth && media.width ? `${media.srcSmall} ${media.smallWidth}w, ${media.src} ${media.width}w` : undefined
+  return <img src={media.src} srcSet={srcSet} sizes={srcSet ? sizes : undefined} width={media.width || undefined} height={media.height || undefined} alt={media.alt} loading={loading} fetchpriority={fetchPriority} decoding="async" className={className} style={{ '--portfolio-case-image-fit': media.fit || 'cover', '--portfolio-case-image-position': media.position || 'center' }} />
 }
 
-const CloseIcon = () => (
-  <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M5 5L19 19M19 5L5 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-  </svg>
-)
+const MediaThumbnail = ({ item }) => {
+  const [failed, setFailed] = useState(false)
+  const src = item.type === 'video' ? item.thumbnail : item.src
+  useEffect(() => { setFailed(false) }, [src])
+  const srcSet = item.type === 'image' && item.srcSmall && item.smallWidth && item.width ? `${item.srcSmall} ${item.smallWidth}w, ${src} ${item.width}w` : undefined
+  return src && !failed ? <img src={src} srcSet={srcSet} sizes={srcSet ? '(min-width: 900px) 48vw, 100vw' : undefined} width={item.width || undefined} height={item.height || undefined} alt={item.type === 'video' ? '' : item.alt} onError={() => setFailed(true)} className="portfolio-case-gallery-image" loading="lazy" decoding="async" /> : <span className="portfolio-media-thumbnail-fallback" aria-hidden="true">{item.title.charAt(0)}</span>
+}
 
-const ChevronIcon = ({ direction }) => (
-  <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path
-      d={direction === 'previous' ? 'M15 5L8 12L15 19' : 'M9 5L16 12L9 19'}
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
-const ProjectGallery = ({ items = [], projectTitle }) => {
+const ProjectGallery = ({ items = [], projectTitle, initialFilter = 'all' }) => {
+  const [filter, setFilter] = useState(initialFilter)
   const [activeIndex, setActiveIndex] = useState(null)
-  const dialogRef = useRef(null)
-  const closeButtonRef = useRef(null)
-  const triggerRef = useRef(null)
-  const titleId = useId()
-  const activeItem = activeIndex == null ? null : items[activeIndex]
-  const isOpen = activeIndex != null
-
-  const restoreTriggerFocus = () => {
-    const trigger = triggerRef.current
-    triggerRef.current = null
-    window.requestAnimationFrame(() => trigger?.focus())
-  }
-
-  const closeLightbox = () => {
-    const dialog = dialogRef.current
-    if (dialog?.open) dialog.close()
-    setActiveIndex(null)
-    restoreTriggerFocus()
-  }
-
-  const openLightbox = (index, trigger) => {
-    triggerRef.current = trigger
-    setActiveIndex(index)
-  }
-
-  const showPrevious = () => {
-    setActiveIndex((current) => (current - 1 + items.length) % items.length)
-  }
-
-  const showNext = () => {
-    setActiveIndex((current) => (current + 1) % items.length)
-  }
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!isOpen || !dialog) return undefined
-
-    if (!dialog.open) dialog.showModal()
-    document.body.style.overflow = 'hidden'
-    window.requestAnimationFrame(() => closeButtonRef.current?.focus())
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        closeLightbox()
-        return
-      }
-      if (items.length < 2) return
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault()
-        showPrevious()
-      }
-      if (event.key === 'ArrowRight') {
-        event.preventDefault()
-        showNext()
-      }
-    }
-
-    dialog.addEventListener('keydown', handleKeyDown)
-    return () => {
-      dialog.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
-    }
-  }, [isOpen, items.length])
-
-  useEffect(
-    () => () => {
-      document.body.style.overflow = ''
-    },
-    [],
-  )
-
+  const visibleItems = items.filter((item) => filter === 'all' || item.category === filter)
+  const selectFilter = (next) => { setActiveIndex(null); setFilter(next) }
   if (!items.length) return null
-
-  return (
-    <>
-      <div className="portfolio-case-gallery" role="group" aria-label={`${projectTitle} project gallery`}>
-        {items.map((item, index) => (
-          <figure
-            key={item.id || item.src}
-            className="portfolio-case-gallery-item"
-            data-layout={item.layout || 'standard'}
-            style={{
-              '--portfolio-media-ratio': item.width && item.height
-                ? `${item.width} / ${item.height}`
-                : '16 / 10',
-            }}
-          >
-            <button
-              type="button"
-              className="portfolio-case-gallery-trigger group"
-              aria-label={`Open ${item.alt} full screen`}
-              onClick={(event) => openLightbox(index, event.currentTarget)}
-            >
-              <ResponsiveImage
-                media={item}
-                sizes="(min-width: 900px) 78vw, 100vw"
-                className="portfolio-case-gallery-image"
-              />
-              <span className="portfolio-case-gallery-expand" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M8 3H3V8M16 3H21V8M21 16V21H16M8 21H3V16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </button>
-            {item.caption && <figcaption>{item.caption}</figcaption>}
-          </figure>
-        ))}
-      </div>
-
-      <dialog
-        ref={dialogRef}
-        className="portfolio-case-lightbox"
-        aria-labelledby={titleId}
-        onCancel={(event) => {
-          event.preventDefault()
-          closeLightbox()
-        }}
-        onClose={() => {
-          setActiveIndex(null)
-          document.body.style.overflow = ''
-        }}
-        onClick={(event) => {
-          if (event.target === dialogRef.current) closeLightbox()
-        }}
-      >
-        <h2 id={titleId} className="sr-only">
-          {projectTitle} project image viewer
-        </h2>
-        <button
-          ref={closeButtonRef}
-          type="button"
-          className="portfolio-case-lightbox-control portfolio-case-lightbox-close"
-          aria-label="Close full-screen image"
-          onClick={closeLightbox}
-        >
-          <CloseIcon />
+  return <>
+    <MediaFilters value={filter} onChange={selectFilter} counts={getMediaCounts(items)} total={items.length} label={`Filter ${projectTitle} media`} />
+    <p className="portfolio-media-results" role="status">{visibleItems.length} {visibleItems.length === 1 ? 'item' : 'items'}{filter !== 'all' ? ` · ${getMediaCategoryLabel(filter)}` : ''}</p>
+    {!visibleItems.length && <div className="portfolio-media-empty"><p>No matching media in this collection.</p><button type="button" onClick={() => selectFilter('all')}>Show all media</button></div>}
+    <div className="portfolio-case-gallery" role="group" aria-label={`${projectTitle} project gallery`}>
+      {visibleItems.map((item, index) => <figure key={item.id} className="portfolio-case-gallery-item" data-layout={item.orientation === 'portrait' ? 'portrait' : item.layout || 'standard'}>
+        <button type="button" className="portfolio-case-gallery-trigger portfolio-collection-media-trigger group" aria-label={`${item.type === 'video' ? 'Watch' : 'View'} ${item.title}`} onClick={() => setActiveIndex(index)}>
+          <MediaThumbnail item={item} />
+          <span className="portfolio-collection-media-play" aria-hidden="true">{item.type === 'video' ? '▶' : '↗'}</span>
+          <span className="portfolio-collection-media-label">{getMediaCategoryLabel(item.category)}</span>
         </button>
-
-        {items.length > 1 && (
-          <>
-            <button
-              type="button"
-              className="portfolio-case-lightbox-control portfolio-case-lightbox-previous"
-              aria-label="Show previous project image"
-              onClick={showPrevious}
-            >
-              <ChevronIcon direction="previous" />
-            </button>
-            <button
-              type="button"
-              className="portfolio-case-lightbox-control portfolio-case-lightbox-next"
-              aria-label="Show next project image"
-              onClick={showNext}
-            >
-              <ChevronIcon direction="next" />
-            </button>
-          </>
-        )}
-
-        {activeItem && (
-          <figure className="portfolio-case-lightbox-figure">
-            <img
-              src={activeItem.src}
-              width={activeItem.width || undefined}
-              height={activeItem.height || undefined}
-              alt={activeItem.alt}
-              decoding="async"
-            />
-            {activeItem.caption && <figcaption>{activeItem.caption}</figcaption>}
-          </figure>
-        )}
-
-        <p className="portfolio-case-lightbox-count" aria-live="polite">
-          {activeIndex == null ? '' : `${activeIndex + 1} of ${items.length}`}
-        </p>
-      </dialog>
-    </>
-  )
+        <figcaption><strong>{item.title}</strong>{item.caption && <span>{item.caption}</span>}</figcaption>
+      </figure>)}
+    </div>
+    <MediaViewer items={visibleItems} activeIndex={activeIndex} onChange={setActiveIndex} onClose={() => setActiveIndex(null)} projectTitle={projectTitle} />
+  </>
 }
-
 export { ResponsiveImage }
 export default ProjectGallery

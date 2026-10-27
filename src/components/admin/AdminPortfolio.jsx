@@ -5,6 +5,8 @@ import { adminAPI } from '../../lib/api/admin'
 import { portfolioAPI } from '../../lib/api/portfolio'
 import { uploadAPI } from '../../lib/api/upload'
 import AdminIcon from './AdminIcons'
+import PortfolioMediaEditor from './PortfolioMediaEditor'
+import { getEditableProjectMedia, MEDIA_CATEGORIES, matchesMediaFilter, validateMediaItems } from '../../data/portfolioMedia'
 import {
   AdminConfirmDialog,
   AdminEmpty,
@@ -24,6 +26,7 @@ const EMPTY_PROJECT = {
   testimonialName: '', testimonialRole: '', testimonialOrganization: '', image: '', altText: '',
   imageCaption: '', gallery: '', videoUrl: '', link: '', seoTitle: '', seoDescription: '',
   status: 'draft', featured: false, homepageFeatured: false, sortOrder: 0,
+  collectionType: 'project', mediaItems: [],
 }
 
 const toForm = (record = {}) => ({
@@ -63,6 +66,8 @@ const toForm = (record = {}) => ({
   featured: Boolean(record.featured),
   homepageFeatured: Boolean(record.homepage_featured),
   sortOrder: record.sort_order ?? 0,
+  collectionType: record.collection_type === 'company' ? 'company' : 'project',
+  mediaItems: getEditableProjectMedia(record),
 })
 
 const parseMetrics = (value) => value.split('\n').map((line) => line.trim()).filter(Boolean).map((line) => {
@@ -79,9 +84,10 @@ const getUniqueProjectSlug = (value, records) => {
   return `${root}-${suffix}`
 }
 
-const buildPayload = (form, advanced) => ({
+const buildPayload = (form, advanced, collectionsEnabled = false) => ({
   ...form,
   advanced,
+  collectionsEnabled,
   description: form.cardDescription,
   tags: form.tags,
   approach: { understand: form.understand.trim(), create: form.create.trim(), deliver: form.deliver.trim() },
@@ -89,7 +95,7 @@ const buildPayload = (form, advanced) => ({
   gallery: form.gallery.split('\n').map((url) => url.trim()).filter(Boolean).map((url) => ({ url })),
 })
 
-const validateProject = (form, records, editingId, advanced) => {
+const validateProject = (form, records, editingId, advanced, collectionsEnabled) => {
   const errors = {}
   if (!form.title.trim()) errors.title = 'Enter a project title.'
   if (!form.category.trim()) errors.category = 'Choose a primary category.'
@@ -97,16 +103,17 @@ const validateProject = (form, records, editingId, advanced) => {
   if (advanced && !form.slug.trim()) errors.slug = 'Enter a URL slug.'
   if (advanced && records.some((record) => record.id !== editingId && record.slug === form.slug.trim())) errors.slug = 'This slug is already in use.'
   if (form.link && !/^https?:\/\//i.test(form.link)) errors.link = 'Use a complete http:// or https:// URL.'
-  if (form.videoUrl && !/^https?:\/\//i.test(form.videoUrl)) errors.videoUrl = 'Use a complete http:// or https:// URL.'
+  if (!collectionsEnabled && form.videoUrl && !/^https?:\/\//i.test(form.videoUrl)) errors.videoUrl = 'Use a complete http:// or https:// URL.'
   if (form.tags.split(',').map((tag) => tag.trim()).filter(Boolean).length > 2) errors.tags = 'Use no more than two visible supporting tags.'
   if ((form.testimonialQuote && !form.testimonialName) || (!form.testimonialQuote && form.testimonialName)) errors.testimonialQuote = 'A verified quotation and client name are both required.'
-  return errors
+  return { ...errors, ...(collectionsEnabled ? validateMediaItems(form.mediaItems) : {}) }
 }
 
 const AdminPortfolio = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [records, setRecords] = useState([])
   const [advanced, setAdvanced] = useState(false)
+  const [collectionsReady, setCollectionsReady] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -119,6 +126,8 @@ const AdminPortfolio = () => {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
   const [status, setStatus] = useState('all')
+  const [contentType, setContentType] = useState('all')
+  const [collectionType, setCollectionType] = useState('all')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -128,6 +137,7 @@ const AdminPortfolio = () => {
     ])
     setRecords(nextRecords)
     setAdvanced(Boolean(capabilities.advancedPortfolio))
+    setCollectionsReady(Boolean(capabilities.portfolioCollections))
     setLoading(false)
     return nextRecords
   }, [])
@@ -136,6 +146,7 @@ const AdminPortfolio = () => {
 
   const mergedProjects = useMemo(() => mergePortfolioRecords(records), [records])
   const previewByRecordId = useMemo(() => new Map(mergedProjects.filter((project) => project.sourceRecord).map((project) => [String(project.sourceRecord.id), getProjectPath(project)])), [mergedProjects])
+  const projectsByRecordId = useMemo(() => new Map(mergedProjects.filter((project) => project.sourceRecord).map((project) => [String(project.sourceRecord.id), project])), [mergedProjects])
   const categories = useMemo(() => [...new Set(records.map((record) => record.category).filter(Boolean))].sort(), [records])
   const dirty = Boolean(form && initialForm && JSON.stringify(form) !== JSON.stringify(initialForm))
   useUnsavedWarning(dirty)
@@ -177,11 +188,12 @@ const AdminPortfolio = () => {
   const updateField = (name, value) => {
     setForm((current) => ({ ...current, [name]: value }))
     if (errors[name]) setErrors((current) => ({ ...current, [name]: '' }))
+    if (name === 'mediaItems') setErrors((current) => Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith('mediaItems'))))
   }
 
   const save = async (event) => {
     event.preventDefault()
-    const nextErrors = validateProject(form, records, editingId === 'new' ? null : editingId, advanced)
+    const nextErrors = validateProject(form, records, editingId === 'new' ? null : editingId, advanced, collectionsReady)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) {
       document.getElementById(`project-${Object.keys(nextErrors)[0]}`)?.focus()
@@ -191,7 +203,7 @@ const AdminPortfolio = () => {
     setSaving(true)
     setNotice(null)
     try {
-      const payload = buildPayload(form, advanced)
+      const payload = buildPayload(form, advanced, collectionsReady)
       const saved = editingId === 'new'
         ? await portfolioAPI.create(payload)
         : await portfolioAPI.update(editingId, payload)
@@ -279,10 +291,11 @@ const AdminPortfolio = () => {
 
   const filtered = records.filter((record) => {
     const query = search.trim().toLowerCase()
-    const matchesSearch = !query || [record.title, record.description, record.category].some((value) => String(value || '').toLowerCase().includes(query))
+    const matchesSearch = !query || [record.title, record.client_name, record.description, record.category].some((value) => String(value || '').toLowerCase().includes(query))
     const matchesCategory = category === 'all' || record.category === category
     const recordStatus = record.status || 'published'
-    return matchesSearch && matchesCategory && (status === 'all' || recordStatus === status)
+    const project = projectsByRecordId.get(String(record.id))
+    return matchesSearch && matchesCategory && (status === 'all' || recordStatus === status) && (collectionType === 'all' || (record.collection_type || 'project') === collectionType) && (contentType === 'all' || (project && matchesMediaFilter(project, contentType)))
   })
 
   return (
@@ -290,11 +303,12 @@ const AdminPortfolio = () => {
       <AdminPageHeader
         eyebrow="Case-study library"
         title="Portfolio"
-        description="Manage public projects, their case-study content, images, status, and homepage visibility."
-        actions={<button type="button" className="admin-button" onClick={() => openEditor()}><AdminIcon name="plus" />Add Project</button>}
+        description="Organize company or project collections, with multiple tagged videos and photos inside each one."
+        actions={<button type="button" className="admin-button" onClick={() => openEditor()}><AdminIcon name="plus" />Add Collection</button>}
       />
 
       {!advanced && <AdminNotice tone="warning" title="Advanced case-study fields need the CMS migration"><p>Basic project content and one image save now. Drafts, custom slugs, galleries, verified results, testimonials, SEO, ordering, and archive controls stay disabled so nothing appears persistent when it is not.</p></AdminNotice>}
+      {!loading && !collectionsReady && <AdminNotice tone="warning" title="Media collections need the portfolio migration"><p>Existing projects remain available. Apply the additive portfolio media migration to enable company collections and multiple tagged videos/photos.</p></AdminNotice>}
       {notice && <AdminNotice tone={notice.type} title={notice.type === 'success' ? 'Portfolio updated' : notice.type === 'warning' ? 'Review before saving' : 'Unable to update portfolio'}><p>{notice.text}</p></AdminNotice>}
 
       {editingId && form ? (
@@ -309,7 +323,8 @@ const AdminPortfolio = () => {
               <section className="admin-editor-section">
                 <div className="admin-editor-section-heading"><span>01</span><div><h4>Project basics</h4><p>Content used by the Portfolio grid and URL.</p></div></div>
                 <div className="admin-form-grid admin-form-grid--two">
-                  <AdminField label="Project title" htmlFor="project-title" required error={errors.title}><input id="project-title" value={form.title} onChange={(event) => updateField('title', event.target.value)} required aria-invalid={Boolean(errors.title)} /></AdminField>
+                  <AdminField label="Collection type" htmlFor="project-collectionType" help="Use Project for a campaign, or Company for ongoing work with one client."><select id="project-collectionType" value={form.collectionType} disabled={!collectionsReady} onChange={(event) => updateField('collectionType', event.target.value)}><option value="project">Project / campaign</option><option value="company">Company collection</option></select></AdminField>
+                  <AdminField label="Project or company title" htmlFor="project-title" required error={errors.title}><input id="project-title" value={form.title} onChange={(event) => updateField('title', event.target.value)} required aria-invalid={Boolean(errors.title)} /></AdminField>
                   <AdminField label="URL slug" htmlFor="project-slug" required={advanced} error={errors.slug} help={!advanced ? 'Stable custom slugs require the CMS migration.' : 'Lowercase words separated by hyphens.'}><input id="project-slug" value={form.slug} disabled={!advanced} onChange={(event) => updateField('slug', slugifyProjectTitle(event.target.value))} aria-invalid={Boolean(errors.slug)} /></AdminField>
                   <AdminField label="Client name" htmlFor="project-clientName" optional help={!advanced ? 'Requires the CMS migration.' : 'Leave empty when not verified.'}><input id="project-clientName" value={form.clientName} disabled={!advanced} onChange={(event) => updateField('clientName', event.target.value)} /></AdminField>
                   <AdminField label="Primary category" htmlFor="project-category" required error={errors.category}><input id="project-category" value={form.category} onChange={(event) => updateField('category', event.target.value)} required aria-invalid={Boolean(errors.category)} /></AdminField>
@@ -359,7 +374,7 @@ const AdminPortfolio = () => {
                     <AdminField label="Alternative text" htmlFor="project-altText" optional help={!advanced ? 'Requires the CMS migration.' : 'Describe the project visual for visitors using assistive technology.'}><input id="project-altText" value={form.altText} disabled={!advanced} onChange={(event) => updateField('altText', event.target.value)} /></AdminField>
                   </div>
                 </div>
-                <fieldset disabled={!advanced} className="admin-subfieldset">
+                {!collectionsReady && <fieldset disabled={!advanced} className="admin-subfieldset">
                   <div className="admin-form-grid admin-form-grid--two">
                     <AdminField label="Gallery image URLs" htmlFor="project-gallery" optional help="One URL per line."><textarea id="project-gallery" rows="5" value={form.gallery} onChange={(event) => updateField('gallery', event.target.value)} /></AdminField>
                     <div className="admin-form-stack">
@@ -367,7 +382,8 @@ const AdminPortfolio = () => {
                       <AdminField label="Optional video URL" htmlFor="project-videoUrl" optional error={errors.videoUrl}><input id="project-videoUrl" type="url" value={form.videoUrl} onChange={(event) => updateField('videoUrl', event.target.value)} /></AdminField>
                     </div>
                   </div>
-                </fieldset>
+                </fieldset>}
+                {collectionsReady && <PortfolioMediaEditor items={form.mediaItems} onChange={(items) => updateField('mediaItems', items)} errors={errors} disabled={saving || uploading} onBusy={setUploading} />}
               </section>
 
               <fieldset className="admin-editor-section" disabled={!advanced}>
@@ -399,7 +415,9 @@ const AdminPortfolio = () => {
             <label className="admin-search"><AdminIcon name="search" /><span className="sr-only">Search projects</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search projects…" /></label>
             <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter by category"><option value="all">All categories</option>{categories.map((item) => <option value={item} key={item}>{item}</option>)}</select>
             <select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter by status"><option value="all">All statuses</option><option value="published">Published</option><option value="draft" disabled={!advanced}>Draft</option><option value="archived" disabled={!advanced}>Archived</option></select>
-            <span>{filtered.length} of {records.length} projects</span>
+            <select value={collectionType} onChange={(event) => setCollectionType(event.target.value)} aria-label="Filter by collection type"><option value="all">Projects &amp; companies</option><option value="project">Projects / campaigns</option><option value="company">Company collections</option></select>
+            <select value={contentType} onChange={(event) => setContentType(event.target.value)} aria-label="Filter by content type"><option value="all">All content types</option>{MEDIA_CATEGORIES.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select>
+            <span>{filtered.length} of {records.length} collections</span>
           </section>
 
           {loading ? <AdminLoading label="Loading portfolio projects…" /> : filtered.length ? (

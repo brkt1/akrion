@@ -79,7 +79,7 @@ const createOwner = async () => {
     if (signedIn.user.app_metadata?.role !== 'admin') throw new Error('Admin role was not present in the issued session.')
     const result = await browser.from('page_sections').select('id').limit(1)
     if (result.error) throw result.error
-    await browser.auth.signOut()
+    await browser.auth.signOut({ scope: 'local' })
     console.log('Verified password login, server-controlled admin role, and protected CMS access.')
   }
 }
@@ -126,7 +126,55 @@ const verify = async () => {
     console.log(JSON.stringify({ ownerLogin: 'passed', adminRole: 'passed', cmsReadWrite: 'passed', draftPrivacy: 'passed', anonymousWritesDenied: 'passed', counts }))
   } finally {
     await browser.from('page_sections').delete().eq('page_key', '__cms_verification').in('section_key', [marker, marker + '-anonymous'])
-    await browser.auth.signOut()
+    await browser.auth.signOut({ scope: 'local' })
+  }
+}
+
+const verifyMedia = async () => {
+  const properties = await ownerLink()
+  const browserKey = process.env.VITE_SUPABASE_ANON_KEY
+  if (!browserKey) throw new Error('Set VITE_SUPABASE_ANON_KEY.')
+  const options = { auth: { persistSession: false, autoRefreshToken: false } }
+  const owner = createClient(`https://${ref}.supabase.co`, browserKey, options)
+  const anonymous = createClient(`https://${ref}.supabase.co`, browserKey, options)
+  const { data: auth, error: authError } = await owner.auth.verifyOtp({ token_hash: properties.hashed_token, type: 'magiclink' })
+  if (authError || auth.user.app_metadata?.role !== 'admin') throw authError || new Error('Admin session required.')
+  const marker = randomUUID()
+  let rowId
+  const initial = await owner.from('portfolio_projects').select('id', { count: 'exact', head: true })
+  if (initial.error) throw initial.error
+  try {
+    const photo = await owner.from('portfolio_projects').select('image').not('image', 'is', null).limit(1).single()
+    if (photo.error) throw photo.error
+    const media = [
+      { id: 'qa-video', type: 'video', category: 'interview', title: 'Private QA interview', url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', thumbnail: '', alt: '', caption: '', orientation: 'landscape' },
+      { id: 'qa-photo', type: 'image', category: 'photos', title: 'Private QA image reference', url: photo.data.image, thumbnail: '', alt: 'Existing project visual', caption: '', orientation: 'landscape' },
+    ]
+    const created = await owner.from('portfolio_projects').insert({ title: `__media_verification_${marker}`, slug: `qa-media-${marker}`, description: 'Temporary private verification record.', status: 'draft', collection_type: 'company', media_items: media }).select().single()
+    if (created.error) throw created.error
+    rowId = created.data.id
+    if (created.data.media_items.length !== 2 || created.data.collection_type !== 'company') throw new Error('Collection metadata did not round-trip.')
+    const hidden = await anonymous.from('portfolio_projects').select('id').eq('id', rowId)
+    if (hidden.error || hidden.data.length) throw new Error('Draft media was exposed publicly.')
+    const ordered = await owner.from('portfolio_projects').update({ media_items: [media[1], media[0]] }).eq('id', rowId).select('media_items').single()
+    if (ordered.error || ordered.data.media_items[0].id !== 'qa-photo') throw ordered.error || new Error('Media ordering failed.')
+    const invalid = await owner.from('portfolio_projects').update({ media_items: [{ ...media[0], category: 'invalid' }] }).eq('id', rowId)
+    if (invalid.error?.code !== '23514') throw new Error('Database accepted an invalid content type.')
+    const denied = await anonymous.from('portfolio_projects').update({ title: 'Unauthorized change' }).eq('id', rowId).select('id')
+    const unchanged = await owner.from('portfolio_projects').select('title').eq('id', rowId).single()
+    if ((!denied.error && denied.data?.length) || unchanged.data?.title !== created.data.title) throw new Error('Anonymous mutation was not denied.')
+    const cleared = await owner.from('portfolio_projects').update({ media_items: [] }).eq('id', rowId).select('media_items').single()
+    if (cleared.error || cleared.data.media_items.length) throw new Error('Explicitly clearing media failed.')
+    console.log(JSON.stringify({ collectionSave: 'passed', mediaRoundTrip: 'passed', ordering: 'passed', explicitEmpty: 'passed', databaseValidation: 'passed', draftPrivacy: 'passed', anonymousWritesDenied: 'passed' }))
+  } finally {
+    if (rowId) {
+      const cleanup = await owner.from('portfolio_projects').delete().eq('id', rowId).eq('slug', `qa-media-${marker}`)
+      if (cleanup.error) throw cleanup.error
+    }
+    const final = await owner.from('portfolio_projects').select('id', { count: 'exact', head: true })
+    await owner.auth.signOut({ scope: 'local' })
+    if (final.error || final.count !== initial.count) throw new Error('Collection count changed during verification; inspect the record inventory.')
+    console.log(`Verified cleanup; ${final.count} existing portfolio records preserved.`)
   }
 }
 
@@ -134,8 +182,9 @@ try {
   if (process.argv[2] === 'snapshot') await snapshot()
   else if (process.argv[2] === 'create-owner') await createOwner()
   else if (process.argv[2] === 'verify') await verify()
+  else if (process.argv[2] === 'verify-media') await verifyMedia()
   else if (process.argv[2] === 'owner-link') console.log(JSON.stringify({ url: (await ownerLink()).action_link }))
-  else throw new Error('Choose snapshot, create-owner, verify, or owner-link.')
+  else throw new Error('Choose snapshot, create-owner, verify, verify-media, or owner-link.')
 } catch (error) {
   console.error(error.message)
   process.exitCode = 1

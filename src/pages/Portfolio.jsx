@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import { ResponsiveImage } from '../components/portfolio/ProjectGallery'
+import MediaFilters from '../components/portfolio/MediaFilters'
+import MediaViewer from '../components/portfolio/MediaViewer'
+import { MEDIA_CATEGORIES, isMediaCategory, matchesMediaFilter } from '../data/portfolioMedia'
 import ScrollAnimation from '../components/ScrollAnimation'
 import {
   getProjectPath,
@@ -39,10 +42,20 @@ const getCardGridClassName = (project, index, total) => {
   return classNames.join(' ')
 }
 
-const CaseStudyCard = ({ project }) => {
+const CaseStudyCard = ({ project, onWatch, filter }) => {
   const cardRef = useRef(null)
   const tiltFrameRef = useRef(null)
   const result = project.result?.statement
+  const previewItems = (project.mediaItems || []).filter((item) => filter === 'all' || item.category === filter)
+  const videoCount = project.mediaItems?.filter((item) => item.type === 'video').length || 0
+  const photoCount = project.mediaItems?.filter((item) => item.type === 'image').length || 0
+  const mediaSummary = [
+    videoCount && `${videoCount} ${videoCount === 1 ? 'video' : 'videos'}`,
+    photoCount && `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}`,
+  ].filter(Boolean).join(' · ')
+  const firstVideo = previewItems.findIndex((item) => item.type === 'video' && item.category !== 'behind-the-scenes')
+  const videoIndex = firstVideo >= 0 ? firstVideo : previewItems.findIndex((item) => item.type === 'video')
+  const destination = `${getProjectPath(project)}${filter !== 'all' ? `?type=${filter}` : ''}`
 
   useEffect(
     () => () => {
@@ -93,7 +106,7 @@ const CaseStudyCard = ({ project }) => {
       onBlur={resetTilt}
     >
       <Link
-        to={getProjectPath(project)}
+        to={destination}
         aria-label={`View the ${project.title} case study`}
         className="portfolio-grid-card-link"
       >
@@ -118,12 +131,6 @@ const CaseStudyCard = ({ project }) => {
             <span className="portfolio-card-featured-label">Featured Project</span>
           )}
 
-          {project.presentation === 'video' && (
-            <span className="portfolio-card-play-mark" aria-hidden="true">
-              <VideoPlayIcon />
-            </span>
-          )}
-
           <span className="portfolio-card-media-action" aria-hidden="true">
             View Case Study <span className="portfolio-card-arrow"><ArrowIcon /></span>
           </span>
@@ -138,6 +145,7 @@ const CaseStudyCard = ({ project }) => {
           )}
 
           <h2>{project.title}</h2>
+          {project.collectionType === 'company' && <span className="portfolio-collection-kind">Company collection</span>}
 
           {project.summary && <p className="portfolio-card-summary">{project.summary}</p>}
 
@@ -146,6 +154,7 @@ const CaseStudyCard = ({ project }) => {
               <li key={tag} className="portfolio-card-tag">{tag}</li>
             ))}
           </ul>
+          {mediaSummary && <p className="portfolio-card-media-count">{mediaSummary}</p>}
 
           <div className={`portfolio-card-result${result ? '' : ' portfolio-card-result--empty'}`}>
             {result && (
@@ -161,12 +170,15 @@ const CaseStudyCard = ({ project }) => {
           </span>
         </div>
       </Link>
-
+      {videoIndex >= 0 && <button type="button" className="portfolio-card-watch-button" onClick={() => onWatch({ project, items: previewItems, index: videoIndex })} aria-label={`Watch ${project.title} videos without leaving the portfolio`}><VideoPlayIcon /><span>Watch videos</span></button>}
     </article>
   )
 }
 
 const Portfolio = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filter = isMediaCategory(searchParams.get('type')) ? searchParams.get('type') : 'all'
+  const [preview, setPreview] = useState(null)
   const [records, setRecords] = useState([])
   const [publishedWorkflow, setPublishedWorkflow] = useState('legacy')
   const [loading, setLoading] = useState(true)
@@ -191,6 +203,15 @@ const Portfolio = () => {
   const displayedProjects = records.length
     ? mergePortfolioRecords(records, { includeBundledFallback: publishedWorkflow !== 'advanced' })
     : publishedWorkflow === 'advanced' ? [] : portfolioProjects
+  const filteredProjects = displayedProjects.filter((project) => matchesMediaFilter(project, filter))
+  const counts = Object.fromEntries(MEDIA_CATEGORIES.map(({ id }) => [id, displayedProjects.filter((project) => matchesMediaFilter(project, id)).length]))
+  const changeFilter = (next) => {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'all') params.delete('type')
+    else params.set('type', next)
+    setSearchParams(params, { replace: true })
+    setPreview(null)
+  }
 
   return (
     <>
@@ -223,16 +244,21 @@ const Portfolio = () => {
               </div>
             </ScrollAnimation>
 
+            <section className="portfolio-collection-filters" aria-label="Explore portfolio collections">
+              <MediaFilters value={filter} onChange={changeFilter} counts={counts} total={displayedProjects.length} />
+              <p className="portfolio-media-results" role="status">{loading ? 'Updating collections…' : `${filteredProjects.length} ${filteredProjects.length === 1 ? 'collection' : 'collections'} · Explore each project or company’s videos and photos.`}</p>
+            </section>
             <div className="portfolio-card-grid">
-              {displayedProjects.map((project, index) => (
+              {filteredProjects.map((project, index) => (
                 <div
                   key={project.slug}
-                  className={getCardGridClassName(project, index, displayedProjects.length)}
+                  className={getCardGridClassName(project, index, filteredProjects.length)}
                 >
-                  <CaseStudyCard project={project} />
+                  <CaseStudyCard project={project} onWatch={setPreview} filter={filter} />
                 </div>
               ))}
             </div>
+            {!loading && !filteredProjects.length && <div className="portfolio-media-empty"><p>No collections match this content type yet.</p><button type="button" onClick={() => changeFilter('all')}>View all collections</button></div>}
 
             {loading && <p className="text-center text-xs" aria-live="polite" style={{ color: 'rgba(201,161,112,0.45)' }}>Checking for the latest projects…</p>}
 
@@ -249,6 +275,7 @@ const Portfolio = () => {
           </div>
         </div>
       </main>
+      <MediaViewer items={preview?.items || []} activeIndex={preview?.index ?? null} onChange={(index) => setPreview((current) => current ? { ...current, index } : null)} onClose={() => setPreview(null)} projectTitle={preview?.project.title} />
       <Footer />
     </>
   )

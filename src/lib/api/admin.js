@@ -7,6 +7,10 @@ const DEFAULT_RECENT_LIMIT = 8
 const INQUIRIES_UNAVAILABLE_REASON = 'The public contact form opens WhatsApp and does not store inquiries in the website database.'
 
 const CAPABILITY_PROBES = {
+  portfolioCollections: {
+    table: 'portfolio_projects',
+    columns: 'collection_type,media_items',
+  },
   pageContent: {
     table: 'page_sections',
     columns: 'id,page_key,section_key,draft_content,published_content,status,updated_at',
@@ -377,6 +381,7 @@ export const adminAPI = {
     )
 
     const capabilities = {
+      portfolioCollections: false,
       pageContent: false,
       advancedPortfolio: false,
       advancedBlog: false,

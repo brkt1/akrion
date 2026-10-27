@@ -12,6 +12,7 @@ import weddingEvent1000 from '../assets/portfolio/wedding-event-1000.webp'
 import weddingEvent600 from '../assets/portfolio/wedding-event-600.webp'
 import yenegeEventsLogo720 from '../assets/portfolio/yenege-events-logo-720.webp'
 import yenegeEventsLogo480 from '../assets/portfolio/yenege-events-logo-480.webp'
+import { getProjectMedia } from './portfolioMedia'
 
 const birhumindsSourceImage =
   'https://gavhkkrnsuisqsjnnaow.supabase.co/storage/v1/object/public/images/portfolio/1777402598274_0jt6rr.jpg'
@@ -343,6 +344,8 @@ export const portfolioProjects = [
   width: project.hero.width,
   height: project.hero.height,
   gallery: [createGalleryItem(project.slug, project.hero, project.galleryCaption)],
+  mediaItems: getProjectMedia({}, [createGalleryItem(project.slug, project.hero, project.galleryCaption)], project.title),
+  collectionType: 'project',
   seo: {
     title: `${project.title} | Akrion Digitals`,
     description: project.summary,
@@ -421,13 +424,14 @@ export const hydratePortfolioProject = (project, record) => {
   const summary = record.project_summary || record.card_description || (
     descriptionMatches ? project.summary : record.description || project.summary
   )
-  const useOptimizedMedia = !record.image || isCurrentSourceValue(record.image, project.sourceImage)
+  const coverImage = record.featured_image || record.image
+  const useOptimizedMedia = !coverImage || isCurrentSourceValue(coverImage, project.sourceImage)
   const authoredAlt = String(record.alt_text || record.image_alt || '').trim()
   const hero = useOptimizedMedia
-    ? project.hero
+    ? { ...project.hero, alt: authoredAlt || project.hero.alt }
     : createMedia({
-        src: record.image,
-        alt: authoredAlt,
+        src: coverImage,
+        alt: authoredAlt || `${title} project cover`,
         fit: project.hero.fit,
         position: project.hero.position,
       })
@@ -436,6 +440,7 @@ export const hydratePortfolioProject = (project, record) => {
   const galleryCaption = contentMatches && useOptimizedMedia
     ? project.galleryCaption
     : record.image_caption || undefined
+  const mediaItems = getProjectMedia(record, [createGalleryItem(project.slug, hero, galleryCaption)], title)
   const hydrated = {
     ...project,
     title,
@@ -454,7 +459,9 @@ export const hydratePortfolioProject = (project, record) => {
     imageSmallWidth: hero.smallWidth,
     width: hero.width,
     height: hero.height,
-    gallery: hero.alt ? [createGalleryItem(project.slug, hero, galleryCaption)] : [],
+    gallery: mediaItems.filter((item) => item.type === 'image'),
+    mediaItems,
+    collectionType: record.collection_type === 'company' ? 'company' : 'project',
     sourceRecord: record,
     seo: {
       title: record.seo_title || `${title} | Akrion Digitals`,
@@ -501,15 +508,17 @@ export const normalizePortfolioRecord = (record) => {
   const hero = heroSource
     ? createMedia({
         src: heroSource,
-        alt: authoredAlt,
+        alt: authoredAlt || `${title} project cover`,
         fit: 'contain',
       })
     : null
   const services = parseTags(record?.services)
   const approach = getStructuredApproach(record || {})
-  const gallery = hero?.alt
+  const fallbackGallery = hero?.alt
     ? [createGalleryItem(slug, hero, record?.image_caption || undefined)]
     : []
+
+  const mediaItems = getProjectMedia(record, fallbackGallery, title)
 
   return {
     id: slug,
@@ -539,7 +548,9 @@ export const normalizePortfolioRecord = (record) => {
       ? { statement: record.result, metrics: Array.isArray(record.metrics) ? record.metrics : [] }
       : undefined,
     testimonial: getVerifiedTestimonial(record || {}),
-    gallery,
+    gallery: mediaItems.filter((item) => item.type === 'image'),
+    mediaItems,
+    collectionType: record?.collection_type === 'company' ? 'company' : 'project',
     seo: {
       title: record?.seo_title || `${title} | Akrion Digitals`,
       description: record?.seo_description || summary,

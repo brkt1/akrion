@@ -1,6 +1,6 @@
 # Akrion deployment handover
 
-Updated 25 October 2026.
+Updated 27 October 2026.
 
 ## Live deployment
 
@@ -31,6 +31,39 @@ WhatsApp flow; the dashboard does not pretend to store those messages.
 The content editor deliberately retains the public design and bundled defaults
 when a section has not been published. Existing demo/test records are preserved
 for the owner to review rather than silently removed.
+
+### Portfolio collections
+
+Portfolio now supports one card per project/campaign or company collection,
+with multiple ordered videos and photos inside. In Content Studio, open
+**Portfolio → Add Collection**, select the collection type, add the title,
+slug, short description and cover, then use **Add video** / **Add photo**.
+Choose a content type for each item: TV & Promo, Interviews, Behind the Scenes,
+Reels, or Photos. Set the publication status and save the collection. Draft
+collections and all their media remain unavailable to public visitors.
+
+YouTube videos should be Unlisted or Public with embedding enabled. Private
+videos are not suitable for normal website visitors. Paste a watch/share/Shorts
+link; the editor converts it to a stable video URL. Existing HTTPS MP4/WebM
+links also work, but this editor does not upload or transcode video files.
+Photos and custom thumbnails use the existing image storage (JPEG/PNG/WebP,
+up to 5 MB). A collection supports up to 100 media items, each with a title,
+content type, optional caption/alternative text, and orientation. Up/down
+controls set playback order; removing an item does not delete its storage file.
+
+Public filters match collections containing that content type. **Watch videos**
+opens playback on the Portfolio page; the full case-study page has its own
+filterable media gallery. The player is mounted only after a visitor clicks,
+uses YouTube's privacy-enhanced domain, and stops when closed. Keyboard focus,
+Escape dismissal, portrait reels, mobile layout and reduced motion are supported.
+
+`supabase/migrations/202610270001_portfolio_media_collections.sql` is additive
+and has been applied to the owner's existing backend. It adds `collection_type`
+and `media_items` without rewriting existing projects or changing their RLS.
+NULL media retains the legacy gallery/video fallback; an explicitly saved empty
+array clears the collection without resurrecting removed items. Original legacy
+fields stay available as a compatibility source. Existing video links must be
+given a content type when first edited; no categories or project facts are invented.
 
 ## Deployment and account access
 
@@ -71,12 +104,21 @@ The ignored `.backend-backups` folder contains a dated pre-change export of
 public content, policies, a minimal user inventory, and storage object metadata.
 It is not a download of the uploaded binary files or a full Auth backup.
 
-`scripts/maintain-backend.mjs` supports `snapshot`, `verify`, `create-owner`, and
-`owner-link`. It runs only on the owner's machine using the authenticated CLI;
+`scripts/maintain-backend.mjs` supports `snapshot`, `verify`, `verify-media`,
+`create-owner`, and `owner-link`. It runs only on the owner's machine using the authenticated CLI;
 it is not part of the deployed application. Set `SUPABASE_CLI_PATH` if the CLI
 is not available on PATH, and `ADMIN_EMAIL` for owner-specific commands. Load
 the ignored local environment with Node's `--env-file=.env.local` when needed.
 An `owner-link` is a short-lived credential: never commit or share its output.
+
+`verify-media` checks collection persistence, ordering, empty media lists,
+database validation, draft privacy, and anonymous write denial using one
+temporary private draft, then deletes only that draft and confirms the existing
+record count is unchanged. A pre-migration content snapshot is retained in the
+ignored backups directory. `npm test` runs local model tests; `npm run test:browser`
+runs isolated Playwright fixtures against localhost, never the live database.
+Browser tests default to installed Microsoft Edge; set `PLAYWRIGHT_CHANNEL`
+to another installed Playwright channel if needed.
 
 Verification completed: production build, owner Auth session and protected CMS
 access, draft/public separation, anonymous write denial, and live homepage
