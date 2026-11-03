@@ -251,10 +251,14 @@ const ProjectCaseStudy = () => {
         )
       case 'work':
         return (
-          <Reveal className="portfolio-case-shell" reducedMotion={reducedMotion}>
-            <SectionHeading eyebrow="The Work" title="A closer look at the project." id="project-work-heading" />
+          <div className="portfolio-case-shell">
+            {/* Animate the heading, not an arbitrarily tall media collection:
+                long albums must remain visible on short/landscape screens. */}
+            <Reveal reducedMotion={reducedMotion}>
+              <SectionHeading eyebrow="The Work" title="A closer look at the project." id="project-work-heading" />
+            </Reveal>
             <ProjectGallery key={`${project.slug}-${mediaFilter}`} items={project.mediaItems} projectTitle={project.title} initialFilter={mediaFilter} />
-          </Reveal>
+          </div>
         )
       case 'result':
         return (

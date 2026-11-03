@@ -2,6 +2,16 @@ import { test, expect } from '@playwright/test'
 import { installFixtures } from './fixtures.mjs'
 import { productionGallery, productionCollection } from '../../src/data/productionPhotos.js'
 
+const albumRecord = () => ({
+  id: 504, slug: productionCollection.slug, title: productionCollection.title,
+  image: productionGallery[0].src, description: productionCollection.description,
+  status: 'published', category: 'Behind the Scenes',
+  media_items: productionGallery.map((photo) => ({
+    id: photo.id, title: photo.title, type: 'image', category: 'photos',
+    url: photo.src, thumbnail: photo.srcSmall, alt: photo.alt, orientation: 'portrait',
+  })),
+})
+
 for (const width of [390, 1440]) {
   test(`real production photography fits the existing site at ${width}px`, async ({ page }) => {
     await installFixtures(page)
@@ -40,15 +50,7 @@ for (const width of [390, 1440]) {
 
 test('BTS album uses thumbnails and opens the original aspect ratio in the viewer', async ({ page }) => {
   const fixture = await installFixtures(page)
-  fixture.getRecords().push({
-    id: 504, slug: productionCollection.slug, title: productionCollection.title,
-    image: productionGallery[0].src, description: productionCollection.description,
-    status: 'published', category: 'Behind the Scenes',
-    media_items: productionGallery.map((photo) => ({
-      id: photo.id, title: photo.title, type: 'image', category: 'photos',
-      url: photo.src, thumbnail: photo.srcSmall, alt: photo.alt, orientation: 'portrait',
-    })),
-  })
+  fixture.getRecords().push(albumRecord())
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(`/portfolio/${productionCollection.slug}`, { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.portfolio-case-gallery-item')).toHaveCount(11)
@@ -59,4 +61,19 @@ test('BTS album uses thumbnails and opens the original aspect ratio in the viewe
   await expect(fullImage).toHaveCSS('object-fit', 'contain')
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).not.toBeVisible()
+})
+
+test('long albums remain visible on short screens with normal motion enabled', async ({ page }) => {
+  const fixture = await installFixtures(page)
+  const album = albumRecord()
+  album.media_items = Array.from({ length: 40 }, (_, index) => ({ ...album.media_items[index % 11], id: `long-album-${index}` }))
+  fixture.getRecords().push(album)
+  await page.setViewportSize({ width: 640, height: 360 })
+  await page.goto(`/portfolio/${productionCollection.slug}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('.portfolio-case-gallery-item')).toHaveCount(40)
+  const first = page.locator('.portfolio-case-gallery-trigger').first()
+  await first.scrollIntoViewIfNeeded()
+  await expect(page.locator('.portfolio-case-section--work .portfolio-case-shell')).toHaveCSS('opacity', '1')
+  await first.click()
+  await expect(page.getByRole('dialog')).toBeVisible()
 })
