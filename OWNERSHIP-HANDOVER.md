@@ -1,6 +1,6 @@
 # Akrion deployment handover
 
-Updated 27 October 2026.
+Updated 3 November 2026.
 
 ## Live deployment
 
@@ -64,6 +64,39 @@ NULL media retains the legacy gallery/video fallback; an explicitly saved empty
 array clears the collection without resurrecting removed items. Original legacy
 fields stay available as a compatibility source. Existing video links must be
 given a content type when first edited; no categories or project facts are invented.
+
+### Real production photography
+
+Owner-supplied BTS photos now replace illustrative/generated photography in
+the homepage hero and showreel poster, Who We Are image, creative-process
+visuals, About collage, production service imagery, Why Choose Us visuals and
+Blog imagery. Design services use existing verified project assets rather than
+claiming a BTS photograph is a website screenshot or finished brand campaign.
+Page layouts, brand styling, copy and existing client projects are retained.
+
+`src/data/productionPhotos.js` is the shared photo registry. Eleven selected
+photos have 720px and 1200px WebP versions in `public/images/production/`
+(under 2 MB combined), with accurate alternative text, focal positions and
+intrinsic dimensions. The originals were not modified. EXIF/GPS and XMP
+metadata are stripped from all published derivatives. A clipboard duplicate
+and a near-identical softer frame were not used. HEIC inputs were decoded
+without generated content before optimization.
+
+The same optimized files are available in the existing Supabase image library.
+**Behind the Scenes at Akrion** is a new editable Portfolio collection at
+`/portfolio/behind-the-scenes-at-akrion`, with 11 photos, lightweight gallery
+thumbnails and uncropped full-image viewing. No client, project year, result,
+testimonial or performance metric is inferred for these mixed productions.
+The collection uses the existing Photos content type and Production/BTS tags.
+
+`scripts/prepare-production-photos.mjs` reproduces the WebP derivatives from
+the owner's JPEGs and losslessly decoded HEIC PNGs; provide a `sharp` module
+directory with `AKRION_IMAGE_MODULES` when using the bundled runtime.
+`scripts/publish-production-gallery.mjs` uploads only these new files and
+supports `draft`, `publish`, and `verify`. It refuses to overwrite different
+existing files or publish a collection with a changed title or media list. Existing
+records and original uploads remain unchanged. A dated pre-change snapshot
+is retained in the ignored `.backend-backups` directory.
 
 ## Deployment and account access
 

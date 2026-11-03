@@ -1,13 +1,5 @@
-import serviceBrandIdentity1200 from '../assets/services/service-brand-identity-1200.webp'
-import serviceBrandIdentity720 from '../assets/services/service-brand-identity-720.webp'
-import serviceCreativeConsulting1200 from '../assets/services/service-creative-consulting-1200.webp'
-import serviceCreativeConsulting720 from '../assets/services/service-creative-consulting-720.webp'
-import serviceSocialMedia1200 from '../assets/services/service-social-media-1200.webp'
-import serviceSocialMedia720 from '../assets/services/service-social-media-720.webp'
-import serviceVideoMotion1200 from '../assets/services/service-video-motion-1200.webp'
-import serviceVideoMotion720 from '../assets/services/service-video-motion-720.webp'
-import serviceWebDevelopment1200 from '../assets/services/service-web-development-1200.webp'
-import serviceWebDevelopment720 from '../assets/services/service-web-development-720.webp'
+import { productionPhotos } from './productionPhotos'
+import { agencyServiceVisuals } from './agencyVisuals'
 
 export const BLOG_FILTERS = [
   'All',
@@ -38,61 +30,27 @@ const createMedia = ({
   position = 'center',
 }) => ({ src, srcSmall, alt, width, height, smallWidth, position })
 
-/**
- * Editorial placeholders used by the Blog hero and as safe fallbacks for
- * article covers. Replace the imported files here when real Akrion editorial
- * photography is available; consumers do not need to change their layout.
- */
+// Real Akrion production photography, without changing article copy or routes.
 export const blogHeroMedia = [
   {
-    id: 'brand-identity',
-    label: 'Brand identity and packaging',
-    ...createMedia({
-      src: serviceBrandIdentity1200,
-      srcSmall: serviceBrandIdentity720,
-      alt: 'A coordinated brand identity system arranged across printed applications',
-      position: 'center 46%',
-    }),
+    id: 'behind-the-lens', label: 'Behind the lens',
+    ...createMedia(productionPhotos.warmLighting),
   },
   {
-    id: 'web-technology',
-    label: 'Website and application design',
-    ...createMedia({
-      src: serviceWebDevelopment1200,
-      srcSmall: serviceWebDevelopment720,
-      alt: 'Responsive website interface shown across desktop and mobile screens',
-      position: 'center 50%',
-    }),
+    id: 'on-location', label: 'On location',
+    ...createMedia(productionPhotos.onLocation),
   },
   {
-    id: 'video-content',
-    label: 'Video production',
-    ...createMedia({
-      src: serviceVideoMotion1200,
-      srcSmall: serviceVideoMotion720,
-      alt: 'Video production workspace with a camera and editing display',
-      position: 'center 47%',
-    }),
+    id: 'video-content', label: 'Interview production',
+    ...createMedia(productionPhotos.interviewMonitors),
   },
   {
-    id: 'creative-direction',
-    label: 'Motion design',
-    ...createMedia({
-      src: serviceCreativeConsulting1200,
-      srcSmall: serviceCreativeConsulting720,
-      alt: 'Creative workspace with hands arranging visual references and design materials',
-      position: 'center 45%',
-    }),
+    id: 'production-preparation', label: 'Production preparation',
+    ...createMedia(productionPhotos.productionKit),
   },
   {
-    id: 'social-campaigns',
-    label: 'Social-media campaigns',
-    ...createMedia({
-      src: serviceSocialMedia1200,
-      srcSmall: serviceSocialMedia720,
-      alt: 'Social-media campaign layouts presented on a phone and editorial cards',
-      position: 'center 48%',
-    }),
+    id: 'event-coverage', label: 'Event coverage',
+    ...createMedia(productionPhotos.eventCoverage),
   },
 ]
 
@@ -110,12 +68,7 @@ const sourceArticles = [
     slug: 'professional-content-for-business',
     category: 'Marketing',
     featured: true,
-    hero: createMedia({
-      src: serviceSocialMedia1200,
-      srcSmall: serviceSocialMedia720,
-      alt: 'Social-media campaign layouts presented on a phone and editorial cards',
-      position: 'center 48%',
-    }),
+    hero: createMedia(productionPhotos.onLocation),
   },
   {
     sourceId: 1,
@@ -130,12 +83,7 @@ const sourceArticles = [
     slug: 'how-video-marketing-increases-sales',
     category: 'Video & Content',
     featured: false,
-    hero: createMedia({
-      src: serviceVideoMotion1200,
-      srcSmall: serviceVideoMotion720,
-      alt: 'Video production workspace with a camera and editing display',
-      position: 'center 47%',
-    }),
+    hero: createMedia(productionPhotos.interviewMonitors),
   },
   {
     sourceId: 2,
@@ -151,10 +99,12 @@ const sourceArticles = [
     category: 'Branding',
     featured: false,
     hero: createMedia({
-      src: serviceBrandIdentity1200,
-      srcSmall: serviceBrandIdentity720,
-      alt: 'A coordinated brand identity system arranged across printed applications',
-      position: 'center 46%',
+      src: agencyServiceVisuals.brand.large,
+      srcSmall: agencyServiceVisuals.brand.small,
+      alt: agencyServiceVisuals.brand.alt,
+      width: agencyServiceVisuals.brand.width,
+      height: agencyServiceVisuals.brand.height,
+      position: agencyServiceVisuals.brand.position,
     }),
   },
 ]

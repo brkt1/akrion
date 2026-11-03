@@ -13,6 +13,7 @@ import weddingEvent600 from '../assets/portfolio/wedding-event-600.webp'
 import yenegeEventsLogo720 from '../assets/portfolio/yenege-events-logo-720.webp'
 import yenegeEventsLogo480 from '../assets/portfolio/yenege-events-logo-480.webp'
 import { getProjectMedia } from './portfolioMedia'
+import { getProductionPhotoForUrl } from './productionPhotos'
 
 const birhumindsSourceImage =
   'https://gavhkkrnsuisqsjnnaow.supabase.co/storage/v1/object/public/images/portfolio/1777402598274_0jt6rr.jpg'
@@ -26,7 +27,16 @@ const createMedia = ({
   alt,
   fit = 'cover',
   position = 'center',
-}) => ({ src, srcSmall, smallWidth, width, height, alt, fit, position })
+}) => {
+  const productionPhoto = getProductionPhotoForUrl(src)
+  return {
+    src, srcSmall: srcSmall || productionPhoto?.srcSmall,
+    smallWidth: smallWidth || productionPhoto?.smallWidth,
+    width: width || productionPhoto?.width, height: height || productionPhoto?.height,
+    alt: alt || productionPhoto?.alt, fit,
+    position: productionPhoto?.position || position,
+  }
+}
 
 const createGalleryItem = (slug, media, caption) => ({
   id: `${slug}-project-visual`,

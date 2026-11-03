@@ -23,7 +23,7 @@ const ResponsiveServiceImage = ({
     <source media="(max-width: 767px)" srcSet={image.small} />
     <img
       src={image.large}
-      srcSet={`${image.small} 720w, ${image.large} 1200w`}
+      srcSet={`${image.small} ${image.smallWidth || 720}w, ${image.large} ${image.largeWidth || 1200}w`}
       sizes={sizes}
       width={image.width}
       height={image.height}
@@ -31,7 +31,7 @@ const ResponsiveServiceImage = ({
       fetchpriority={fetchPriority}
       decoding="async"
       alt={hidden ? '' : alt}
-      style={{ '--services-image-position': image.position }}
+      style={{ '--services-image-position': image.position, objectFit: image.fit || 'cover' }}
     />
   </picture>
 )
@@ -89,7 +89,7 @@ const Services = () => {
     preloadLink.rel = 'preload'
     preloadLink.as = 'image'
     preloadLink.href = firstImage.large
-    preloadLink.imageSrcset = `${firstImage.small} 720w, ${firstImage.large} 1200w`
+    preloadLink.imageSrcset = `${firstImage.small} ${firstImage.smallWidth || 720}w, ${firstImage.large} ${firstImage.largeWidth || 1200}w`
     preloadLink.imageSizes = '(min-width: 1024px) 42vw, 92vw'
     preloadLink.fetchPriority = 'high'
     preloadLink.setAttribute(preloadAttribute, 'true')

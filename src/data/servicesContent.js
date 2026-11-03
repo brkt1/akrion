@@ -1,13 +1,4 @@
-import brandIdentity1200 from '../assets/services/service-brand-identity-1200.webp'
-import brandIdentity720 from '../assets/services/service-brand-identity-720.webp'
-import creativeConsulting1200 from '../assets/services/service-creative-consulting-1200.webp'
-import creativeConsulting720 from '../assets/services/service-creative-consulting-720.webp'
-import socialMedia1200 from '../assets/services/service-social-media-1200.webp'
-import socialMedia720 from '../assets/services/service-social-media-720.webp'
-import videoMotion1200 from '../assets/services/service-video-motion-1200.webp'
-import videoMotion720 from '../assets/services/service-video-motion-720.webp'
-import webDevelopment1200 from '../assets/services/service-web-development-1200.webp'
-import webDevelopment720 from '../assets/services/service-web-development-720.webp'
+import { agencyServiceVisuals } from './agencyVisuals'
 
 export const serviceStories = [
   {
@@ -18,14 +9,7 @@ export const serviceStories = [
     included: ['Strategy', 'Logo design', 'Visual identity', 'Guidelines', 'Packaging', 'Brand applications'],
     recordAliases: ['brand identity', 'branding'],
     recordIcon: 'Branding',
-    image: {
-      small: brandIdentity720,
-      large: brandIdentity1200,
-      width: 1200,
-      height: 800,
-      position: 'center 48%',
-      alt: 'Brand identity and packaging presentation arranged in Akrion’s emerald and gold palette',
-    },
+    image: agencyServiceVisuals.brand,
   },
   {
     id: 'web-applications',
@@ -35,14 +19,7 @@ export const serviceStories = [
     included: ['Websites', 'Landing pages', 'Web applications', 'UI/UX', 'Ongoing support'],
     recordAliases: ['web & applications', 'web applications', 'website design', 'development'],
     recordIcon: 'Development',
-    image: {
-      small: webDevelopment720,
-      large: webDevelopment1200,
-      width: 1200,
-      height: 800,
-      position: '58% center',
-      alt: 'Responsive website and application interfaces displayed across desktop and mobile devices',
-    },
+    image: agencyServiceVisuals.web,
   },
   {
     id: 'video-motion-photography',
@@ -52,14 +29,7 @@ export const serviceStories = [
     included: ['Video production', 'Motion graphics', 'Photography', 'Documentaries', 'Event coverage'],
     recordAliases: ['video, motion & photography', 'videos', 'video'],
     recordIcon: 'Video',
-    image: {
-      small: videoMotion720,
-      large: videoMotion1200,
-      width: 1200,
-      height: 800,
-      position: '58% center',
-      alt: 'Cinematic video-production and motion-design editing workspace',
-    },
+    image: agencyServiceVisuals.video,
   },
   {
     id: 'social-media-advertising',
@@ -69,14 +39,7 @@ export const serviceStories = [
     included: ['Strategy', 'Content production', 'Account management', 'Organic campaigns', 'Paid advertising'],
     recordAliases: ['social media & advertising', 'social media'],
     recordIcon: 'Social Media',
-    image: {
-      small: socialMedia720,
-      large: socialMedia1200,
-      width: 1200,
-      height: 800,
-      position: '60% center',
-      alt: 'Coordinated social-media campaign with post, carousel, and Reel compositions',
-    },
+    image: agencyServiceVisuals.social,
   },
   {
     id: 'creative-consulting',
@@ -86,14 +49,7 @@ export const serviceStories = [
     included: ['Brand audits', 'Campaign planning', 'Creative strategy', 'Digital guidance'],
     recordAliases: ['creative consulting', 'consulting'],
     recordIcon: 'Consulting',
-    image: {
-      small: creativeConsulting720,
-      large: creativeConsulting1200,
-      width: 1200,
-      height: 800,
-      position: 'center 46%',
-      alt: 'Creative strategy workspace with moodboards, sketches, colors, and material studies',
-    },
+    image: agencyServiceVisuals.consulting,
   },
 ]
 

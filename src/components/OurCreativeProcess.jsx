@@ -1,14 +1,8 @@
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 
-import brandIdentity1200 from '../assets/services/service-brand-identity-1200.webp'
-import brandIdentity720 from '../assets/services/service-brand-identity-720.webp'
-import creativeConsulting1200 from '../assets/services/service-creative-consulting-1200.webp'
-import creativeConsulting720 from '../assets/services/service-creative-consulting-720.webp'
-import videoMotion1200 from '../assets/services/service-video-motion-1200.webp'
-import videoMotion720 from '../assets/services/service-video-motion-720.webp'
-import webDevelopment1200 from '../assets/services/service-web-development-1200.webp'
-import webDevelopment720 from '../assets/services/service-web-development-720.webp'
+import { productionPhotos } from '../data/productionPhotos'
+import { agencyServiceVisuals } from '../data/agencyVisuals'
 import documentaryFilm720 from '../assets/portfolio/documentary-film-720.webp'
 import enenTubeSeries600 from '../assets/portfolio/enen-tube-series-600.webp'
 import liyuMelketa720 from '../assets/portfolio/liyu-melketa-720.webp'
@@ -20,27 +14,25 @@ const stages = ['Discover', 'Define', 'Create', 'Launch']
 const scenes = [
   {
     stage: 0,
-    label: 'Research & brainstorming',
-    src: creativeConsulting1200,
-    srcSet: `${creativeConsulting720} 720w, ${creativeConsulting1200} 1200w`,
+    label: 'Planning & preparation',
+    ...productionPhotos.productionKit,
   },
   {
     stage: 1,
-    label: 'Moodboards · Color · Type',
-    src: brandIdentity1200,
-    srcSet: `${brandIdentity720} 720w, ${brandIdentity1200} 1200w`,
+    label: 'Brand identity & applications',
+    src: agencyServiceVisuals.brand.large,
+    srcSet: `${agencyServiceVisuals.brand.small} 720w, ${agencyServiceVisuals.brand.large} 1200w`,
   },
   {
     stage: 2,
-    label: 'Web & interface design',
-    src: webDevelopment1200,
-    srcSet: `${webDevelopment720} 720w, ${webDevelopment1200} 1200w`,
+    label: 'Web & digital identity',
+    src: agencyServiceVisuals.web.large,
+    srcSet: `${agencyServiceVisuals.web.small} 480w, ${agencyServiceVisuals.web.large} 720w`,
   },
   {
     stage: 2,
     label: 'Production & post',
-    src: videoMotion1200,
-    srcSet: `${videoMotion720} 720w, ${videoMotion1200} 1200w`,
+    ...productionPhotos.interviewMonitors,
   },
   {
     stage: 3,
@@ -90,12 +82,13 @@ const ProcessPlaceholder = ({ activeScene, poster, reducedMotion }) => {
               src={scene.src}
               srcSet={scene.srcSet}
               sizes="(min-width: 1024px) 45vw, calc(100vw - 2rem)"
-              width="1200"
-              height="800"
+              width={scene.width || 1200}
+              height={scene.height || 900}
               loading="lazy"
               decoding="async"
               alt=""
               className="creative-process-scene-image"
+              style={{ objectPosition: scene.position || 'center' }}
             />
           )}
         </div>
@@ -106,7 +99,7 @@ const ProcessPlaceholder = ({ activeScene, poster, reducedMotion }) => {
 
 const OurCreativeProcess = ({
   className = '',
-  poster = creativeConsulting720,
+  poster = productionPhotos.productionKit.srcSmall,
   videoSrc = null,
   videoType = 'video/webm',
 }) => {
@@ -234,8 +227,8 @@ const OurCreativeProcess = ({
         </ol>
 
         <p id="creative-process-visual-description" className="sr-only">
-          A visual sequence showing Akrion&apos;s process from research and moodboards through
-          interface design, production, and finished brand work.
+          A visual sequence of real Akrion production photography and project work,
+          from preparation through brand identity, digital work, production, and delivery.
         </p>
       </div>
     </motion.article>

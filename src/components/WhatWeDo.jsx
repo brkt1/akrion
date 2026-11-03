@@ -8,16 +8,14 @@ import {
 import { Link } from 'react-router-dom'
 import { findServiceRecord, serviceStories } from '../data/servicesContent'
 import { servicesAPI } from '../lib/api/services'
-import brandIdentityImage720 from '../assets/services/service-brand-identity-720.webp'
-import brandIdentityImage1200 from '../assets/services/service-brand-identity-1200.webp'
-import webDevelopmentImage720 from '../assets/services/service-web-development-720.webp'
-import webDevelopmentImage1200 from '../assets/services/service-web-development-1200.webp'
-import videoMotionImage720 from '../assets/services/service-video-motion-720.webp'
-import videoMotionImage1200 from '../assets/services/service-video-motion-1200.webp'
-import socialMediaImage720 from '../assets/services/service-social-media-720.webp'
-import socialMediaImage1200 from '../assets/services/service-social-media-1200.webp'
-import creativeConsultingImage720 from '../assets/services/service-creative-consulting-720.webp'
-import creativeConsultingImage1200 from '../assets/services/service-creative-consulting-1200.webp'
+import { agencyServiceVisuals } from '../data/agencyVisuals'
+
+const visualProps = (visual) => ({
+  image: visual.small, imageLarge: visual.large, alt: visual.alt,
+  width: visual.width, height: visual.height,
+  smallWidth: visual.smallWidth, largeWidth: visual.largeWidth,
+  position: visual.position, fit: visual.fit,
+})
 
 const defaultServices = [
   {
@@ -25,27 +23,21 @@ const defaultServices = [
     number: '01',
     name: 'Brand Identity',
     description: 'Logos, visual systems, brand guidelines that make you unmistakable.',
-    image: brandIdentityImage720,
-    imageLarge: brandIdentityImage1200,
-    alt: 'Premium brand identity system with packaging, mark studies, and emerald-and-gold color swatches',
+    ...visualProps(agencyServiceVisuals.brand),
   },
   {
     id: 'web-development',
     number: '02',
     name: 'Web Development',
     description: 'Websites and apps that convert visitors into customers.',
-    image: webDevelopmentImage720,
-    imageLarge: webDevelopmentImage1200,
-    alt: 'Desktop and mobile interface mockups demonstrating responsive web development',
+    ...visualProps(agencyServiceVisuals.web),
   },
   {
     id: 'video-motion',
     number: '03',
     name: 'Video & Motion',
     description: 'Cinematic content that makes people stop scrolling.',
-    image: videoMotionImage720,
-    imageLarge: videoMotionImage1200,
-    alt: 'Cinematic video editing and motion-design workstation with an abstract production timeline',
+    ...visualProps(agencyServiceVisuals.video),
     showPlayMark: true,
   },
   {
@@ -53,18 +45,14 @@ const defaultServices = [
     number: '04',
     name: 'Social Media',
     description: 'Strategy, content & community management that grows your audience.',
-    image: socialMediaImage720,
-    imageLarge: socialMediaImage1200,
-    alt: 'Original social media post, carousel, and vertical video content mockups',
+    ...visualProps(agencyServiceVisuals.social),
   },
   {
     id: 'creative-consulting',
     number: '05',
     name: 'Creative Consulting',
     description: 'Strategic guidance to position, launch, and scale your brand.',
-    image: creativeConsultingImage720,
-    imageLarge: creativeConsultingImage1200,
-    alt: 'Creative strategy workshop table with campaign sketches, notes, and color planning',
+    ...visualProps(agencyServiceVisuals.consulting),
   },
 ]
 
@@ -256,15 +244,16 @@ const WhatWeDo = () => {
                     <img
                       className="service-panel-image absolute inset-0 h-full w-full object-cover"
                       src={service.image}
-                      srcSet={`${service.image} 720w, ${service.imageLarge} 1200w`}
+                      srcSet={`${service.image} ${service.smallWidth}w, ${service.imageLarge} ${service.largeWidth}w`}
                       sizes={isActive
                         ? '(min-width: 1280px) 55vw, (min-width: 768px) 50vw, 100vw'
                         : '(min-width: 1280px) 18vw, (min-width: 768px) 50vw, 100vw'}
-                      width="1200"
-                      height="800"
+                      width={service.width}
+                      height={service.height}
                       loading="lazy"
                       decoding="async"
                       alt={service.alt}
+                      style={{ objectPosition: service.position, objectFit: service.fit || 'cover' }}
                     />
                     <div aria-hidden="true" className="service-panel-overlay absolute inset-0" />
                     <div aria-hidden="true" className="eth-pattern-subtle absolute inset-0 opacity-[0.12] mix-blend-screen" />

@@ -7,18 +7,7 @@ import {
 } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import brandIdentity1200 from '../assets/services/service-brand-identity-1200.webp'
-import brandIdentity720 from '../assets/services/service-brand-identity-720.webp'
-import creativeConsulting1200 from '../assets/services/service-creative-consulting-1200.webp'
-import creativeConsulting720 from '../assets/services/service-creative-consulting-720.webp'
-import socialMedia1200 from '../assets/services/service-social-media-1200.webp'
-import socialMedia720 from '../assets/services/service-social-media-720.webp'
-import videoMotion1200 from '../assets/services/service-video-motion-1200.webp'
-import videoMotion720 from '../assets/services/service-video-motion-720.webp'
-import webDevelopment1200 from '../assets/services/service-web-development-1200.webp'
-import webDevelopment720 from '../assets/services/service-web-development-720.webp'
-import documentaryFilm1400 from '../assets/portfolio/documentary-film-1400.webp'
-import documentaryFilm720 from '../assets/portfolio/documentary-film-720.webp'
+import { productionPhotos } from '../data/productionPhotos'
 import Footer from './Footer'
 import Header from './Header'
 import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
@@ -26,68 +15,14 @@ import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
 const HERO_ROTATION_MS = 6200
 const PROCESS_ROTATION_MS = 6000
 
-// Replace these responsive image pairs with real Akrion project work as it becomes available.
+// Real production photography in the existing collage and process layout.
 const projectVisuals = [
-  {
-    id: 'brand-identity',
-    small: brandIdentity720,
-    large: brandIdentity1200,
-    largeWidth: 1200,
-    width: 1200,
-    height: 800,
-    position: 'center 48%',
-    alt: 'Placeholder brand identity and packaging system in Akrion’s emerald and gold palette',
-  },
-  {
-    id: 'web-design',
-    small: webDevelopment720,
-    large: webDevelopment1200,
-    largeWidth: 1200,
-    width: 1200,
-    height: 800,
-    position: '58% center',
-    alt: 'Placeholder responsive website and application interface shown on desktop and mobile screens',
-  },
-  {
-    id: 'video-production',
-    small: documentaryFilm720,
-    large: documentaryFilm1400,
-    largeWidth: 1400,
-    width: 1400,
-    height: 788,
-    position: 'center 46%',
-    alt: 'Placeholder Akrion video-production still from an Ethiopian documentary project',
-  },
-  {
-    id: 'social-media',
-    small: socialMedia720,
-    large: socialMedia1200,
-    largeWidth: 1200,
-    width: 1200,
-    height: 800,
-    position: '60% center',
-    alt: 'Placeholder social-media campaign with coordinated post, carousel, and mobile content designs',
-  },
-  {
-    id: 'motion-design',
-    small: videoMotion720,
-    large: videoMotion1200,
-    largeWidth: 1200,
-    width: 1200,
-    height: 800,
-    position: '58% center',
-    alt: 'Placeholder motion-design and video-editing workstation with a branded animation timeline',
-  },
-  {
-    id: 'creative-strategy',
-    small: creativeConsulting720,
-    large: creativeConsulting1200,
-    largeWidth: 1200,
-    width: 1200,
-    height: 800,
-    position: 'center 46%',
-    alt: 'Placeholder creative strategy workshop with moodboards, sketches, and material studies',
-  },
+  productionPhotos.onLocation,
+  productionPhotos.interviewSet,
+  productionPhotos.warmLighting,
+  productionPhotos.eventCoverage,
+  productionPhotos.sceneSetup,
+  productionPhotos.productionKit,
 ]
 
 const heroVisualIndexes = [0, 1, 2, 3]

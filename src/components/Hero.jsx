@@ -9,69 +9,23 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
 import logo from '../assets/brand/akrion-mark-gold.png'
-import brandIdentityLarge from '../assets/services/service-brand-identity-1200.webp'
-import brandIdentitySmall from '../assets/services/service-brand-identity-720.webp'
-import webDevelopmentLarge from '../assets/services/service-web-development-1200.webp'
-import webDevelopmentSmall from '../assets/services/service-web-development-720.webp'
-import videoProductionLarge from '../assets/portfolio/documentary-film-1400.webp'
-import videoProductionSmall from '../assets/portfolio/documentary-film-720.webp'
-import videoMotionLarge from '../assets/services/service-video-motion-1200.webp'
-import videoMotionSmall from '../assets/services/service-video-motion-720.webp'
-import socialMediaLarge from '../assets/services/service-social-media-1200.webp'
-import socialMediaSmall from '../assets/services/service-social-media-720.webp'
+import { productionPhotos } from '../data/productionPhotos'
 
 const GOLD = '#C9A170'
 const CREAM = '#F5EDD8'
 const HERO_BACKGROUND_INTERVAL = 6500
 
-// Replace either responsive image pair below when real Akrion project imagery is ready.
+// Real owner-supplied production photos; existing timing, overlays and layout
+// are unchanged. Only the first responsive image is preloaded.
 const heroBackgrounds = [
-  {
-    id: 'brand-identity-and-packaging',
-    src: brandIdentityLarge,
-    srcSet: `${brandIdentitySmall} 720w, ${brandIdentityLarge} 1200w`,
-    position: 'center 48%',
-    mobilePosition: '61% center',
-    panFrom: '-0.45%',
-    panTo: '0.45%',
-  },
-  {
-    id: 'website-and-application-design',
-    src: webDevelopmentLarge,
-    srcSet: `${webDevelopmentSmall} 720w, ${webDevelopmentLarge} 1200w`,
-    position: '58% center',
-    mobilePosition: '57% center',
-    panFrom: '0.5%',
-    panTo: '-0.4%',
-  },
-  {
-    id: 'video-production',
-    src: videoProductionLarge,
-    srcSet: `${videoProductionSmall} 720w, ${videoProductionLarge} 1400w`,
-    position: 'center 46%',
-    mobilePosition: '45% center',
-    panFrom: '-0.35%',
-    panTo: '0.5%',
-  },
-  {
-    id: 'motion-design',
-    src: videoMotionLarge,
-    srcSet: `${videoMotionSmall} 720w, ${videoMotionLarge} 1200w`,
-    position: '58% center',
-    mobilePosition: '60% center',
-    panFrom: '0.45%',
-    panTo: '-0.5%',
-  },
-  {
-    id: 'social-media-campaigns',
-    src: socialMediaLarge,
-    srcSet: `${socialMediaSmall} 720w, ${socialMediaLarge} 1200w`,
-    position: '56% center',
-    mobilePosition: '70% center',
-    panFrom: '-0.4%',
-    panTo: '0.45%',
-  },
-]
+  productionPhotos.warmLighting, productionPhotos.onLocation,
+  productionPhotos.productionKit, productionPhotos.interviewSet,
+  productionPhotos.interviewMonitors,
+].map((photo, index) => ({
+  ...photo, mobilePosition: photo.position,
+  panFrom: index % 2 ? '0.45%' : '-0.45%',
+  panTo: index % 2 ? '-0.45%' : '0.45%',
+}))
 
 const particles = [
   { size: 2, top: '15%', left: '10%', color: GOLD, depth: 7, delay: 0 },
@@ -116,10 +70,12 @@ const ShowreelPlaceholder = () => (
   <div
     className="showreel-card group relative aspect-video w-full overflow-hidden rounded-[1.5rem] border border-[rgba(201,161,112,0.30)] bg-bg-card shadow-[0_24px_70px_rgba(0,0,0,0.34),0_0_42px_rgba(201,161,112,0.07)] transition-all duration-500 ease-out hover:-translate-y-1 hover:border-[rgba(201,161,112,0.62)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.42),0_0_52px_rgba(201,161,112,0.14)] motion-reduce:transform-none"
     role="img"
-    aria-label="Akrion Digitals YouTube showreel placeholder"
+    aria-label="Behind the scenes of an Akrion interview production. YouTube showreel coming soon."
   >
     {/* Replace this placeholder content with a responsive YouTube iframe when the showreel URL is ready. */}
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_22%,rgba(201,161,112,0.24),transparent_32%),linear-gradient(135deg,#173621_0%,#0D1F13_52%,#09160E_100%)]" />
+    <img src={productionPhotos.interviewMonitors.src} srcSet={productionPhotos.interviewMonitors.srcSet} sizes="(min-width: 1024px) 48vw, 100vw" width="1200" height="1600" alt="" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-70" style={{ objectPosition: productionPhotos.interviewMonitors.position }} />
+    <div className="absolute inset-0 bg-gradient-to-t from-[#071A0F]/85 via-[#071A0F]/20 to-[#071A0F]/25" />
     <div className="eth-pattern absolute -right-12 -top-10 h-56 w-56 rotate-12 opacity-25" />
     <div className="dot-grid absolute inset-0 opacity-30" />
     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-gold/70 to-transparent" />

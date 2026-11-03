@@ -6,10 +6,7 @@ import {
   motion,
   useReducedMotion,
 } from 'framer-motion'
-import socialMedia1200 from '../assets/services/service-social-media-1200.webp'
-import socialMedia720 from '../assets/services/service-social-media-720.webp'
-import webDevelopment1200 from '../assets/services/service-web-development-1200.webp'
-import webDevelopment720 from '../assets/services/service-web-development-720.webp'
+import { productionPhotos } from '../data/productionPhotos'
 import benediktaFoundation1200 from '../assets/portfolio/benedikta-foundation-1200.webp'
 import benediktaFoundation720 from '../assets/portfolio/benedikta-foundation-720.webp'
 import documentaryFilm1400 from '../assets/portfolio/documentary-film-1400.webp'
@@ -38,14 +35,10 @@ const REASONS = [
     title: 'ONE CONNECTED TEAM',
     description: 'Branding, websites, applications, social media, video, and motion—planned and executed as one connected experience.',
     visual: {
-      src: webDevelopment720,
-      srcSet: `${webDevelopment720} 720w, ${webDevelopment1200} 1200w`,
-      width: 720,
-      height: 480,
-      alt: 'Branded concept visual showing a responsive emerald and cream digital experience on desktop and mobile.',
-      caption: 'Digital Experiences',
-      context: 'Concept visual · replaceable media',
-      objectPosition: 'center',
+      ...productionPhotos.onLocation,
+      caption: 'Production on Location',
+      context: 'Akrion behind the scenes',
+      objectPosition: productionPhotos.onLocation.position,
     },
   },
   {
@@ -70,14 +63,10 @@ const REASONS = [
     title: 'CREATIVITY BUILT TO PERFORM',
     description: 'We create work that does more than attract attention. It builds clarity, trust, action, and sustainable growth.',
     visual: {
-      src: socialMedia720,
-      srcSet: `${socialMedia720} 720w, ${socialMedia1200} 1200w`,
-      width: 720,
-      height: 480,
-      alt: 'Branded concept visual showing a coordinated emerald, cream, and gold social media system.',
-      caption: 'Social Media Systems',
-      context: 'Concept visual · replaceable media',
-      objectPosition: 'center',
+      ...productionPhotos.interviewSet,
+      caption: 'Content Production',
+      context: 'Akrion behind the scenes',
+      objectPosition: productionPhotos.interviewSet.position,
     },
   },
 ]

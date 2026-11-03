@@ -1,14 +1,8 @@
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { useRef } from 'react'
-import teamImage1200 from '../assets/akrion-team-placeholder-1200.webp'
-import teamImage768 from '../assets/akrion-team-placeholder-768.webp'
+import { productionPhotos } from '../data/productionPhotos'
 
-// Replace these two imports with optimized versions of the real Akrion team photo when ready.
-const teamImage = {
-  src: teamImage1200,
-  srcSet: `${teamImage768} 768w, ${teamImage1200} 1200w`,
-  alt: 'Ethiopian creative professionals collaborating on design and filming concepts in a studio',
-}
+const teamImage = productionPhotos.onLocation
 
 const WhoWeAreImage = ({ imageUrl, imageAlt }) => {
   const frameRef = useRef(null)
@@ -31,12 +25,13 @@ const WhoWeAreImage = ({ imageUrl, imageAlt }) => {
           src={imageUrl || teamImage.src}
           srcSet={imageUrl ? undefined : teamImage.srcSet}
           sizes="(min-width: 1400px) 660px, (min-width: 1024px) 45vw, calc(100vw - 2rem)"
-          width="1200"
-          height="800"
+          width={teamImage.width}
+          height={teamImage.height}
           loading="lazy"
           decoding="async"
           alt={imageAlt || teamImage.alt}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025] motion-reduce:transform-none"
+          style={{ objectPosition: imageUrl ? 'center' : teamImage.position }}
         />
 
         <div className="who-we-are-image-overlay pointer-events-none absolute -inset-5" />

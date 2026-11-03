@@ -10,7 +10,7 @@ const ResponsiveImage = ({ media, className = '', loading = 'lazy', sizes = '100
 
 const MediaThumbnail = ({ item }) => {
   const [failed, setFailed] = useState(false)
-  const src = item.type === 'video' ? item.thumbnail : item.src
+  const src = item.type === 'video' ? item.thumbnail : item.thumbnail || item.src
   useEffect(() => { setFailed(false) }, [src])
   const srcSet = item.type === 'image' && item.srcSmall && item.smallWidth && item.width ? `${item.srcSmall} ${item.smallWidth}w, ${src} ${item.width}w` : undefined
   return src && !failed ? <img src={src} srcSet={srcSet} sizes={srcSet ? '(min-width: 900px) 48vw, 100vw' : undefined} width={item.width || undefined} height={item.height || undefined} alt={item.type === 'video' ? '' : item.alt} onError={() => setFailed(true)} className="portfolio-case-gallery-image" loading="lazy" decoding="async" /> : <span className="portfolio-media-thumbnail-fallback" aria-hidden="true">{item.title.charAt(0)}</span>

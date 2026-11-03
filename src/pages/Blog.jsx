@@ -204,7 +204,7 @@ const Blog = () => {
             </div>
 
             <ScrollAnimation className="blog-hero-visual" animation="fadeLeft" delay={0.18} respectReducedMotion>
-              <div className="blog-hero-collage" role="img" aria-label="Akrion creative work across branding, content, web design, marketing, and production">
+              <div className="blog-hero-collage" role="img" aria-label="Real behind-the-scenes Akrion photography showing cameras, interview production, filming on location, and event coverage">
                 {blogHeroMedia.map((media, index) => <HeroCollageImage key={media.src} media={media} index={index} />)}
               </div>
             </ScrollAnimation>

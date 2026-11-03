@@ -12,6 +12,10 @@ export const installFixtures = async (page, { admin = false } = {}) => {
   page.on('pageerror', (error) => console.error(`Browser exception: ${error.message}`))
   let records = makeRecords()
   const writes = []
+  // Keep local UI checks deterministic when the external font CDN is slow.
+  // Production still loads the existing brand fonts normally.
+  await page.route('https://fonts.googleapis.com/**', (route) => route.fulfill({ contentType: 'text/css', body: '' }))
+  await page.route('https://fonts.gstatic.com/**', (route) => route.abort())
   const image = await readFile(new URL('../../src/assets/services/service-brand-identity-720.webp', import.meta.url))
   const user = { id: '11111111-1111-4111-8111-111111111111', aud: 'authenticated', role: 'authenticated', email: 'qa@example.test', app_metadata: { role: 'admin' } }
   if (admin) {
