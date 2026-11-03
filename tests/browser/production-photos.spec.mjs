@@ -77,3 +77,24 @@ test('long albums remain visible on short screens with normal motion enabled', a
   await first.click()
   await expect(page.getByRole('dialog')).toBeVisible()
 })
+
+test('replacing an existing photo clears its previous optimized thumbnail', async ({ page }) => {
+  const fixture = await installFixtures(page, { admin: true })
+  const original = fixture.getRecords()[0].media_items[4]
+  original.thumbnail = 'https://media.example.test/old-thumbnail.webp'
+  await page.goto('/admin/portfolio?edit=501', { waitUntil: 'domcontentloaded' })
+  let row = page.locator('.admin-portfolio-media-item').last()
+  await row.getByRole('textbox', { name: 'Photo URL', exact: true }).fill('https://media.example.test/new-photo.webp')
+  await page.getByRole('button', { name: 'Update project', exact: true }).click()
+  await expect(page.getByText('Project saved with its current workflow status.')).toBeVisible()
+  expect(fixture.writes[0].media_items[4].thumbnail).toBe('')
+
+  fixture.getRecords()[0].media_items[4].thumbnail = 'https://media.example.test/old-thumbnail.webp'
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  row = page.locator('.admin-portfolio-media-item').last()
+  await row.getByLabel('Upload photo', { exact: true }).setInputFiles({ name: 'replacement.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZlqAAAAAASUVORK5CYII=', 'base64') })
+  await expect(row.getByRole('textbox', { name: 'Photo URL', exact: true })).toHaveValue(/storage\/v1\/object\/public/)
+  await page.getByRole('button', { name: 'Update project', exact: true }).click()
+  await expect(page.getByText('Project saved with its current workflow status.')).toBeVisible()
+  expect(fixture.writes[1].media_items[4].thumbnail).toBe('')
+})

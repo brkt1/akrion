@@ -7,7 +7,7 @@ import { AdminField } from './AdminUi'
 const PortfolioMediaEditor = ({ items, onChange, errors = {}, disabled = false, onBusy }) => {
   const [uploadError, setUploadError] = useState(null)
   const [preview, setPreview] = useState(null)
-  const update = (id, field, value) => onChange(items.map((item) => item.id === id ? { ...item, [field]: value, ...(field === 'category' && value === 'reels' ? { orientation: 'portrait' } : {}) } : item))
+  const update = (id, field, value) => onChange(items.map((item) => item.id === id ? { ...item, [field]: value, ...(field === 'category' && value === 'reels' ? { orientation: 'portrait' } : {}), ...(item.type === 'image' && field === 'url' && value !== item.url ? { thumbnail: '' } : {}) } : item))
   const add = (type) => onChange([...items, { id: crypto.randomUUID(), type, category: type === 'image' ? 'photos' : '', title: '', url: '', thumbnail: '', alt: '', caption: '', orientation: 'landscape' }])
   const move = (index, offset) => {
     const next = [...items]
@@ -25,7 +25,7 @@ const PortfolioMediaEditor = ({ items, onChange, errors = {}, disabled = false, 
     onBusy(true)
     try {
       const url = await uploadAPI.uploadImage(file, 'portfolio')
-      onChange(items.map((current) => current.id === item.id ? { ...current, [item.type === 'image' ? 'url' : 'thumbnail']: url, title: current.title || file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ') } : current))
+      onChange(items.map((current) => current.id === item.id ? { ...current, [item.type === 'image' ? 'url' : 'thumbnail']: url, ...(item.type === 'image' ? { thumbnail: '' } : {}), title: current.title || file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ') } : current))
     } catch { setUploadError({ id: item.id, message: 'Upload failed. Check your connection and try again.' }) }
     finally { onBusy(false); event.target.value = '' }
   }
