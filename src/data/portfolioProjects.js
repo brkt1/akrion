@@ -14,6 +14,7 @@ import yenegeEventsLogo720 from '../assets/portfolio/yenege-events-logo-720.webp
 import yenegeEventsLogo480 from '../assets/portfolio/yenege-events-logo-480.webp'
 import { getProjectMedia } from './portfolioMedia'
 import { getProductionPhotoForUrl } from './productionPhotos'
+import { getPortfolioCoverBackup } from './portfolioCoverBackups'
 
 const birhumindsSourceImage =
   'https://gavhkkrnsuisqsjnnaow.supabase.co/storage/v1/object/public/images/portfolio/1777402598274_0jt6rr.jpg'
@@ -347,7 +348,7 @@ export const portfolioProjects = [
   },
 ].map((project) => ({
   ...project,
-  hero: { ...project.hero, fallbackSrc: project.sourceImage },
+  hero: { ...project.hero, fallbackSrc: getPortfolioCoverBackup(project.slug) },
   description: project.summary,
   alt: project.hero.alt,
   image: project.hero.src,

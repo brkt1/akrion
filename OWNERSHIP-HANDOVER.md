@@ -96,6 +96,10 @@ the first two cards and recover from failed or stalled optimized requests using
 the same existing photograph, not unrelated replacement imagery. Known BTS
 photos can recover between the two owned hosting services. Content-hashed
 build assets use immutable browser caching; page HTML remains revalidated.
+`scripts/publish-portfolio-cover-backups.mjs` adds seven lightweight copies of
+the existing verified covers to the image library (under 300 KB combined),
+without changing project records or replacing any existing files. Recovery
+uses these copies instead of downloading the large original uploads.
 
 `scripts/prepare-production-photos.mjs` reproduces the WebP derivatives from
 the owner's JPEGs and losslessly decoded HEIC PNGs; provide a `sharp` module

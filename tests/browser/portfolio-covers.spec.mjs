@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { installFixtures } from './fixtures.mjs'
+import { getPortfolioCoverBackup } from '../../src/data/portfolioCoverBackups.js'
 
 const originalCover = 'https://gavhkkrnsuisqsjnnaow.supabase.co/storage/v1/object/public/images/portfolio/1777418739694_voxqus.png'
+const backupCover = getPortfolioCoverBackup('documentary-film-production')
 const useDocumentary = (fixture) => Object.assign(fixture.getRecords()[0], {
   id: 36, title: 'Documentary Film Production', slug: 'documentary-film-production', image: originalCover,
 })
@@ -31,15 +33,15 @@ for (const width of [320, 375, 390, 430, 768, 1440]) {
   })
 }
 
-test('failed optimized covers recover to the existing original photograph', async ({ page }) => {
+test('failed optimized covers recover to a lightweight copy of the same photograph', async ({ page }) => {
   const fixture = await installFixtures(page)
   useDocumentary(fixture)
   const photo = await readFile(new URL('../../src/assets/portfolio/documentary-film-720.webp', import.meta.url))
   await page.route('**/src/assets/portfolio/documentary-film-*.webp*', (route) => route.request().resourceType() === 'image' ? route.abort('failed') : route.continue())
-  await page.route(originalCover, (route) => route.fulfill({ contentType: 'image/webp', body: photo }))
+  await page.route(backupCover, (route) => route.fulfill({ contentType: 'image/webp', body: photo }))
   await page.goto('/portfolio', { waitUntil: 'domcontentloaded' })
   const cover = page.locator('.portfolio-grid-card-image').first()
-  await expect(cover).toHaveAttribute('src', originalCover)
+  await expect(cover).toHaveAttribute('src', backupCover)
   await expect(cover).toHaveAttribute('data-image-state', 'loaded')
   expect(await cover.getAttribute('srcset')).toBeNull()
   await page.getByRole('link', { name: 'View the Documentary Film Production case study', exact: true }).click()
@@ -57,12 +59,12 @@ test('stalled cover requests recover without waiting for a browser network error
     await stalled
     await route.abort().catch(() => {})
   })
-  await page.route(originalCover, (route) => route.fulfill({ contentType: 'image/webp', body: photo }))
+  await page.route(backupCover, (route) => route.fulfill({ contentType: 'image/webp', body: photo }))
   try {
     await page.goto('/portfolio', { waitUntil: 'domcontentloaded' })
     const cover = page.locator('.portfolio-grid-card-image').first()
     await expect(cover).toHaveAttribute('data-image-state', 'loading')
-    await expect(cover).toHaveAttribute('src', originalCover, { timeout: 12000 })
+    await expect(cover).toHaveAttribute('src', backupCover, { timeout: 12000 })
     await expect(cover).toHaveAttribute('data-image-state', 'loaded')
   } finally { release() }
 })
