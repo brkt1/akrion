@@ -1,4 +1,5 @@
 /* Scoped collection UI; the existing emerald/ivory editorial layout stays intact. */
+.portfolio-image-unavailable { display: grid; place-items: center; padding: 1rem; color: #E2C49A; background: #071A0F; text-align: center; font-size: .85rem; }
 .portfolio-media-filters { display: flex; flex-wrap: wrap; gap: .55rem; min-width: 0; }
 .portfolio-media-filters button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .65rem; max-width: 100%; padding: .65rem 1rem; border: 1px solid rgba(201,161,112,.4); border-radius: 999px; background: rgba(201,161,112,.05); color: #F5EDD8; font-size: .8rem; font-weight: 650; line-height: 1.35; transition: background 250ms ease, border-color 250ms ease; }
 .portfolio-media-filters button span { min-width: 1.3em; opacity: .7; font-size: .72rem; }
@@ -18,6 +19,11 @@
 .portfolio-card-media-count { margin: .8rem 0 0; color: #486052; font-size: .75rem; }
 .portfolio-collection-media-trigger { cursor: pointer; }
 .portfolio-collection-media-trigger .portfolio-case-gallery-image { width: 100%; height: 100%; object-fit: contain; }
+/* Photo frames follow the actual image, including mixed portrait/landscape
+   albums. Do not letterbox a tall photograph inside the video-shaped frame. */
+.portfolio-case-gallery-item[data-media-type='image'] .portfolio-collection-media-trigger { min-height: 0; aspect-ratio: auto; }
+.portfolio-case-gallery-item[data-media-type='image'] .portfolio-case-gallery-image { height: auto; padding: 0; }
+.portfolio-case-gallery-item[data-media-type='image'] .portfolio-image-unavailable { min-height: 12rem; }
 .portfolio-collection-media-play { position: absolute; left: 50%; top: 50%; display: grid; width: 3.5rem; height: 3.5rem; place-items: center; transform: translate(-50%,-50%); border: 1px solid #E2C49A; border-radius: 50%; background: rgba(7,26,15,.85); color: #E2C49A; box-shadow: 0 0 30px #C9A17022; }
 .portfolio-collection-media-label { position: absolute; left: .8rem; bottom: .8rem; max-width: calc(100% - 1.6rem); padding: .35rem .6rem; border-radius: 999px; color: #F5EDD8; background: rgba(7,26,15,.9); font-size: .7rem; }
 .portfolio-media-thumbnail-fallback { display: grid; height: 100%; place-items: center; color: #C9A17033; font-size: 5rem; }

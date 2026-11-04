@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 import { getMediaCategoryLabel, getMediaCounts } from '../../data/portfolioMedia'
+import { getProductionPhotoForUrl } from '../../data/productionPhotos'
 import MediaFilters from './MediaFilters'
 import MediaViewer from './MediaViewer'
-
-const ResponsiveImage = ({ media, className = '', loading = 'lazy', sizes = '100vw', fetchPriority }) => {
-  const srcSet = media.srcSmall && media.smallWidth && media.width ? `${media.srcSmall} ${media.smallWidth}w, ${media.src} ${media.width}w` : undefined
-  return <img src={media.src} srcSet={srcSet} sizes={srcSet ? sizes : undefined} width={media.width || undefined} height={media.height || undefined} alt={media.alt} loading={loading} fetchpriority={fetchPriority} decoding="async" className={className} style={{ '--portfolio-case-image-fit': media.fit || 'cover', '--portfolio-case-image-position': media.position || 'center' }} />
-}
+import ResponsiveImage from './ResponsiveImage'
 
 const MediaThumbnail = ({ item }) => {
   const [failed, setFailed] = useState(false)
   const src = item.type === 'video' ? item.thumbnail : item.thumbnail || item.src
   useEffect(() => { setFailed(false) }, [src])
-  const srcSet = item.type === 'image' && item.srcSmall && item.smallWidth && item.width ? `${item.srcSmall} ${item.smallWidth}w, ${src} ${item.width}w` : undefined
-  return src && !failed ? <img src={src} srcSet={srcSet} sizes={srcSet ? '(min-width: 900px) 48vw, 100vw' : undefined} width={item.width || undefined} height={item.height || undefined} alt={item.type === 'video' ? '' : item.alt} onError={() => setFailed(true)} className="portfolio-case-gallery-image" loading="lazy" decoding="async" /> : <span className="portfolio-media-thumbnail-fallback" aria-hidden="true">{item.title.charAt(0)}</span>
+  if (item.type === 'image' && src) {
+    const photo = getProductionPhotoForUrl(item.src)
+    return <ResponsiveImage media={{
+      src, alt: item.alt, width: item.width || photo?.width, height: item.height || photo?.height,
+      fallbackSrc: src !== item.src ? item.src : photo?.fallbackSrc,
+    }} className="portfolio-case-gallery-image" />
+  }
+  return src && !failed ? <img src={src} alt="" onError={() => setFailed(true)} className="portfolio-case-gallery-image" loading="lazy" decoding="async" /> : <span className="portfolio-media-thumbnail-fallback" aria-hidden="true">{item.title.charAt(0)}</span>
 }
 
 const ProjectGallery = ({ items = [], projectTitle, initialFilter = 'all' }) => {
@@ -27,7 +30,7 @@ const ProjectGallery = ({ items = [], projectTitle, initialFilter = 'all' }) => 
     <p className="portfolio-media-results" role="status">{visibleItems.length} {visibleItems.length === 1 ? 'item' : 'items'}{filter !== 'all' ? ` · ${getMediaCategoryLabel(filter)}` : ''}</p>
     {!visibleItems.length && <div className="portfolio-media-empty"><p>No matching media in this collection.</p><button type="button" onClick={() => selectFilter('all')}>Show all media</button></div>}
     <div className="portfolio-case-gallery" role="group" aria-label={`${projectTitle} project gallery`}>
-      {visibleItems.map((item, index) => <figure key={item.id} className="portfolio-case-gallery-item" data-layout={item.orientation === 'portrait' ? 'portrait' : item.layout || 'standard'}>
+      {visibleItems.map((item, index) => <figure key={item.id} className="portfolio-case-gallery-item" data-media-type={item.type} data-layout={item.orientation === 'portrait' ? 'portrait' : item.layout || 'standard'}>
         <button type="button" className="portfolio-case-gallery-trigger portfolio-collection-media-trigger group" aria-label={`${item.type === 'video' ? 'Watch' : 'View'} ${item.title}`} onClick={() => setActiveIndex(index)}>
           <MediaThumbnail item={item} />
           <span className="portfolio-collection-media-play" aria-hidden="true">{item.type === 'video' ? '▶' : '↗'}</span>

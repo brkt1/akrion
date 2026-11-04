@@ -46,7 +46,8 @@ test('supports photo viewing, switching media, and reduced motion', async ({ pag
 test('admin saves a multi-video company collection, supports ordering and photo upload', async ({ page }) => {
   const fixture = await installFixtures(page, { admin: true })
   await page.goto('/admin/portfolio?edit=501')
-  await expect(page.getByLabel('Collection type', { exact: true })).toHaveValue('company')
+  // The first admin visit also compiles its lazy-loaded module in Vite.
+  await expect(page.getByLabel('Collection type', { exact: true })).toHaveValue('company', { timeout: 30000 })
   await expect(page.locator('.admin-portfolio-media-item')).toHaveCount(5)
   await page.getByRole('button', { name: '+ Add video', exact: true }).click()
   const row = page.locator('.admin-portfolio-media-item').last()

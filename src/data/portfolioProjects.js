@@ -35,6 +35,7 @@ const createMedia = ({
     width: width || productionPhoto?.width, height: height || productionPhoto?.height,
     alt: alt || productionPhoto?.alt, fit,
     position: productionPhoto?.position || position,
+    fallbackSrc: productionPhoto?.fallbackSrc,
   }
 }
 
@@ -346,6 +347,7 @@ export const portfolioProjects = [
   },
 ].map((project) => ({
   ...project,
+  hero: { ...project.hero, fallbackSrc: project.sourceImage },
   description: project.summary,
   alt: project.hero.alt,
   image: project.hero.src,

@@ -56,6 +56,8 @@ test('CMS photos keep their portrait dimensions without affecting custom uploads
   const stored = getProductionPhotoForUrl('https://gavhkkrnsuisqsjnnaow.supabase.co/storage/v1/object/public/images/portfolio/akrion-bts-on-location-1200.webp')
   assert.equal(stored.width, 1200)
   assert.match(stored.srcSmall, /-720.webp$/)
+  assert.equal(stored.fallbackSrc, productionPhotos.onLocation.srcSmall)
+  assert.match(local.fallbackSrc, /^https:\/\/gavhkkrnsuisqsjnnaow\.supabase\.co\/storage\//)
   assert.equal(getProductionPhotoForUrl('https://other.test/images/production/akrion-bts-on-location-1200.webp'), null)
   assert.equal(getProductionPhotoForUrl('https://www.akriondigitals.com/other/akrion-bts-on-location-1200.webp'), null)
 })

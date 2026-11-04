@@ -42,7 +42,7 @@ const getCardGridClassName = (project, index, total) => {
   return classNames.join(' ')
 }
 
-const CaseStudyCard = ({ project, onWatch, filter }) => {
+const CaseStudyCard = ({ project, onWatch, filter, priority }) => {
   const cardRef = useRef(null)
   const tiltFrameRef = useRef(null)
   const result = project.result?.statement
@@ -114,6 +114,8 @@ const CaseStudyCard = ({ project, onWatch, filter }) => {
           {project.hero ? (
             <ResponsiveImage
               media={project.hero}
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : undefined}
               sizes={project.featured
                 ? '(min-width: 1100px) 64vw, (min-width: 640px) 96vw, 100vw'
                 : '(min-width: 1100px) 31vw, (min-width: 640px) 48vw, 100vw'}
@@ -254,7 +256,7 @@ const Portfolio = () => {
                   key={project.slug}
                   className={getCardGridClassName(project, index, filteredProjects.length)}
                 >
-                  <CaseStudyCard project={project} onWatch={setPreview} filter={filter} />
+                  <CaseStudyCard project={project} onWatch={setPreview} filter={filter} priority={index < 2} />
                 </div>
               ))}
             </div>

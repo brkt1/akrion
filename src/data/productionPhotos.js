@@ -54,6 +54,12 @@ export const getProductionPhotoForUrl = (value) => {
     if (!match) return null
     const small = new URL(url.href)
     small.pathname = small.pathname.replace('-1200.webp', '-720.webp')
-    return { ...match, src: value, srcSmall: String(value).startsWith('/') ? small.pathname : small.href }
+    // The same optimized photograph is hosted on both owned services. If one
+    // image CDN stalls, the portfolio can recover from the other without
+    // substituting unrelated work or altering the owner's chosen cover.
+    const fallbackSrc = url.origin === 'https://gavhkkrnsuisqsjnnaow.supabase.co'
+      ? match.srcSmall
+      : `https://gavhkkrnsuisqsjnnaow.supabase.co/storage/v1/object/public/images/portfolio/${match.srcSmall.split('/').pop()}`
+    return { ...match, src: value, srcSmall: String(value).startsWith('/') ? small.pathname : small.href, fallbackSrc }
   } catch { return null }
 }

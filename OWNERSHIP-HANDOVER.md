@@ -1,6 +1,6 @@
 # Akrion deployment handover
 
-Updated 3 November 2026.
+Updated 5 November 2026.
 
 ## Live deployment
 
@@ -88,6 +88,14 @@ The same optimized files are available in the existing Supabase image library.
 thumbnails and uncropped full-image viewing. No client, project year, result,
 testimonial or performance metric is inferred for these mixed productions.
 The collection uses the existing Photos content type and Production/BTS tags.
+
+Portfolio photo-gallery frames now follow each photograph's intrinsic aspect
+ratio, without wide letterboxing or cropping portrait photos. Video frames
+and the full-image viewer keep their existing behavior. Cover images prioritize
+the first two cards and recover from failed or stalled optimized requests using
+the same existing photograph, not unrelated replacement imagery. Known BTS
+photos can recover between the two owned hosting services. Content-hashed
+build assets use immutable browser caching; page HTML remains revalidated.
 
 `scripts/prepare-production-photos.mjs` reproduces the WebP derivatives from
 the owner's JPEGs and losslessly decoded HEIC PNGs; provide a `sharp` module
