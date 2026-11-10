@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Footer from '../components/Footer'
-import Header from '../components/Header'
 import { ResponsiveImage } from '../components/portfolio/ProjectGallery'
 import MediaFilters from '../components/portfolio/MediaFilters'
 import MediaViewer from '../components/portfolio/MediaViewer'
@@ -217,7 +216,6 @@ const Portfolio = () => {
 
   return (
     <>
-      <Header />
       <main className="relative min-h-screen overflow-hidden" style={{ background: '#0D1F13' }}>
         <div className="dot-grid pointer-events-none fixed inset-0 z-0 opacity-30" />
         <div className="pointer-events-none fixed bottom-0 right-0 z-0 h-[600px] w-[600px] rounded-full blur-[160px]" style={{ background: 'rgba(245,237,216,0.03)' }} />

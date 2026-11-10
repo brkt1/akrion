@@ -1,6 +1,7 @@
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { useRef } from 'react'
 import { productionPhotos } from '../data/productionPhotos'
+import ResponsiveImage from './portfolio/ResponsiveImage'
 
 const teamImage = productionPhotos.onLocation
 
@@ -8,12 +9,15 @@ const WhoWeAreImage = ({ imageUrl, imageAlt }) => {
   const frameRef = useRef(null)
   const isInView = useInView(frameRef, { once: true, amount: 0.25 })
   const shouldReduceMotion = useReducedMotion()
+  const image = imageUrl
+    ? { src: imageUrl, fallbackSrc: teamImage.srcTiny, alt: imageAlt || 'Akrion Digitals' }
+    : { ...teamImage, alt: imageAlt || teamImage.alt }
 
   return (
     <motion.div
       ref={frameRef}
       initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+      animate={shouldReduceMotion || isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
       transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="relative py-1"
     >
@@ -21,15 +25,9 @@ const WhoWeAreImage = ({ imageUrl, imageAlt }) => {
       <div className="eth-corner pointer-events-none absolute -bottom-3 right-4 h-20 w-20 rotate-180 opacity-30" />
 
       <figure className="who-we-are-image-frame group relative aspect-[3/2] w-full overflow-hidden rounded-[1.35rem] border bg-bg-card sm:rounded-[1.6rem]">
-        <img
-          src={imageUrl || teamImage.src}
-          srcSet={imageUrl ? undefined : teamImage.srcSet}
+        <ResponsiveImage
+          media={image}
           sizes="(min-width: 1400px) 660px, (min-width: 1024px) 45vw, calc(100vw - 2rem)"
-          width={teamImage.width}
-          height={teamImage.height}
-          loading="lazy"
-          decoding="async"
-          alt={imageAlt || teamImage.alt}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025] motion-reduce:transform-none"
           style={{ objectPosition: imageUrl ? 'center' : teamImage.position }}
         />

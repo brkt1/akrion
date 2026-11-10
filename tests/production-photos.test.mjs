@@ -21,11 +21,12 @@ test('real BTS photography has unique identities and meaningful descriptions', (
 test('every photo has lightweight WebP sizes without EXIF/GPS or XMP metadata', async () => {
   let total = 0
   for (const photo of productionGallery) {
-    for (const src of [photo.srcSmall, photo.src]) {
+    for (const src of [photo.srcTiny, photo.srcSmall, photo.src]) {
       const file = await readFile(new URL(`../public${src}`, import.meta.url))
       assert.equal(file.toString('ascii', 0, 4), 'RIFF')
       assert.equal(file.toString('ascii', 8, 12), 'WEBP')
       assert.ok(file.length < 250 * 1024)
+      if (src === photo.srcTiny) assert.ok(file.length < 45 * 1024)
       for (let offset = 12; offset + 8 <= file.length;) {
         const chunk = file.toString('ascii', offset, offset + 4)
         assert.ok(!['EXIF', 'XMP '].includes(chunk))
@@ -35,7 +36,7 @@ test('every photo has lightweight WebP sizes without EXIF/GPS or XMP metadata', 
       total += file.length
     }
   }
-  assert.ok(total < 2 * 1024 * 1024)
+  assert.ok(total < 2.4 * 1024 * 1024)
 })
 
 test('BTS photographs use the existing editable media collection format', () => {

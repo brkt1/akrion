@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import logo from '../assets/brand/akrion-mark-gold.png'
+import logo from '../assets/brand/akrion-mark-gold-240.webp'
 import TiletDivider from './TiletDivider'
 import { safeContentUrl, useContactSettings, useSiteSettings } from '../lib/publishedContent'
 

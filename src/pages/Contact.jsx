@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import Footer from '../components/Footer'
-import Header from '../components/Header'
 import PageMeta from '../components/PageMeta'
 import ScrollAnimation from '../components/ScrollAnimation'
 import { useContactSettings } from '../lib/publishedContent'
@@ -223,7 +222,6 @@ const Contact = () => {
         description="Tell Akrion Digitals what you are building and continue the conversation on WhatsApp. Brand, web, motion, social media, and creative consulting in Addis Ababa."
         path="/contact"
       />
-      <Header />
 
       <main className="contact-page">
         <section className="contact-page-hero" aria-labelledby="contact-page-title">

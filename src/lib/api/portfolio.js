@@ -1,4 +1,4 @@
-import { supabase } from '../supabase'
+import { loadSupabase } from '../loadSupabase'
 import { serializeMediaItems } from '../../data/portfolioMedia'
 
 const isLegacyWorkflowSchemaError = (error) => {
@@ -9,11 +9,13 @@ const isLegacyWorkflowSchemaError = (error) => {
     || /(?:column|field).*(?:status|archived_at|sort_order).*(?:does not exist|schema cache)/i.test(message)
 }
 
-const getAllPortfolioProjects = async () => {
-  const { data, error } = await supabase
+const getAllPortfolioProjects = async (signal) => {
+  const supabase = await loadSupabase()
+  const query = supabase
     .from('portfolio_projects')
     .select('*')
     .order('created_at', { ascending: false })
+  const { data, error } = await (signal ? query.abortSignal(signal) : query)
 
   if (error) {
     console.error('Error fetching portfolio projects:', error)
@@ -22,7 +24,8 @@ const getAllPortfolioProjects = async () => {
   return data || []
 }
 
-const getPublishedPortfolioProjectsResult = async () => {
+const fetchPublishedPortfolioProjects = async (signal) => {
+  const supabase = await loadSupabase()
   const { data, error } = await supabase
     .from('portfolio_projects')
     .select('*')
@@ -30,14 +33,44 @@ const getPublishedPortfolioProjectsResult = async () => {
     .is('archived_at', null)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
+    .abortSignal(signal)
 
   if (!error) return { data: data || [], workflow: 'advanced' }
   if (isLegacyWorkflowSchemaError(error)) {
-    return { data: await getAllPortfolioProjects(), workflow: 'legacy' }
+    return { data: await getAllPortfolioProjects(signal), workflow: 'legacy' }
   }
 
   console.error('Error fetching published portfolio projects:', error)
   throw error
+}
+
+let publishedRequest
+let publishedResult
+let publishedUntil = 0
+
+const invalidatePublishedProjects = () => {
+  publishedResult = undefined
+  publishedRequest = undefined
+  publishedUntil = 0
+}
+
+const getPublishedPortfolioProjectsResult = async () => {
+  if (publishedResult && Date.now() < publishedUntil) return publishedResult
+  if (publishedRequest) return publishedRequest
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 8000)
+  const request = fetchPublishedPortfolioProjects(controller.signal).then(result => {
+    if (publishedRequest === request) {
+      publishedResult = result
+      publishedUntil = Date.now() + 15000
+    }
+    return result
+  }).finally(() => {
+    clearTimeout(timeout)
+    if (publishedRequest === request) publishedRequest = undefined
+  })
+  publishedRequest = request
+  return request
 }
 
 const buildPortfolioPayload = (project) => {
@@ -116,6 +149,7 @@ export const portfolioAPI = {
 
   // Get a single project by ID
   async getById(id) {
+    const supabase = await loadSupabase()
     const { data, error } = await supabase
       .from('portfolio_projects')
       .select('*')
@@ -131,6 +165,7 @@ export const portfolioAPI = {
 
   // Create a new project
   async create(project) {
+    const supabase = await loadSupabase()
     const { data, error } = await supabase
       .from('portfolio_projects')
       .insert([buildPortfolioPayload(project)])
@@ -141,11 +176,13 @@ export const portfolioAPI = {
       console.error('Error creating portfolio project:', error)
       throw error
     }
+    invalidatePublishedProjects()
     return data
   },
 
   // Update a project
   async update(id, project) {
+    const supabase = await loadSupabase()
     const { data, error } = await supabase
       .from('portfolio_projects')
       .update({
@@ -160,11 +197,13 @@ export const portfolioAPI = {
       console.error('Error updating portfolio project:', error)
       throw error
     }
+    invalidatePublishedProjects()
     return data
   },
 
   // Delete a project
   async delete(id) {
+    const supabase = await loadSupabase()
     const { error } = await supabase
       .from('portfolio_projects')
       .delete()
@@ -174,6 +213,7 @@ export const portfolioAPI = {
       console.error('Error deleting portfolio project:', error)
       throw error
     }
+    invalidatePublishedProjects()
     return true
   }
 }

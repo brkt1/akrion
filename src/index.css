@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: Inter;
+  src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Outfit;
+  src: url('@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+.route-loading {
+  min-height: 70svh;
+  display: grid;
+  place-items: center;
+  padding: 6rem 1rem 2rem;
+  color: #E2C49A;
+}
+
 /* ═══════════════════════════════════════════════════════
    DESIGN SYSTEM – AKRION DIGITALS
    Deep Forest Green × Warm Gold/Copper — Ethiopian Brand

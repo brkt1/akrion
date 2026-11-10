@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { warmPublicRoute } from '../lib/publicRoutes'
 
 const icons = {
   home: (
@@ -40,6 +41,7 @@ const MobileBottomNav = () => {
             <Link
               key={item.path}
               to={item.path}
+              onFocus={() => { if (!active) warmPublicRoute(item.path) }}
               className={`mobile-bottom-nav__item${active ? ' is-active' : ''}`}
               aria-current={active ? 'page' : undefined}
             >

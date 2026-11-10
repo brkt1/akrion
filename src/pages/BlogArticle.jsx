@@ -2,7 +2,6 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Footer from '../components/Footer'
-import Header from '../components/Header'
 import PageMeta from '../components/PageMeta'
 import ResponsiveArticleImage from '../components/blog/ResponsiveArticleImage'
 import {
@@ -87,12 +86,6 @@ const BlogArticle = () => {
     setLoading(!canonicalArticle)
     setLoadError(false)
 
-    const root = document.documentElement
-    const previousScrollBehavior = root.style.scrollBehavior
-    root.style.scrollBehavior = 'auto'
-    window.scrollTo({ top: 0, behavior: 'auto' })
-    root.style.scrollBehavior = previousScrollBehavior
-
     const loadArticle = async () => {
       try {
         const result = await blogAPI.getPublishedResult()
@@ -139,7 +132,6 @@ const BlogArticle = () => {
   if (loading && !article) {
     return (
       <>
-        <Header />
         <PageMeta title="Loading Article | Akrion Digitals" path={`/blog/${slug}/`} noIndex />
         <main
           className="grid min-h-[72svh] place-items-center bg-[#071A0F] px-4 pb-20 pt-32 text-[#F5EDD8]"
@@ -162,7 +154,6 @@ const BlogArticle = () => {
   if (!article && loadError) {
     return (
       <>
-        <Header />
         <PageMeta
           title="Article Temporarily Unavailable | Akrion Digitals"
           description="This article could not be loaded right now."
@@ -208,7 +199,6 @@ const BlogArticle = () => {
   if (!article) {
     return (
       <>
-        <Header />
         <PageMeta
           title="Article Not Found | Akrion Digitals"
           description="Return to the Akrion Digitals blog to explore available articles."
@@ -271,7 +261,6 @@ const BlogArticle = () => {
 
   return (
     <>
-      <Header />
       <PageMeta
         title={article.seo?.title || `${article.title} | Akrion Digitals`}
         description={article.seo?.description || article.excerpt}

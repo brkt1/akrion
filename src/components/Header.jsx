@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import logo from '../assets/brand/akrion-mark-gold.png'
+import logo from '../assets/brand/akrion-mark-gold-240.webp'
 import { safeContentUrl, useSiteSettings } from '../lib/publishedContent'
+import { warmPublicRoute } from '../lib/publicRoutes'
 
 const navItems = [
   { label: 'Home', path: '/' },
@@ -20,6 +21,7 @@ const Header = () => {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 24)
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -84,6 +86,8 @@ const Header = () => {
               <Link
                 key={item.path}
                 to={item.path}
+                onPointerEnter={(event) => { if (event.pointerType === 'mouse' && !isActive(item.path)) warmPublicRoute(item.path) }}
+                onFocus={() => { if (!isActive(item.path)) warmPublicRoute(item.path) }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive(item.path)
                     ? 'text-accent-orange bg-accent-orange/8'

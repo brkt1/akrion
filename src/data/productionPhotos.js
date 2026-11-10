@@ -4,10 +4,11 @@ const photo = (id, title, alt, height = 1600, position = 'center') => ({
   id, title, alt, position,
   src: `/images/production/akrion-bts-${id}-1200.webp`,
   srcSmall: `/images/production/akrion-bts-${id}-720.webp`,
+  srcTiny: `/images/production/akrion-bts-${id}-480.webp`,
   small: `/images/production/akrion-bts-${id}-720.webp`,
   large: `/images/production/akrion-bts-${id}-1200.webp`,
   width: 1200, height, smallWidth: 720, largeWidth: 1200,
-  srcSet: `/images/production/akrion-bts-${id}-720.webp 720w, /images/production/akrion-bts-${id}-1200.webp 1200w`,
+  srcSet: `/images/production/akrion-bts-${id}-480.webp 480w, /images/production/akrion-bts-${id}-720.webp 720w, /images/production/akrion-bts-${id}-1200.webp 1200w`,
 })
 
 export const productionPhotos = {

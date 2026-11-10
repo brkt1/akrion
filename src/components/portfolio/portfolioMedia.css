@@ -30,7 +30,11 @@
 .portfolio-case-gallery-item figcaption strong, .portfolio-case-gallery-item figcaption > span { display: block; }
 .portfolio-case-gallery-item figcaption > span { margin-top: .35rem; opacity: .8; }
 .portfolio-media-results + .portfolio-case-gallery { margin-top: 1.5rem; }
-.portfolio-media-viewer { width: min(1120px,calc(100vw - 2rem)); max-width: none; max-height: calc(100dvh - 2rem); margin: auto; padding: 0; overflow: auto; border: 1px solid rgba(201,161,112,.6); border-radius: 1.25rem; background: #071A0F; color: #F5EDD8; box-shadow: 0 30px 100px #0008; }
+.portfolio-media-viewer { --viewer-inset: 2rem; width: min(1120px,calc(100vw - var(--viewer-inset))); max-width: none; max-height: calc(100dvh - var(--viewer-inset)); margin: auto; padding: 0; overflow: auto; border: 1px solid rgba(201,161,112,.6); border-radius: 1.25rem; background: #071A0F; color: #F5EDD8; box-shadow: 0 30px 100px #0008; }
+.portfolio-media-viewer[data-media-type='video'] {
+  --video-height: min(65dvh, 650px);
+  width: min(1120px, calc(100vw - var(--viewer-inset)), max(202px, calc(var(--video-height) * (var(--media-ratio)) + 2px)));
+}
 .portfolio-media-viewer::backdrop { background: rgba(0,9,5,.88); backdrop-filter: blur(7px); }
 .portfolio-media-viewer-header, .portfolio-media-viewer-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; }
 .portfolio-media-viewer-header { border-bottom: 1px solid #C9A17033; }
@@ -41,12 +45,16 @@
 .portfolio-media-viewer button:focus-visible { outline: 3px solid #E2C49A; outline-offset: 3px; }
 .portfolio-media-viewer-stage { display: flex; justify-content: center; align-items: center; height: min(65dvh,650px); min-height: 200px; background: #020C07; }
 .portfolio-media-viewer-stage > img, .portfolio-media-viewer-stage > video { display: block; width: 100%; height: 100%; object-fit: contain; }
-.portfolio-media-embed { width: min(100%,calc(min(65dvh,650px) * var(--media-ratio))); aspect-ratio: var(--media-ratio); max-height: 100%; min-height: 200px; }
-.portfolio-media-embed iframe { width: 100%; height: 100%; min-height: 200px; border: 0; }
+.portfolio-media-viewer[data-media-type='video'] .portfolio-media-viewer-stage { display: block; height: auto; min-height: 0; aspect-ratio: var(--media-ratio); }
+.portfolio-media-embed { width: 100%; height: 100%; }
+.portfolio-media-embed iframe { display: block; width: 100%; height: 100%; border: 0; }
 .portfolio-media-viewer-footer { align-items: flex-start; border-top: 1px solid #C9A17033; }
 .portfolio-media-viewer-footer > div:first-child { min-width: 0; }
 .portfolio-media-viewer-footer span { color: #E2C49A; font-size: .75rem; }
 .portfolio-media-viewer-footer p { max-width: 65ch; margin: .4rem 0 0; font-size: .85rem; line-height: 1.6; overflow-wrap: anywhere; }
+.portfolio-media-viewer-footer .portfolio-media-quality { font-size: .75rem; color: rgba(245,237,216,.78); }
+.portfolio-media-quality a { display: inline-flex; align-items: center; min-height: 28px; color: #E2C49A; text-decoration: underline; text-underline-offset: 3px; }
+.portfolio-media-quality a:focus-visible { outline: 2px solid #E2C49A; outline-offset: 2px; }
 .portfolio-media-viewer-controls { display: flex; align-items: center; flex-shrink: 0; gap: .6rem; }
 .admin-portfolio-media { display: grid; gap: 1.2rem; min-width: 0; }
 .admin-portfolio-media-intro h4 { margin: 0 0 .5rem; font-size: 15px; }
@@ -71,7 +79,7 @@
   .portfolio-media-filters button { padding: .55rem .7rem; gap: .4rem; font-size: .73rem; }
   .portfolio-card-watch-button { top: .65rem; right: .65rem; padding: .5rem .65rem; }
   .portfolio-card-featured-label { max-width: calc(100% - 9.2rem); overflow-wrap: anywhere; }
-  .portfolio-media-viewer { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); border-radius: 1rem; }
+  .portfolio-media-viewer { --viewer-inset: 1rem; border-radius: 1rem; }
   .portfolio-media-viewer-header, .portfolio-media-viewer-footer { padding: .8rem; gap: .6rem; }
   .portfolio-media-viewer-footer { flex-wrap: wrap; }
   .portfolio-media-viewer-controls { margin-left: auto; }

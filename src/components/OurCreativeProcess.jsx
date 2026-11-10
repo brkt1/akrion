@@ -6,6 +6,7 @@ import { agencyServiceVisuals } from '../data/agencyVisuals'
 import documentaryFilm720 from '../assets/portfolio/documentary-film-720.webp'
 import enenTubeSeries600 from '../assets/portfolio/enen-tube-series-600.webp'
 import liyuMelketa720 from '../assets/portfolio/liyu-melketa-720.webp'
+import useConstrainedConnection from '../lib/useConstrainedConnection'
 
 const SCENE_DURATION = 1800
 
@@ -41,7 +42,12 @@ const scenes = [
   },
 ]
 
-const ProcessPlaceholder = ({ activeScene, poster, reducedMotion }) => {
+const ProcessPlaceholder = ({ activeScene, poster, reducedMotion, isInView }) => {
+  const [mountedScenes, setMountedScenes] = useState(() => new Set([0]))
+  useEffect(() => {
+    if (reducedMotion || !isInView) return
+    setMountedScenes(current => new Set([...current, activeScene, (activeScene + 1) % scenes.length]))
+  }, [activeScene, isInView, reducedMotion])
   if (reducedMotion) {
     return (
       <img
@@ -58,7 +64,7 @@ const ProcessPlaceholder = ({ activeScene, poster, reducedMotion }) => {
 
   return (
     <div className="creative-process-scenes" aria-hidden="true">
-      {scenes.map((scene, index) => (
+      {scenes.map((scene, index) => mountedScenes.has(index) && (
         <div
           key={scene.label}
           className="creative-process-scene"
@@ -71,6 +77,7 @@ const ProcessPlaceholder = ({ activeScene, poster, reducedMotion }) => {
                   key={src}
                   src={src}
                   loading="lazy"
+                  fetchpriority={index === activeScene ? 'auto' : 'low'}
                   decoding="async"
                   alt=""
                   className={`creative-process-montage-image creative-process-montage-image--${montageIndex + 1}`}
@@ -85,6 +92,7 @@ const ProcessPlaceholder = ({ activeScene, poster, reducedMotion }) => {
               width={scene.width || 1200}
               height={scene.height || 900}
               loading="lazy"
+              fetchpriority={index === activeScene ? 'auto' : 'low'}
               decoding="async"
               alt=""
               className="creative-process-scene-image"
@@ -99,7 +107,7 @@ const ProcessPlaceholder = ({ activeScene, poster, reducedMotion }) => {
 
 const OurCreativeProcess = ({
   className = '',
-  poster = productionPhotos.productionKit.srcSmall,
+  poster = productionPhotos.productionKit.srcTiny,
   videoSrc = null,
   videoType = 'video/webm',
 }) => {
@@ -107,6 +115,8 @@ const OurCreativeProcess = ({
   const videoRef = useRef(null)
   const isInView = useInView(panelRef, { amount: 0.2 })
   const reducedMotion = Boolean(useReducedMotion())
+  const constrained = useConstrainedConnection()
+  const staticVisual = reducedMotion || constrained
   const [activeScene, setActiveScene] = useState(0)
   const [hasEntered, setHasEntered] = useState(false)
   const [pageVisible, setPageVisible] = useState(
@@ -124,14 +134,14 @@ const OurCreativeProcess = ({
   }, [])
 
   useEffect(() => {
-    if (videoSrc || reducedMotion || !isInView || !pageVisible) return undefined
+    if (videoSrc || staticVisual || !isInView || !pageVisible) return undefined
 
     const interval = window.setInterval(() => {
       setActiveScene((current) => (current + 1) % scenes.length)
     }, SCENE_DURATION)
 
     return () => window.clearInterval(interval)
-  }, [isInView, pageVisible, reducedMotion, videoSrc])
+  }, [isInView, pageVisible, staticVisual, videoSrc])
 
   useEffect(() => {
     const video = videoRef.current
@@ -173,7 +183,7 @@ const OurCreativeProcess = ({
       style={{ '--creative-process-progress': `${progress}%` }}
     >
       <div className="creative-process-media">
-        {videoSrc && !reducedMotion && hasEntered ? (
+        {videoSrc && !staticVisual && hasEntered ? (
           <video
             ref={videoRef}
             className="creative-process-video"
@@ -189,13 +199,13 @@ const OurCreativeProcess = ({
             <source src={videoSrc} type={videoType} />
           </video>
         ) : (
-          <ProcessPlaceholder activeScene={activeScene} poster={poster} reducedMotion={reducedMotion} />
+          <ProcessPlaceholder activeScene={activeScene} poster={poster} reducedMotion={staticVisual} isInView={isInView && pageVisible} />
         )}
 
         <div className="creative-process-media-pattern eth-pattern" />
         <div className="creative-process-media-overlay" />
 
-        {!reducedMotion && (
+        {!staticVisual && (
           <span className="creative-process-scene-label" aria-hidden="true">
             {videoSrc ? stages[activeStage] : scenes[activeScene].label}
           </span>

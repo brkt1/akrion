@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { isMediaCategory } from '../data/portfolioMedia'
 import Footer from '../components/Footer'
-import Header from '../components/Header'
 import PageMeta from '../components/PageMeta'
 import ProjectGallery, { ResponsiveImage } from '../components/portfolio/ProjectGallery'
 import {
@@ -28,10 +27,10 @@ const ArrowIcon = ({ direction = 'right' }) => (
   </svg>
 )
 
-const Reveal = ({ children, className = '', reducedMotion }) => (
+const Reveal = ({ children, className = '', reducedMotion, distance = 22 }) => (
   <motion.div
     className={className}
-    initial={reducedMotion ? false : { opacity: 0, y: 22 }}
+    initial={reducedMotion ? false : { opacity: 0, y: distance }}
     whileInView={reducedMotion ? undefined : { opacity: 1, y: 0 }}
     viewport={reducedMotion ? undefined : { once: true, amount: 0.18 }}
     transition={reducedMotion ? undefined : { duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
@@ -78,12 +77,6 @@ const ProjectCaseStudy = () => {
     setProjectCollection(portfolioProjects)
     setLoading(!canonicalProject)
     setLoadError(false)
-    const root = document.documentElement
-    const previousScrollBehavior = root.style.scrollBehavior
-    root.style.scrollBehavior = 'auto'
-    window.scrollTo({ top: 0, behavior: 'auto' })
-    root.style.scrollBehavior = previousScrollBehavior
-
     const loadProject = async () => {
       try {
         const result = await portfolioAPI.getPublishedResult()
@@ -126,7 +119,6 @@ const ProjectCaseStudy = () => {
   if (loading && !project) {
     return (
       <>
-        <Header />
         <PageMeta
           title="Loading Project | Akrion Digitals"
           path={`/portfolio/${slug}`}
@@ -143,7 +135,6 @@ const ProjectCaseStudy = () => {
   if (!project && loadError) {
     return (
       <>
-        <Header />
         <PageMeta
           title="Project Temporarily Unavailable | Akrion Digitals"
           description="This project could not be loaded right now."
@@ -172,7 +163,6 @@ const ProjectCaseStudy = () => {
   if (!project) {
     return (
       <>
-        <Header />
         <PageMeta
           title="Project Not Found | Akrion Digitals"
           description="Return to the Akrion Digitals portfolio to explore available work."
@@ -252,9 +242,8 @@ const ProjectCaseStudy = () => {
       case 'work':
         return (
           <div className="portfolio-case-shell">
-            {/* Animate the heading, not an arbitrarily tall media collection:
-                long albums must remain visible on short/landscape screens. */}
-            <Reveal reducedMotion={reducedMotion}>
+            {/* Fade in place so the heading never slides over the live filter buttons. */}
+            <Reveal reducedMotion={reducedMotion} distance={0}>
               <SectionHeading eyebrow="The Work" title="A closer look at the project." id="project-work-heading" />
             </Reveal>
             <ProjectGallery key={`${project.slug}-${mediaFilter}`} items={project.mediaItems} projectTitle={project.title} initialFilter={mediaFilter} />
@@ -299,7 +288,6 @@ const ProjectCaseStudy = () => {
 
   return (
     <>
-      <Header />
       <PageMeta
         title={project.seo?.title || `${project.title} | Akrion Digitals`}
         description={project.seo?.description || project.summary}

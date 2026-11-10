@@ -1,22 +1,24 @@
 import {
   motion,
+  useInView,
   useMotionValue,
   useReducedMotion,
   useSpring,
   useTransform,
 } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
-import logo from '../assets/brand/akrion-mark-gold.png'
+import logo from '../assets/brand/akrion-mark-gold-240.webp'
 import { productionPhotos } from '../data/productionPhotos'
+import useConstrainedConnection from '../lib/useConstrainedConnection'
+import ResponsiveImage from './portfolio/ResponsiveImage'
 
 const GOLD = '#C9A170'
 const CREAM = '#F5EDD8'
 const HERO_BACKGROUND_INTERVAL = 6500
 
-// Real owner-supplied production photos; existing timing, overlays and layout
-// are unchanged. Only the first responsive image is preloaded.
+// Real owner-supplied production photos; the next slide only loads on demand.
 const heroBackgrounds = [
   productionPhotos.warmLighting, productionPhotos.onLocation,
   productionPhotos.productionKit, productionPhotos.interviewSet,
@@ -74,7 +76,7 @@ const ShowreelPlaceholder = () => (
   >
     {/* Replace this placeholder content with a responsive YouTube iframe when the showreel URL is ready. */}
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_22%,rgba(201,161,112,0.24),transparent_32%),linear-gradient(135deg,#173621_0%,#0D1F13_52%,#09160E_100%)]" />
-    <img src={productionPhotos.interviewMonitors.src} srcSet={productionPhotos.interviewMonitors.srcSet} sizes="(min-width: 1024px) 48vw, 100vw" width="1200" height="1600" alt="" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-70" style={{ objectPosition: productionPhotos.interviewMonitors.position }} />
+    <ResponsiveImage media={{ ...productionPhotos.interviewMonitors, alt: '' }} sizes="(min-width: 1400px) 660px, (min-width: 1024px) 48vw, calc(100vw - 2rem)" loading="eager" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover opacity-70" style={{ objectPosition: productionPhotos.interviewMonitors.position }} />
     <div className="absolute inset-0 bg-gradient-to-t from-[#071A0F]/85 via-[#071A0F]/20 to-[#071A0F]/25" />
     <div className="eth-pattern absolute -right-12 -top-10 h-56 w-56 rotate-12 opacity-25" />
     <div className="dot-grid absolute inset-0 opacity-30" />
@@ -116,6 +118,10 @@ const Hero = () => {
   const content = usePublishedSection('homepage', 'hero')
   const showreel = safeContentUrl(content.showreel_url)
   const shouldReduceMotion = useReducedMotion()
+  const constrained = useConstrainedConnection()
+  const heroRef = useRef(null)
+  const heroInView = useInView(heroRef, { amount: 0.05 })
+  const loadedBackgrounds = useRef(new Set())
   const [supportsPointerParallax, setSupportsPointerParallax] = useState(false)
   const [activeBackground, setActiveBackground] = useState(0)
   const [mountedBackgrounds, setMountedBackgrounds] = useState(() => new Set([0]))
@@ -129,7 +135,7 @@ const Hero = () => {
   const cursorY = useMotionValue(0)
   const smoothX = useSpring(cursorX, { stiffness: 45, damping: 24, mass: 0.8 })
   const smoothY = useSpring(cursorY, { stiffness: 45, damping: 24, mass: 0.8 })
-  const shouldReduceSlideshowMotion = Boolean(shouldReduceMotion || prefersReducedSlideshowMotion)
+  const shouldReduceSlideshowMotion = Boolean(shouldReduceMotion || prefersReducedSlideshowMotion || constrained)
 
   useEffect(() => {
     const pointerQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
@@ -150,23 +156,6 @@ const Hero = () => {
   }, [])
 
   useEffect(() => {
-    const preloadAttribute = 'data-akrion-hero-preload'
-    if (document.head.querySelector(`link[${preloadAttribute}]`)) return undefined
-
-    const preloadLink = document.createElement('link')
-    preloadLink.rel = 'preload'
-    preloadLink.as = 'image'
-    preloadLink.href = heroBackgrounds[0].src
-    preloadLink.imageSrcset = heroBackgrounds[0].srcSet
-    preloadLink.imageSizes = '100vw'
-    preloadLink.fetchPriority = 'high'
-    preloadLink.setAttribute(preloadAttribute, 'true')
-    document.head.appendChild(preloadLink)
-
-    return () => preloadLink.remove()
-  }, [])
-
-  useEffect(() => {
     const updatePageVisibility = () => {
       setIsPageVisible(document.visibilityState === 'visible')
     }
@@ -182,7 +171,7 @@ const Hero = () => {
       return undefined
     }
 
-    if (!isPageVisible) return undefined
+    if (!isPageVisible || !heroInView) return undefined
 
     const nextBackground = (activeBackground + 1) % heroBackgrounds.length
     const stageTimer = window.setTimeout(() => {
@@ -195,15 +184,16 @@ const Hero = () => {
       })
     }, HERO_BACKGROUND_INTERVAL - 1800)
 
-    const rotationTimer = window.setTimeout(() => {
-      setActiveBackground(nextBackground)
+    const rotationTimer = window.setInterval(() => {
+      // Keep the current photograph visible while the next file is loading.
+      if (loadedBackgrounds.current.has(nextBackground)) setActiveBackground(nextBackground)
     }, HERO_BACKGROUND_INTERVAL)
 
     return () => {
       window.clearTimeout(stageTimer)
-      window.clearTimeout(rotationTimer)
+      window.clearInterval(rotationTimer)
     }
-  }, [activeBackground, isPageVisible, shouldReduceSlideshowMotion])
+  }, [activeBackground, heroInView, isPageVisible, shouldReduceSlideshowMotion])
 
   const handlePointerMove = (event) => {
     if (!supportsPointerParallax || shouldReduceMotion || event.pointerType !== 'mouse') return
@@ -226,6 +216,7 @@ const Hero = () => {
 
   return (
     <section
+      ref={heroRef}
       className="hero-section relative flex min-h-[calc(100svh-80px)] items-center overflow-hidden py-14 sm:py-16 lg:py-20"
       onPointerMove={handlePointerMove}
       onPointerLeave={resetParallax}
@@ -234,7 +225,7 @@ const Hero = () => {
 
       <div
         className="hero-background-slideshow pointer-events-none absolute inset-0 z-0"
-        data-paused={!isPageVisible || shouldReduceSlideshowMotion}
+        data-paused={!isPageVisible || !heroInView || shouldReduceSlideshowMotion}
         aria-hidden="true"
       >
         {heroBackgrounds.map((background, index) => {
@@ -248,7 +239,8 @@ const Hero = () => {
               sizes="100vw"
               alt=""
               loading={index === 0 ? 'eager' : 'lazy'}
-              fetchPriority={index === 0 ? 'high' : 'low'}
+              fetchpriority="low"
+              onLoad={() => loadedBackgrounds.current.add(index)}
               decoding="async"
               className={`hero-background-image ${index === activeBackground ? 'is-active' : ''}`}
               style={{

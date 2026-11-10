@@ -1,4 +1,4 @@
-import { supabase } from '../supabase'
+import { loadSupabase } from '../loadSupabase'
 
 const buildServicePayload = (service) => {
   const payload = {
@@ -27,6 +27,7 @@ const buildServicePayload = (service) => {
 export const servicesAPI = {
   // Get all services
   async getAll() {
+    const supabase = await loadSupabase()
     const { data, error } = await supabase
       .from('services')
       .select('*')
@@ -41,6 +42,7 @@ export const servicesAPI = {
 
   // Get a single service by ID
   async getById(id) {
+    const supabase = await loadSupabase()
     const { data, error } = await supabase
       .from('services')
       .select('*')
@@ -56,6 +58,7 @@ export const servicesAPI = {
 
   // Create a new service
   async create(service) {
+    const supabase = await loadSupabase()
     const { data, error } = await supabase
       .from('services')
       .insert([buildServicePayload(service)])
@@ -71,6 +74,7 @@ export const servicesAPI = {
 
   // Update a service
   async update(id, service) {
+    const supabase = await loadSupabase()
     const { data, error } = await supabase
       .from('services')
       .update({
@@ -90,6 +94,7 @@ export const servicesAPI = {
 
   // Delete a service
   async delete(id) {
+    const supabase = await loadSupabase()
     const { error } = await supabase
       .from('services')
       .delete()

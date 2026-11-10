@@ -9,8 +9,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { productionPhotos } from '../data/productionPhotos'
 import Footer from './Footer'
-import Header from './Header'
 import { safeContentUrl, usePublishedSection } from '../lib/publishedContent'
+import useConstrainedConnection from '../lib/useConstrainedConnection'
 
 const HERO_ROTATION_MS = 6200
 const PROCESS_ROTATION_MS = 6000
@@ -62,17 +62,18 @@ const ResponsiveProjectImage = ({
   loading = 'lazy',
   fetchPriority = 'auto',
   sizes = '100vw',
+  onLoad,
 }) => (
   <picture className={className} aria-hidden={!isActive}>
-    <source media="(max-width: 767px)" srcSet={visual.small} />
     <img
       src={visual.large}
-      srcSet={`${visual.small} 720w, ${visual.large} ${visual.largeWidth}w`}
+      srcSet={visual.srcSet}
       sizes={sizes}
       width={visual.width}
       height={visual.height}
       loading={loading}
-      fetchPriority={fetchPriority}
+      fetchpriority={fetchPriority}
+      onLoad={onLoad}
       decoding="async"
       alt={isActive ? visual.alt : ''}
       style={{ '--about-image-position': visual.position }}
@@ -135,6 +136,7 @@ const About = () => {
   const closingContent = usePublishedSection('about', 'closing_content')
   const displayedPrinciples = principles.map((item, index) => ({ ...item, title: principleContent[`principle_${index + 1}_title`] || item.title, description: principleContent[`principle_${index + 1}_description`] || item.description }))
   const reducedMotion = usePrefersReducedMotion()
+  const constrained = useConstrainedConnection()
   const pageVisible = usePageVisibility()
   const heroRef = useRef(null)
   const processRef = useRef(null)
@@ -153,30 +155,14 @@ const About = () => {
   const collageParallax = useTransform(scrollYProgress, [0, 1], [0, 16])
 
   useEffect(() => {
-    const preloadAttribute = 'data-akrion-about-hero-preload'
-    if (document.head.querySelector(`link[${preloadAttribute}]`)) return undefined
-
-    const firstVisual = projectVisuals[heroVisualIndexes[0]]
-    const preloadLink = document.createElement('link')
-    preloadLink.rel = 'preload'
-    preloadLink.as = 'image'
-    preloadLink.href = firstVisual.large
-    preloadLink.imageSrcset = `${firstVisual.small} 720w, ${firstVisual.large} ${firstVisual.largeWidth}w`
-    preloadLink.imageSizes = '(min-width: 1024px) 52vw, 100vw'
-    preloadLink.fetchPriority = 'high'
-    preloadLink.setAttribute(preloadAttribute, 'true')
-    document.head.appendChild(preloadLink)
-
-    return () => preloadLink.remove()
-  }, [])
-
-  useEffect(() => {
-    const deferredImagesTimer = window.setTimeout(() => setCollageReady(true), 700)
+    // Give the main image the connection first, but still show the visible
+    // tiles if that request stalls.
+    const deferredImagesTimer = window.setTimeout(() => setCollageReady(true), 2500)
     return () => window.clearTimeout(deferredImagesTimer)
   }, [])
 
   useEffect(() => {
-    if (reducedMotion) {
+    if (reducedMotion || constrained) {
       setHeroActiveIndex(0)
       return undefined
     }
@@ -188,11 +174,12 @@ const About = () => {
     }, HERO_ROTATION_MS)
 
     return () => window.clearTimeout(heroTimer)
-  }, [collageReady, heroActiveIndex, heroInView, pageVisible, reducedMotion])
+  }, [collageReady, constrained, heroActiveIndex, heroInView, pageVisible, reducedMotion])
 
   useEffect(() => {
     if (
       reducedMotion
+      || constrained
       || !pageVisible
       || !processInView
       || processHasInteracted
@@ -207,6 +194,7 @@ const About = () => {
     return () => window.clearTimeout(processTimer)
   }, [
     activeStage,
+    constrained,
     pageVisible,
     processFocusWithin,
     processHasInteracted,
@@ -239,7 +227,6 @@ const About = () => {
 
   return (
     <>
-      <Header />
       <main className="about-story-page">
         <section ref={heroRef} className="about-story-hero" aria-labelledby="about-story-heading">
           <div aria-hidden="true" className="about-story-hero-glow" />
@@ -273,13 +260,13 @@ const About = () => {
 
             <motion.div
               className="about-story-collage"
-              data-paused={!pageVisible || !heroInView || reducedMotion}
+              data-paused={!pageVisible || !heroInView || reducedMotion || constrained}
               style={reducedMotion ? undefined : { y: collageParallax }}
               {...reveal(reducedMotion, 0.14, 26)}
             >
               <div className="about-story-feature-frame">
                 {heroVisualIndexes.map((visualIndex, index) => {
-                  if (index !== 0 && !collageReady) return null
+                  if (index !== 0 && (!collageReady || constrained || reducedMotion)) return null
                   const isActive = index === heroActiveIndex
 
                   return (
@@ -290,6 +277,7 @@ const About = () => {
                       isActive={isActive}
                       loading={index === 0 ? 'eager' : 'lazy'}
                       fetchPriority={index === 0 ? 'high' : 'low'}
+                      onLoad={index === 0 ? () => setCollageReady(true) : undefined}
                       sizes="(min-width: 1280px) 38vw, (min-width: 1024px) 44vw, (min-width: 640px) 70vw, 92vw"
                     />
                   )
@@ -357,7 +345,7 @@ const About = () => {
               </div>
 
               <motion.div className="about-story-principle-visual" {...reveal(reducedMotion, 0.12)}>
-                {principles.map((principle, index) => (
+                {principles.map((principle, index) => (constrained && activePrinciple !== index ? null : (
                   <ResponsiveProjectImage
                     key={principle.number}
                     visual={projectVisuals[principle.visualIndex]}
@@ -367,7 +355,7 @@ const About = () => {
                     fetchPriority="low"
                     sizes="(min-width: 1280px) 600px, (min-width: 1024px) 48vw, calc(100vw - 2rem)"
                   />
-                ))}
+                )))}
                 <div aria-hidden="true" className="about-story-principle-overlay" />
                 <span aria-hidden="true" className="about-story-principle-index">
                   {principles[activePrinciple].number}
@@ -425,7 +413,7 @@ const About = () => {
               aria-labelledby={`about-stage-${activeStage}`}
               {...reveal(reducedMotion, 0.1, 26)}
             >
-              {processStages.map((stage, index) => (
+              {processStages.map((stage, index) => (constrained && activeStage !== index ? null : (
                 <ResponsiveProjectImage
                   key={stage.name}
                   visual={projectVisuals[stage.visualIndex]}
@@ -435,7 +423,7 @@ const About = () => {
                   fetchPriority="low"
                   sizes="(min-width: 1280px) 620px, (min-width: 1024px) 50vw, calc(100vw - 2rem)"
                 />
-              ))}
+              )))}
               <div aria-hidden="true" className="about-story-process-overlay" />
               <span className="about-story-process-stage" aria-hidden="true">
                 {processStages[activeStage].name}

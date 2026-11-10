@@ -13,7 +13,7 @@ const MediaThumbnail = ({ item }) => {
     const photo = getProductionPhotoForUrl(item.src)
     return <ResponsiveImage media={{
       src, alt: item.alt, width: item.width || photo?.width, height: item.height || photo?.height,
-      fallbackSrc: src !== item.src ? item.src : photo?.fallbackSrc,
+      fallbackSrc: photo?.fallbackSrc || (src !== item.src ? item.src : undefined),
     }} className="portfolio-case-gallery-image" />
   }
   return src && !failed ? <img src={src} alt="" onError={() => setFailed(true)} className="portfolio-case-gallery-image" loading="lazy" decoding="async" /> : <span className="portfolio-media-thumbnail-fallback" aria-hidden="true">{item.title.charAt(0)}</span>

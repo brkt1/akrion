@@ -2,7 +2,6 @@ import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
-import Header from '../components/Header'
 import { mergeServiceStories, serviceStories as fallbackServiceStories } from '../data/servicesContent'
 import { servicesAPI } from '../lib/api/services'
 
@@ -120,7 +119,6 @@ const Services = () => {
 
   return (
     <>
-      <Header />
       <main className="services-editorial-page">
         <section ref={heroRef} className="services-editorial-hero" aria-labelledby="services-editorial-heading">
           <div aria-hidden="true" className="services-editorial-hero-glow" />

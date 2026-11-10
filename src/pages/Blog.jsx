@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
-import Header from '../components/Header'
 import PageMeta from '../components/PageMeta'
 import ResponsiveArticleImage from '../components/blog/ResponsiveArticleImage'
 import ScrollAnimation, { StaggerContainer, StaggerItem } from '../components/ScrollAnimation'
@@ -185,7 +184,6 @@ const Blog = () => {
         imageAlt={blogArticles[0]?.hero?.alt}
         path="/blog"
       />
-      <Header />
       <main className="blog-page">
         <section className="blog-hero" aria-labelledby="blog-page-title">
           <div className="blog-pattern blog-pattern--hero eth-pattern-subtle" aria-hidden="true" />

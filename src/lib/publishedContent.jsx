@@ -1,14 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from './supabase'
+import { loadSupabase } from './loadSupabase'
 
 const PublishedContent = createContext({ sections: {}, settings: {} })
 
 export const PublishedContentProvider = ({ children }) => {
   const [content, setContent] = useState({ sections: {}, settings: {} })
   useEffect(() => {
-    if (!supabase) return undefined
     let mounted = true
     const load = async () => {
+      const supabase = await loadSupabase()
+      if (!mounted) return
       const [pages, settings] = await Promise.all([
         supabase.from('published_page_sections').select('page_key,section_key,content'),
         supabase.from('published_site_settings').select('setting_key,value'),

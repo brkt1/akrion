@@ -4,15 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 // image approaches the viewport, without starting timers for off-screen cards.
 const RECOVERY_DELAY = 8000
 
-const RecoverableImage = ({ media, className = '', loading = 'lazy', sizes = '100vw', fetchPriority }) => {
+const RecoverableImage = ({ media, className = '', loading = 'lazy', sizes = '100vw', fetchPriority, style }) => {
   const imageRef = useRef(null)
   const [attempt, setAttempt] = useState(0)
   const [loaded, setLoaded] = useState(false)
-  const backups = [...new Set([media.fallbackSrc, media.srcSmall].filter((src) => src && src !== media.src))]
+  const backups = [...new Set([media.fallbackSrc, media.srcTiny, media.srcSmall].filter((src) => src && src !== media.src))]
   const src = attempt === 0 ? media.src : backups[attempt - 1]
-  const srcSet = attempt === 0 && media.srcSmall && media.smallWidth && media.width
+  const srcSet = attempt === 0 ? media.srcSet || (media.srcSmall && media.smallWidth && media.width
     ? `${media.srcSmall} ${media.smallWidth}w, ${media.src} ${media.width}w`
-    : undefined
+    : undefined) : undefined
 
   useEffect(() => {
     const image = imageRef.current
@@ -24,7 +24,7 @@ const RecoverableImage = ({ media, className = '', loading = 'lazy', sizes = '10
       if (timer || !backups[attempt]) return
       timer = window.setTimeout(() => {
         if (image.complete && image.naturalWidth > 0) setLoaded(true)
-        else setAttempt((current) => current + 1)
+        else setAttempt((current) => current === attempt ? current + 1 : current)
       }, RECOVERY_DELAY)
     }
     // Cached images can finish before React attaches its load handler.
@@ -58,8 +58,8 @@ const RecoverableImage = ({ media, className = '', loading = 'lazy', sizes = '10
     className={className}
     data-image-state={loaded ? 'loaded' : 'loading'}
     onLoad={() => setLoaded(true)}
-    onError={() => { setLoaded(false); setAttempt((current) => current + 1) }}
-    style={{ '--portfolio-case-image-fit': media.fit || 'cover', '--portfolio-case-image-position': media.position || 'center' }}
+    onError={() => { setLoaded(false); setAttempt((current) => current === attempt ? current + 1 : current) }}
+    style={{ '--portfolio-case-image-fit': media.fit || 'cover', '--portfolio-case-image-position': media.position || 'center', ...style }}
   />
 }
 
